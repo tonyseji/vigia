@@ -88,6 +88,19 @@ Cuatro correcciones pedidas por Tony al leer lo montado:
 
 El diseño aprobado se mantiene como base; los retoques llegarán al usarlo.
 
+### El nombre, reabierto y confirmado
+
+Tony reabrió la duda justo antes de crear el repositorio, al escribir «Vigía» en
+GitHub: el nombre habla del vigilante y no de la lista, y lo que él quiere es un
+sitio ordenado donde recordar lo que le interesa, con el precio como criterio
+para decidir cuándo —o si— compra. Se buscaron alternativas de verdad y se
+comprobaron contra lo existente: `mirador`, `atalaya`, `kairos`, `otero`,
+`miru`, `begira`, `utsikt`, `terna`, `antesala`, `tanteo`. Se mantiene Vigía; el
+razonamiento y el motivo de descarte de cada candidato quedan en `DECISIONES.md`
+para no repetir la conversación. Hallazgo útil de la búsqueda: el espacio en
+español está vacío — todo lo que existe se llama *Price Tracker*, *Rastreador de
+precios*, *Reprice*, *Keepa* o *Listonic*.
+
 ### Estado final
 
 Esqueleto verificado: `npm install`, `npm test` (8 tests) y `npm run build` en

@@ -28,6 +28,53 @@ aquí no existe.
 **Revisitar:** Si algún día hay usuarios reales pidiendo comparar entre
 productos que no han guardado. Hoy no hay usuarios, así que no hay señal.
 
+### 2026-09-03 — El nombre es Vigía, revisado a fondo y confirmado
+**Decisión:** El proyecto se llama **Vigía**; el repositorio es `vigia`, sin
+tilde, por la URL. Se reabrió la decisión y se cerró en el mismo sitio.
+**Por qué:** La duda era legítima y estaba bien formulada: «Vigía» nombra a una
+*persona que vigila*, y lo que hay es también *un sitio donde están mis cosas* —
+una lista de productos que me estoy pensando, que puede que no compre nunca, y
+entre los que a veces comparo. Pero el argumento decisivo va al revés: la lista
+sin histórico de precios **ya está resuelta con Notion**, y no justifica
+construir nada. Lo que justifica el proyecto es que algo mire los precios por ti
+para no tener que entrar cada dos por tres a la URL. El nombre debe apuntar a lo
+que hace que esto exista, no a lo que cualquier herramienta ya hace. Y un vigía
+es precisamente el que mira **por ti, para que tú no tengas que mirar**: no
+empuja a comprar, avisa.
+**Descartado, con el motivo de cada uno** (todos comprobados contra lo que ya
+existe, tras la lección de `precioteca`):
+- `bitacora` — muy ocupada y en español carga el significado de «blog».
+- `precioteca` — existe, y es justamente un comparador de ofertas.
+- `mirador` — resolvía bien la objeción (un lugar, no un vigilante), pero es una
+  palabra demasiado común: miradores turísticos, promociones inmobiliarias.
+- `atalaya` — mismo concepto y más distintiva, pero muy ocupada en software
+  español (Atalaya IT, Atalaya GRC, Atalaya Interactive) y, sobre todo, *La
+  Atalaya* es la revista de los Testigos de Jehová: en España esa asociación se
+  come el nombre entero.
+- `kairos` — «el momento oportuno», que es literalmente la decisión que la app
+  ayuda a tomar, pero está saturado: criptomoneda KAIROS, Kairos Wallet,
+  kairos.trade. Un proyecto de precios que suena a cripto es lo contrario de lo
+  que se busca.
+- `otero` — la loma desde la que se otea; libre, corto, sin tilde, y la mejor
+  alternativa encontrada. Cayó solo porque no mejoraba lo suficiente como para
+  pagar el cambio.
+- `miru` (japonés «ver», que además suena a «mira») — colisión directa con
+  `miru-project/miru-app`, un repositorio con tracción en GitHub.
+- `begira` (euskera), `utsikt` (sueco), `belvedere`, `terna`, `antesala`,
+  `tanteo` — descartados por criterio propio: un nombre en un idioma que no
+  hablas envejece mal en un proyecto personal (hay que explicarlo cada vez), y
+  `tanteo` además se contradice con el producto, porque *a tanteo* significa «a
+  ojo, sin medir» y aquí la gracia es tener el dato exacto.
+- Compuestos tipo *miraprecios* o *preciovista* — suenan a extensión de Chrome
+  de 2011.
+**El riesgo que sí tiene el nombre, y cómo se controla:** «vigía de precios»
+puede leerse como alertas y chollos, que es la categoría explícitamente
+descartada. Eso no se corrige con el nombre sino con el alcance, que ya está
+escrito arriba y en `CLAUDE.md`.
+**Revisitar:** Tras unas semanas de uso real. Si para entonces sigue sin
+encajar, el cambio es renombrar el repositorio en GitHub y una línea de
+interfaz — diez minutos. No merece bloquear ninguna fase.
+
 ### 2026-09-03 — Se construye aun sabiendo que PriceBuddy ya hace el 90%
 **Decisión:** Construirlo igualmente.
 **Por qué:** PriceBuddy es un proyecto de código abierto que resuelve casi lo
