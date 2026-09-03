@@ -48,7 +48,7 @@ commit de este repo.
 | Capa | Tecnología |
 |---|---|
 | Frontend | Vite + React 18 (lib + hooks, sin librería de estado) + Tailwind CSS v4 |
-| Base de datos | Supabase (PostgreSQL) — proyecto `muebles` (`ovmnzlbcmuppqctkyngi`) |
+| Base de datos | Supabase (PostgreSQL) — proyecto `muebles` (`ovmnzlbcmuppqctkyngi`), schema `vigia` |
 | Auth | Supabase Auth — enlace mágico por email |
 | Lectura de precios | Edge Function `scrape` (Deno/TypeScript) |
 | Refresco | Botón manual + un pase diario configurable (`pg_cron`) |
@@ -113,6 +113,8 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
   cubre credenciales, volcados de BD, `privado/` y `*.private.md`; el hook de
   `.githooks/pre-commit` bloquea el commit si detecta un secreto. Activarlo una
   vez por máquina: `git config core.hooksPath .githooks`.
+- **El schema `public` de ese proyecto es de la app vieja y NO se toca** hasta
+  la fase 6. Todo lo nuevo va en el schema `vigia`.
 - **Nada se aplica en Supabase que no exista antes como archivo** en
   `supabase/migrations/`. En Bilans hay tablas en producción que no están en
   ninguna migración y ya nadie sabe cómo se crearon.

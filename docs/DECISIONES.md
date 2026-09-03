@@ -156,6 +156,29 @@ convierte en un lenguaje de programación mal hecho. En ese caso, tienda difíci
 
 ## Seguridad y datos
 
+### 2026-09-03 — Las tablas nuevas viven en un schema `vigia`, no en `public`
+**Decisión:** El esquema nuevo se crea en un schema de Postgres propio,
+`vigia`, expuesto en la Data API de Supabase, y el cliente se configura con
+`{ db: { schema: 'vigia' } }`. El `public` actual —con las `items`,
+`price_history` y `settings` de la app vieja— no se toca hasta la fase 6.
+**Por qué:** Las tablas nuevas se llaman igual que las viejas y comparten
+proyecto de Supabase, así que crearlas en `public` obligaría o a renombrarlas
+(divergiendo de toda la documentación) o a apagar la app vieja antes de tener
+la nueva funcionando — justo lo que se decidió no hacer. Con un schema aparte
+las dos conviven sin tocarse, la retirada de la fase 6 es un `DROP` acotado y
+verificable, y si algo sale mal durante la transición la app vieja sigue
+sirviendo sin haber sufrido nada.
+**Descartado:** (a) Renombrar las tablas nuevas (`v_items`, `watched_items`):
+arrastra un prefijo feo para siempre por un problema que dura tres fases.
+(b) Un segundo proyecto de Supabase: el plan gratuito permite dos proyectos
+activos y gastarlo aquí obliga a migrar los datos entre proyectos al final,
+que es más trabajo y más riesgo que un `DROP`. (c) Apagar la app vieja antes:
+se descartó explícitamente al hacer el plan.
+**Revisitar:** En la fase 6, al retirar la app vieja, decidir si las tablas se
+quedan en `vigia` (más limpio, un `search_path` distinto) o se mueven a
+`public`. Moverlas es un `ALTER TABLE ... SET SCHEMA` y no rompe nada, así que
+la decisión puede esperar a tener la app nueva en marcha.
+
 ### 2026-09-03 — Auth real (enlace mágico) en vez de clave compartida
 **Decisión:** Supabase Auth con enlace mágico por email. Se retira la clave compartida
 que estaba incrustada en el código.

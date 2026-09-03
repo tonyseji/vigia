@@ -12,7 +12,7 @@
 | Pieza | Dónde vive | Qué hace |
 |---|---|---|
 | Frontend | Vercel | App Vite + React. Habla con Supabase directamente, con la sesión del usuario. |
-| Base de datos | Supabase | `items`, `price_history`, `store_rules`. RLS por `user_id`. |
+| Base de datos | Supabase | Schema `vigia`: `items`, `price_history`, `folders`, `user_settings`, `store_rules`. RLS por `user_id`. |
 | Auth | Supabase | Enlace mágico por email. Sin contraseñas. |
 | Función `scrape` | Supabase Edge Functions | Recibe una URL, devuelve título, imagen y precio. |
 | Refresco automático | `pg_cron` (Supabase) | **Un solo pase al día.** Lo puede apagar o acelerar el usuario desde ajustes. |
@@ -107,7 +107,9 @@ pero no pierde el histórico ni desaparece de la lista.
 
 ## Esquema propuesto
 
-Convención: nombre de tabla en inglés, campos con prefijo de tabla.
+Todo vive en el schema `vigia`, no en `public` — ahí siguen las tablas de la
+app vieja hasta la fase 6. Convención: nombre de tabla en inglés, campos con
+prefijo de tabla.
 
 ### `items`
 
