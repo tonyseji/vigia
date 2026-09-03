@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Build output
+dist/
+
+# Variables de entorno (nunca commitear — este repo es PUBLICO)
+.env
+.env.*
+!.env.example
+
+# Supabase CLI temporales
+supabase/.temp/
+
+# Claude Code (configuracion local, no parte del proyecto)
+.claude/
+.mcp.json
+
+# Logs y temporales
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
