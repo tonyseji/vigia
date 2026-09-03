@@ -1,22 +1,61 @@
-# Dependencias
+# ── Este repositorio es PUBLICO ──────────────────────────────────────
+# Todo lo que no deba verse se ignora aqui. Ante la duda, ignorar.
+# El hook de .githooks/pre-commit bloquea patrones de credenciales;
+# activarlo una sola vez con:  git config core.hooksPath .githooks
+
+# Dependencias y build
 node_modules/
-
-# Build output
 dist/
+coverage/
+*.tsbuildinfo
 
-# Variables de entorno (nunca commitear — este repo es PUBLICO)
+# Variables de entorno
 .env
 .env.*
 !.env.example
+*.local
 
-# Supabase CLI temporales
+# Credenciales y certificados
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa*
+*.jks
+secrets.*
+credentials.*
+service-account*.json
+.netrc
+
+# Plataformas
+.vercel/
+.supabase/
 supabase/.temp/
+supabase/.branches/
 
-# Claude Code (configuracion local, no parte del proyecto)
+# Volcados y copias de la base de datos (contienen datos reales)
+*.dump
+*.sql.gz
+*.bak
+backup/
+backups/
+dumps/
+
+# Herramientas de IA y configuracion local del editor
 .claude/
 .mcp.json
+.cursor/
+.aider*
+.vscode/
+.idea/
 
-# Logs y temporales
+# Notas privadas: cualquier cosa que se escriba aqui no se publica
+privado/
+docs/privado/
+*.private.md
+
+# Logs y basura del sistema
 *.log
 npm-debug.log*
 .DS_Store

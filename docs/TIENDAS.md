@@ -45,7 +45,8 @@ una carrera que no interesa: son dos tiendas y el precio se teclea a mano en
 diez segundos.
 
 **Consecuencia de producto:** el precio manual no es un apaño temporal, es parte
-del diseño. Un artículo con `itm_is_manual = true` no se toca en el refresco
+del diseño, y se avisa **antes** de guardar el artículo (flujo completo en
+`docs/ARQUITECTURA.md`). Un artículo con `itm_is_manual = true` no se toca en el refresco
 automático, y su histórico se marca con `ph_source = 'manual'` para no mezclar
 lo leído con lo tecleado.
 
@@ -53,8 +54,10 @@ lo leído con lo tecleado.
 
 ## Riesgo conocido
 
-Cuantos más artículos se vigilen de la misma tienda, más probable es que empiece
-a bloquear. Kave Home ya bloqueaba con diez artículos. Es un límite del enfoque,
+Cuantos más artículos se vigilen de la misma tienda, y más a menudo se consulte,
+más probable es que empiece a bloquear. Kave Home ya bloqueaba con diez
+artículos. Es la razón de fondo por la que el refresco automático es un pase al
+día y no cada quince minutos. Es un límite del enfoque,
 no un fallo a corregir: para una lista personal de decenas de artículos no
 molesta, y es una de las razones por las que el descubrimiento de productos está
 fuera de alcance.

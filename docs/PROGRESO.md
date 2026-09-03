@@ -62,9 +62,36 @@ partida. Encima, el esqueleto: `package.json`, `vite.config.js`, `index.html`,
 (test + build en cada push y PR), `.gitignore` endurecido por ser repositorio
 público, `.env.example`, y los cinco documentos de `docs/` más `CLAUDE.md`.
 
+### Ajustes tras revisar el resultado (misma sesión)
+
+Cuatro correcciones pedidas por Tony al leer lo montado:
+
+1. **`.gitignore` para un repositorio público.** Se amplió a credenciales y
+   certificados, volcados de base de datos, carpetas de plataforma (`.vercel/`,
+   `.supabase/`), configuración de editores y herramientas de IA, y dos sitios
+   explícitos para lo que no debe publicarse: `privado/` y cualquier
+   `*.private.md`. Además se añadió `.githooks/pre-commit`, que corta el commit
+   si detecta un JWT, una clave privada, un token de GitHub o un `.env` forzado
+   con `-f`. Probado con los tres casos: los bloquea y deja pasar el resto.
+2. **El cron cada 15 minutos se retira.** El botón «Actualizar precios» pasa a
+   ser el camino principal y el automático baja a un pase al día, con la
+   frecuencia como preferencia del usuario (`off`/`daily`/`12h`/`6h`) para poder
+   subirla en la semana del Black Friday y bajarla después. Nueva tabla
+   `user_settings`. Razonado en `DECISIONES.md`.
+3. **Las tiendas bloqueadas dejan de fallar en silencio.** Al pegar la URL se
+   mira el dominio contra `store_rules` antes de intentar nada; si bloquea, se
+   avisa con palabras llanas y se ofrece guardar el artículo en modo manual,
+   conservando lista e histórico. Flujo completo en `ARQUITECTURA.md`.
+4. **El reparto de trabajo queda escrito** en `docs/WORKFLOW.md`: Cowork
+   planifica, decide y documenta; Claude Code implementa. Copiado del
+   `workflow.md` de Bilans, que es el documento suyo que mejor ha aguantado.
+
+El diseño aprobado se mantiene como base; los retoques llegarán al usarlo.
+
 ### Estado final
 
-Esqueleto verificado: `npm install`, `npm test` y `npm run build` en verde.
-Sin funcionalidad todavía — la app vieja sigue siendo la que se usa y no se toca
+Esqueleto verificado: `npm install`, `npm test` (8 tests) y `npm run build` en
+verde. Seis documentos en `docs/`, guardia anti-secretos activa. Sin
+funcionalidad todavía — la app vieja sigue siendo la que se usa y no se toca
 hasta la fase 6. Pendiente de que el repositorio se suba a GitHub
-(`tonyseji/vigia`, público).
+(`tonyseji/vigia`, público) para arrancar la fase 2.

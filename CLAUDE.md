@@ -9,6 +9,7 @@
 > - Decisiones con razonamiento: `docs/DECISIONES.md`
 > - Cómo encaja todo y esquema de BD: `docs/ARQUITECTURA.md`
 > - Qué tiendas dejan leer el precio: `docs/TIENDAS.md`
+> - Quién hace qué (Cowork / Claude Code): `docs/WORKFLOW.md`
 
 ---
 
@@ -33,7 +34,8 @@ pero nada del diseño actual debe darlo por supuesto.
 
 ## Estado actual
 
-**Fase 1 de 6 — esqueleto del repositorio.** Sin funcionalidad todavía.
+**Fase 1 de 6 cerrada — esqueleto del repositorio.** Sin funcionalidad todavía.
+Siguiente: fase 2 (base de datos y acceso).
 
 La app antigua (Edge Function `muebles` en el mismo proyecto Supabase) **sigue
 viva y en uso**, y no se toca hasta la fase 6. Su código está en el primer
@@ -49,7 +51,7 @@ commit de este repo.
 | Base de datos | Supabase (PostgreSQL) — proyecto `muebles` (`ovmnzlbcmuppqctkyngi`) |
 | Auth | Supabase Auth — enlace mágico por email |
 | Lectura de precios | Edge Function `scrape` (Deno/TypeScript) |
-| Refresco automático | `pg_cron` dentro de Supabase |
+| Refresco | Botón manual + un pase diario configurable (`pg_cron`) |
 | Deploy | Vercel (plan Hobby) |
 
 Coste objetivo: 0 €. No se añade nada que obligue a salir del plan gratuito.
@@ -67,6 +69,7 @@ vigia/
 │   ├── ARQUITECTURA.md      ← cómo encaja todo + esquema de BD
 │   ├── DECISIONES.md        ← decisiones con razonamiento
 │   ├── PROGRESO.md          ← log de sesiones
+│   ├── WORKFLOW.md          ← Cowork planifica, Claude Code implementa
 │   ├── ROADMAP.md           ← fases y pendientes
 │   └── TIENDAS.md           ← qué tiendas funcionan y cuáles bloquean
 ├── src/
@@ -96,6 +99,7 @@ prefijo de tabla. Hace legible cualquier consulta con JOINs.
 | `price_history` | `ph` |
 | `folders` | `fld` |
 | `store_rules` | `sr` |
+| `user_settings` | `us` |
 
 Las etiquetas en la interfaz van siempre en español (`itm_price` → «Precio»).
 
@@ -105,8 +109,10 @@ Las etiquetas en la interfaz van siempre en español (`itm_price` → «Precio»
 
 Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
 
-- **El repositorio es público.** Nada de claves, ni de ejemplo. `.env` está en
-  `.gitignore`; antes de commitear, comprobarlo.
+- **El repositorio es público.** Nada de claves, ni de ejemplo. El `.gitignore`
+  cubre credenciales, volcados de BD, `privado/` y `*.private.md`; el hook de
+  `.githooks/pre-commit` bloquea el commit si detecta un secreto. Activarlo una
+  vez por máquina: `git config core.hooksPath .githooks`.
 - **Nada se aplica en Supabase que no exista antes como archivo** en
   `supabase/migrations/`. En Bilans hay tablas en producción que no están en
   ninguna migración y ya nadie sabe cómo se crearon.
@@ -139,8 +145,9 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
 1. Leer este `CLAUDE.md`.
 2. Leer las 2 últimas entradas de `docs/PROGRESO.md`.
 3. Si toca BD, leer `docs/ARQUITECTURA.md`.
-4. Si hay una decisión de diseño no obvia, registrarla en `docs/DECISIONES.md`
-   **antes** de implementar.
+4. Si hay una decisión de diseño no obvia, **no decidirla aquí**: pararla y
+   llevarla a Cowork, que la registra en `docs/DECISIONES.md` antes de
+   implementar. Ver `docs/WORKFLOW.md`.
 
 ## Regla anti-deriva (OBLIGATORIA al cerrar sesión)
 

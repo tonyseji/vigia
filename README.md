@@ -27,7 +27,8 @@ y Vercel. Todo dentro de los planes gratuitos.
 
 ```bash
 npm install
-cp .env.example .env    # y rellenar VITE_SUPABASE_ANON_KEY
+cp .env.example .env                    # y rellenar VITE_SUPABASE_ANON_KEY
+git config core.hooksPath .githooks     # guardia anti-secretos, una sola vez
 npm run dev
 ```
 
@@ -48,6 +49,7 @@ npm run preview   # servir el build
 | [`docs/DECISIONES.md`](docs/DECISIONES.md) | Qué se decidió, por qué, y qué se descartó |
 | [`docs/PROGRESO.md`](docs/PROGRESO.md) | Log de sesiones de trabajo |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Fases y pendientes |
+| [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | Cómo se trabaja: quién decide y quién escribe código |
 | [`docs/TIENDAS.md`](docs/TIENDAS.md) | Qué tiendas dejan leer el precio |
 
 ## Licencia

@@ -43,6 +43,49 @@ día el proyecto deja de apetecer.
 
 ## Arquitectura
 
+### 2026-09-03 — Refresco: el botón es el camino principal; el automático, un pase al día configurable
+**Decisión:** El botón «Actualizar precios» está siempre disponible y no
+depende de ningún cron. El pase automático es **uno al día** por defecto, y el
+usuario puede apagarlo o subirlo a cada 12 h o cada 6 h desde ajustes
+(`user_settings.us_refresh_mode`). Se implementa con un único job de `pg_cron`
+horario que decide por usuario, no con un job por frecuencia.
+**Por qué:** La app vieja refresca cada 15 minutos, y es desproporcionado: el
+precio de un sofá no cambia cada cuarto de hora, así que casi ninguna de esas
+peticiones aporta un dato nuevo. Lo que sí hacen es gastar invocaciones del
+plan gratuito y, sobre todo, **entrenar a las tiendas para bloquear** — cuanto
+más se las consulta, antes aparece el checkpoint anti-bot, que es justo el
+problema que ya tenemos con Kave Home. Un pase diario da el mismo histórico
+útil con dos órdenes de magnitud menos de ruido.
+**Descartado:** (a) Mantener los 15 minutos «porque ya funciona». (b) Quitar el
+cron del todo y dejar solo el botón — se descartó porque el valor del proyecto
+es el histórico, y un histórico con huecos de semanas (los días que no te
+acuerdas de pulsar) vale bastante menos; el pase diario lo rellena sin
+molestar. (c) Dejar la frecuencia como constante en el código: la semana del
+Black Friday va a querer subirla y bajarla después, y eso no puede ser un
+despliegue.
+**Revisitar:** Si el pase diario se queda corto en un pico concreto, el ajuste
+ya está; si hiciera falta algo más fino (por artículo, no por usuario), eso sí
+sería una decisión nueva.
+
+### 2026-09-03 — Una tienda bloqueada avisa antes de guardar, y el artículo se guarda igual en modo manual
+**Decisión:** Al pegar una URL se comprueba el dominio contra `store_rules`
+antes de intentar la extracción. Si está bloqueado, la app lo dice con palabras
+llanas y ofrece guardar el artículo con precio manual. El artículo queda
+marcado, el refresco automático lo salta, y cada edición del precio escribe una
+fila en `price_history` con `ph_source = 'manual'`.
+**Por qué:** Hoy el fallo es mudo: se intenta, no sale el precio, y el artículo
+queda a medias sin que nadie explique por qué. El usuario acaba pensando que la
+app está rota cuando lo que pasa es que la tienda no deja. Avisar por adelantado
+convierte un fallo en una elección informada, y el modo manual conserva lo que
+de verdad importa —que el artículo esté en la lista y tenga histórico— aunque
+se pierda la comodidad.
+**Descartado:** (a) Rechazar la URL directamente: perdería el artículo de la
+lista por un problema que no es del usuario. (b) Guardarlo en silencio sin
+precio: es el comportamiento actual y es el que confunde. (c) Intentar esquivar
+el anti-bot: es empezar una carrera que no interesa por dos tiendas.
+**Revisitar:** Si alguna de las dos dejara de bloquear, es un `update` en
+`store_rules` y los artículos existentes se pueden pasar a automático.
+
 ### 2026-09-03 — Vite + React 18 + Tailwind v4, en la raíz del repositorio
 **Decisión:** Mismo stack que Bilans, pero con la app en la raíz (`src/`), no en
 una subcarpeta `app/`.
@@ -182,3 +225,39 @@ actualización pendiente cada pocos meses.
 cualquier pack de iconos.
 **Revisitar:** Si aparece un gráfico con ejes, tooltips y zoom. Un histórico de
 precio con rango de fechas seleccionable ya estaría en ese terreno.
+
+---
+
+## Proceso
+
+### 2026-09-03 — Cowork planifica y documenta; Claude Code escribe el código
+**Decisión:** El reparto de Bilans se adopta tal cual y queda escrito en
+`docs/WORKFLOW.md`: Cowork decide, diseña y mantiene los `.md`, y prepara el
+prompt; Claude Code implementa dentro de lo especificado y para si aparece un
+dilema de arquitectura.
+**Por qué:** Es donde cada herramienta rinde. Escribir código desde una sesión
+de planificación sale caro y disperso; decidir arquitectura a mitad de un
+archivo hace que la decisión no quede en ningún sitio. Además obliga a que
+cada tarea pase por un prompt escrito, que es una revisión en sí misma: si no
+se puede especificar, es que no está decidida.
+**Descartado:** Hacerlo todo en Cowork (lento y sin poder ejecutar nada) o todo
+en Claude Code (rápido, pero las decisiones no quedan documentadas y se
+redescubren cada sesión).
+**Revisitar:** No.
+
+### 2026-09-03 — Guardia anti-secretos en el repositorio, no solo confianza
+**Decisión:** `.gitignore` amplio (claves, certificados, volcados de base de
+datos, carpetas `privado/` y archivos `*.private.md`) más un hook de
+`pre-commit` en `.githooks/` que bloquea el commit si detecta un JWT, una clave
+privada, un token de GitHub o un `.env` forzado.
+**Por qué:** El repositorio es público y basta un despiste para publicar algo
+que luego queda en el historial para siempre — borrarlo del último commit no lo
+borra de los anteriores. Una lista de patrones y un hook cuestan diez minutos
+una sola vez. La carpeta `privado/` existe para que haya un sitio evidente
+donde dejar notas sin pensárselo.
+**Descartado:** Confiar en revisar antes de cada commit (falla justo el día que
+hay prisa) y montar un servicio externo de escaneo de secretos (desproporcionado
+para un proyecto personal).
+**Revisitar:** Si algún día el repo tiene más de una persona commiteando,
+añadir el escaneo también en el CI, porque un hook local cada uno se lo activa
+—o no— en su máquina.

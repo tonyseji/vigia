@@ -15,7 +15,8 @@
 | Base de datos | Supabase | `items`, `price_history`, `store_rules`. RLS por `user_id`. |
 | Auth | Supabase | Enlace mágico por email. Sin contraseñas. |
 | Función `scrape` | Supabase Edge Functions | Recibe una URL, devuelve título, imagen y precio. |
-| Refresco automático | `pg_cron` (Supabase) | Cada 15 min revisa los artículos con más de 20 h sin mirar, de 6 en 6. |
+| Refresco automático | `pg_cron` (Supabase) | **Un solo pase al día.** Lo puede apagar o acelerar el usuario desde ajustes. |
+| Refresco manual | Botón en la app | Siempre disponible, no depende del cron. Es el camino principal. |
 | Reglas por tienda | Tabla `store_rules` | Cómo leer el precio en cada dominio, editable sin redesplegar. |
 
 ```
@@ -24,7 +25,7 @@ Navegador ──sesión──▶ Supabase (RLS filtra por user_id)
     │  "añade esta URL"   │ guarda item + primer precio
     └───────────▶ Edge Function scrape ──▶ tienda
                           ▲
-                   pg_cron cada 15 min
+                   pg_cron, un pase al día
 ```
 
 Todo dentro del plan gratuito: Vercel Hobby y Supabase Free. El proyecto de
@@ -45,6 +46,62 @@ de nada sin una sesión válida.
 La única pieza que sí necesita servidor es `scrape`, porque descarga páginas de
 terceros: eso el navegador no puede hacerlo (CORS) y además conviene que salga
 desde una IP que no sea la del usuario.
+
+---
+
+## El refresco de precios
+
+Dos caminos, y el principal es el manual:
+
+| Camino | Cuándo | Qué hace |
+|---|---|---|
+| **Botón «Actualizar precios»** | Cuando el usuario quiere | Refresca todo lo que no sea manual. Es el camino principal y no depende de ningún cron. |
+| **Pase automático diario** | Una vez al día, a la hora elegida | Recorre los artículos que lleven más de ~20 h sin mirar. Se puede apagar. |
+
+La frecuencia automática es una preferencia del usuario, no una constante del
+código: `apagado` · `diario` (por defecto) · `cada 12 h` · `cada 6 h`. Las dos
+últimas existen para momentos concretos —la semana del Black Friday, por
+ejemplo— y se vuelven a bajar después. Vive en `user_settings`, así que
+cambiarla es un `update`, no un despliegue.
+
+**Por qué no cada 15 minutos**, que es lo que hace la app vieja: el precio de un
+sofá no cambia cada cuarto de hora, así que el 99 % de esas peticiones no
+aportan un dato nuevo — solo gastan invocaciones del plan gratuito y, sobre
+todo, entrenan a las tiendas para bloquear. Cuantas más peticiones, más
+probable es acabar en la lista de Kave Home. Un pase al día da exactamente el
+mismo histórico útil con dos órdenes de magnitud menos de ruido.
+
+**Cómo se implementa sin multiplicar jobs:** un único job de `pg_cron` cada
+hora que, por cada usuario, mira su preferencia y su último pase, y decide si
+toca. Nada de un job por usuario ni por frecuencia. El pase respeta un tope de
+artículos por tanda para no dispararse si algún día la lista crece.
+
+---
+
+## Tiendas que bloquean: el flujo
+
+Kave Home y Maisons du Monde devuelven una página de verificación en vez de la
+del producto (ver `docs/TIENDAS.md`). Eso no puede convertirse en un error
+silencioso ni en un artículo a medias:
+
+1. **Al pegar la URL**, antes de intentar nada, se mira el dominio contra
+   `store_rules`. Si está marcado como bloqueado, el aviso es inmediato.
+2. **El aviso dice qué pasa y qué se puede hacer**, sin tecnicismos: esta
+   tienda no deja leer el precio automáticamente; puedes guardarlo igualmente e
+   ir metiendo el precio a mano.
+3. **Si el usuario acepta**, el artículo se guarda con `itm_is_manual = true` y
+   el precio que él teclee. Lo que sí se conserva de la extracción es lo que se
+   pueda sacar sin el precio (título e imagen, si la página los da en
+   Open Graph).
+4. **A partir de ahí** el artículo lleva una marca visible en la lista, el
+   refresco automático lo salta, y cada vez que el usuario edita el precio se
+   añade una fila a `price_history` con `ph_source = 'manual'`.
+5. **Si la extracción falla en una tienda que no estaba marcada**, el mismo
+   aviso aparece después del intento, y se ofrece marcarla como bloqueada para
+   que la próxima vez el aviso llegue antes.
+
+El resultado es que un artículo de una tienda bloqueada pierde la comodidad,
+pero no pierde el histórico ni desaparece de la lista.
 
 ---
 
@@ -97,6 +154,17 @@ app vieja.
 | `fld_usr_id` | uuid | FK a `auth.users`. |
 | `fld_name` | text | |
 | `fld_order` | int | Orden manual. |
+
+### `user_settings`
+
+Una fila por usuario. Preferencias, no datos.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `us_usr_id` | uuid PK | FK a `auth.users`. |
+| `us_refresh_mode` | text | `off` · `daily` · `12h` · `6h`. Default `daily`. |
+| `us_refresh_hour` | int | Hora local del pase diario. Default 4. |
+| `us_last_refresh_at` | timestamptz | Lo escribe el pase automático; es lo que le permite decidir si toca. |
 
 ### `store_rules`
 
