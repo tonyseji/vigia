@@ -15,6 +15,12 @@ La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendid
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
 (reglas y convenciones) y `docs/DECISIONES.md`.
 
+**Subida a GitHub:** pospuesta a propósito hasta tener la primera prueba de que
+la cosa funciona (final de la fase 4). Los commits se siguen haciendo en local,
+así que el historial no se pierde; lo único que se acepta mientras tanto es que
+no hay copia fuera de este ordenador. En cuanto haya algo que enseñar, se crea
+`tonyseji/vigia` y se sube todo el historial de golpe.
+
 ---
 
 ## Se decide ahora, aunque no se construya ahora

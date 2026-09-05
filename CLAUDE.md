@@ -10,6 +10,7 @@
 > - Cómo encaja todo y esquema de BD: `docs/ARQUITECTURA.md`
 > - Qué tiendas dejan leer el precio: `docs/TIENDAS.md`
 > - Quién hace qué (Cowork / Claude Code): `docs/WORKFLOW.md`
+> - Cómo tiene que verse: `docs/DISENO.md` + `docs/diseno-referencia.html`
 
 ---
 
@@ -70,6 +71,8 @@ vigia/
 │   ├── DECISIONES.md        ← decisiones con razonamiento
 │   ├── PROGRESO.md          ← log de sesiones
 │   ├── WORKFLOW.md          ← Cowork planifica, Claude Code implementa
+│   ├── DISENO.md            ← qué se copia de la referencia y qué cambia
+│   └── diseno-referencia.html ← prototipo aprobado, abrible en el navegador
 │   ├── ROADMAP.md           ← fases y pendientes
 │   └── TIENDAS.md           ← qué tiendas funcionan y cuáles bloquean
 ├── src/
