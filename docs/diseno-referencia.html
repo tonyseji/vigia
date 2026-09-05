@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigía · referencia de diseño</title>
+<!--
+  REFERENCIA DE DISEÑO — no es código de producción.
+  Prototipo estático aprobado el 2026-09-03, con datos inventados.
+  Ábrelo en el navegador para ver el objetivo visual antes de construir la fase 4.
+  Las reglas y lo que cambia al implementarlo, en docs/DISENO.md.
+-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#f2f3f6; --surface:#ffffff; --surface-2:#e9ebf0;
+  --ink:#14161d; --ink-mut:#5f6577; --line:#dcdfe7;
+  --accent:#33407a; --accent-soft:#e6e9f5;
+  --down:#0e6f45; --down-soft:#dff0e6;
+  --up:#a5301f; --up-soft:#f8e3df;
+  --warn:#8a5a12; --warn-soft:#f7ecd8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101219; --surface:#171a23; --surface-2:#1f2330;
+    --ink:#eceef4; --ink-mut:#969db3; --line:#272c39;
+    --accent:#8f9be0; --accent-soft:#1e2340;
+    --down:#4fc98a; --down-soft:#10301f;
+    --up:#ff8a7a; --up-soft:#3a1c17;
+    --warn:#e0ad55; --warn-soft:#3a2c12;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101219; --surface:#171a23; --surface-2:#1f2330;
+  --ink:#eceef4; --ink-mut:#969db3; --line:#272c39;
+  --accent:#8f9be0; --accent-soft:#1e2340;
+  --down:#4fc98a; --down-soft:#10301f;
+  --up:#ff8a7a; --up-soft:#3a1c17;
+  --warn:#e0ad55; --warn-soft:#3a2c12;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.note{background:var(--accent-soft);color:var(--accent);font-size:12.5px;padding:7px 16px;text-align:center;border-bottom:1px solid var(--line)}
+header{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--line)}
+.hin{max-width:940px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:12px}
+.mark{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:-.02em;flex:1;margin:0}
+.iconbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;padding:0}
+.iconbtn svg{width:17px;height:17px;display:block}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 12px;font:500 13.5px var(--sans);cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+:root[data-theme="dark"] .btn.primary,
+:root:not([data-theme="light"]) .btn.primary{color:#101219}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn.primary{color:#fff}}
+.btn:focus-visible,.iconbtn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:940px;margin:0 auto;padding:16px 16px 56px}
+.stats{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden;margin-bottom:14px}
+.stat{flex:1;padding:11px 13px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-mut)}
+.stat .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:19px;letter-spacing:-.02em;margin-top:2px}
+.stat .v small{font:500 12px var(--mono);color:var(--ink-mut);margin-left:4px}
+.stat.hi .v{color:var(--down)}
+.addbar{display:flex;gap:8px;margin-bottom:12px}
+.addbar input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 12px;font:400 14.5px var(--sans)}
+.addbar input::placeholder{color:var(--ink-mut)}
+.tools{display:flex;gap:7px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.tools input,.tools select{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 9px;font:400 13px var(--sans)}
+.tools .search{flex:1;min-width:110px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink-mut);border-radius:999px;padding:5px 11px;font:500 12.5px var(--sans);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--down-soft);border-color:var(--down);color:var(--down)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink-mut);padding:6px 10px;font:500 12.5px var(--sans);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+h2.cat{display:flex;align-items:baseline;gap:9px;font:600 12px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-mut);margin:22px 2px 9px}
+h2.cat::after{content:"";flex:1;height:1px;background:var(--line)}
+h2.cat b{font-family:var(--mono);font-weight:600;letter-spacing:0;color:var(--ink-mut);font-size:12px}
+.list{display:flex;flex-direction:column;gap:7px}
+.row{display:flex;gap:11px;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px 10px 10px;position:relative;overflow:hidden}
+.row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent}
+.row.d::before{background:var(--down)}
+.row.u::before{background:var(--up)}
+.row.n::before{background:var(--warn)}
+.thumb{width:54px;height:54px;flex:none;border-radius:7px;background:var(--surface-2);display:grid;place-items:center;align-self:center}
+.thumb svg{width:26px;height:26px;color:var(--ink-mut);opacity:.85}
+.mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;justify-content:center}
+.name{font-weight:500;font-size:14.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-decoration:none;color:inherit}
+.src{font-size:12px;color:var(--ink-mut);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.src .store{font-weight:500}
+.right{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;min-width:104px}
+.price{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
+.delta{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:11.5px;padding:2px 6px;border-radius:5px;white-space:nowrap}
+.delta.d{background:var(--down-soft);color:var(--down)}
+.delta.u{background:var(--up-soft);color:var(--up)}
+.nop{font-size:11.5px;background:var(--warn-soft);color:var(--warn);padding:3px 7px;border-radius:5px;white-space:nowrap}
+.spark{display:block}
+.was{font-family:var(--mono);font-size:11px;color:var(--ink-mut);text-decoration:line-through}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.tile .ph{aspect-ratio:4/3;background:var(--surface-2);display:grid;place-items:center}
+.tile .ph svg{width:38px;height:38px;color:var(--ink-mut);opacity:.8}
+.tile .tb{padding:9px 10px 10px;display:flex;flex-direction:column;gap:3px;flex:1}
+.tile .name{font-size:13.5px}
+.tile .prow{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:auto;padding-top:5px}
+@media (max-width:520px){
+  .right{min-width:0}
+  .price{font-size:16px}
+  .stat .v{font-size:17px}
+}
+</style>
+</head>
+<body>
+<div class="note">Referencia de diseño · datos inventados, no son artículos reales</div>
+<header>
+  <div class="hin">
+    <h1 class="mark">Vigía</h1>
+    <button class="iconbtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="btn primary" id="refresh">↻ Actualizar</button>
+  </div>
+</header>
+<main>
+  <div class="stats">
+    <div class="stat"><div class="k">Artículos</div><div class="v">10</div></div>
+    <div class="stat hi"><div class="k">Con bajada</div><div class="v">4</div></div>
+    <div class="stat"><div class="k">Total hoy</div><div class="v">2.264 €<small>−7,4 %</small></div></div>
+  </div>
+  <div class="addbar">
+    <input placeholder="Pega aquí la URL de un producto" inputmode="url">
+    <button class="btn primary">Añadir</button>
+  </div>
+  <div class="tools">
+    <input class="search" id="q" placeholder="Buscar…">
+    <select id="sort">
+      <option value="drop">Mayor bajada</option>
+      <option value="new">Más recientes</option>
+      <option value="cheap">Más baratos</option>
+      <option value="exp">Más caros</option>
+    </select>
+    <button class="chip" id="only" aria-pressed="false">Solo bajadas</button>
+    <div class="seg">
+      <button id="vList" aria-pressed="true">Lista</button>
+      <button id="vGrid" aria-pressed="false">Fotos</button>
+    </div>
+  </div>
+  <div id="out"></div>
+</main>
+<script>
+(function(){
+  var ICON={
+    sofa:'<path d="M3 12v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/><path d="M3 12a2 2 0 0 1 2 2v3h14v-3a2 2 0 0 1 2-2"/><path d="M6 17v2M18 17v2"/>',
+    cama:'<path d="M3 18V8M3 12h18v6"/><path d="M7 12V9h5v3"/><path d="M21 18v-4a2 2 0 0 0-2-2"/>',
+    mesa:'<path d="M2 9h20M5 9v10M19 9v10M9 9v4M15 9v4"/>',
+    lampara:'<path d="M8 10 12 3l4 7z"/><path d="M12 10v9M8 19h8"/>',
+    estante:'<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16"/>',
+    alfombra:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/>'
+  };
+  var D=[
+    {n:"Sofá KIVIK 3 plazas, funda Tibbleby beis",s:"ikea.es",c:"Salón",i:"sofa",p:649,p0:649,h:[649,649,649,649]},
+    {n:"Sofá NOA 3 plazas terciopelo verde",s:"sklum.com",c:"Salón",i:"sofa",p:379,p0:459,h:[459,459,439,399,379]},
+    {n:"Alfombra de yute trenzado 200×300",s:"leroymerlin.es",c:"Salón",i:"alfombra",p:95,p0:119,h:[119,119,110,99,95]},
+    {n:"Lámpara de pie trípode madera y lino",s:"maisonsdumonde.com",c:"Iluminación",i:"lampara",p:null,p0:null,h:[]},
+    {n:"Mesa de comedor extensible roble 140–180",s:"leroymerlin.es",c:"Comedor",i:"mesa",p:259,p0:299,h:[299,299,279,259]},
+    {n:"Mesita de noche HAKU 2 cajones",s:"amazon.es",c:"Dormitorio",i:"cama",p:75.58,p0:82.9,h:[82.9,80.4,78.2,75.58]},
+    {n:"Cabecero tapizado 160 cm lino gris",s:"sklum.com",c:"Dormitorio",i:"cama",p:199,p0:189,h:[189,189,195,199]},
+    {n:"Armario PAX 200 cm puertas correderas",s:"ikea.es",c:"Dormitorio",i:"estante",p:425,p0:425,h:[425,425,425]},
+    {n:"Sofá cama DIVA con arcón",s:"kavehome.com",c:"Salón",i:"sofa",p:null,p0:null,h:[]},
+    {n:"Estantería KALLAX 4×4 blanco",s:"ikea.es",c:"Almacenaje",i:"estante",p:89.99,p0:89.99,h:[89.99,89.99]}
+  ];
+  D.forEach(function(d,k){d.id=k;d.pct=(d.p==null||d.p0==null||!d.p0)?null:Math.round((d.p-d.p0)/d.p0*100);});
+  var eur=function(n){return n==null?"":n.toLocaleString("es-ES",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" €";};
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};
+  var icon=function(k,cls){return '<svg class="'+(cls||"")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ICON[k]+'</svg>';};
+  function spark(h,dir){
+    if(!h||h.length<2)return "";
+    var W=74,H=26,P=3,lo=Math.min.apply(null,h),hi=Math.max.apply(null,h),rg=(hi-lo)||1;
+    var pts=h.map(function(v,i){
+      var x=P+i*(W-2*P)/(h.length-1);
+      var y=H-P-((v-lo)/rg)*(H-2*P);
+      return [x,y];
+    });
+    var col=dir<0?"var(--down)":dir>0?"var(--up)":"var(--ink-mut)";
+    var d=pts.map(function(p,i){return (i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);}).join(" ");
+    var area=d+" L"+pts[pts.length-1][0].toFixed(1)+" "+(H-P)+" L"+pts[0][0].toFixed(1)+" "+(H-P)+" Z";
+    var e=pts[pts.length-1];
+    return '<svg class="spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+      '<path d="'+area+'" fill="'+col+'" opacity=".13" stroke="none"/>'+
+      '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+      '<circle cx="'+e[0].toFixed(1)+'" cy="'+e[1].toFixed(1)+'" r="2.4" fill="'+col+'"/></svg>';
+  }
+  function cls(d){return d.p==null?"n":d.pct<0?"d":d.pct>0?"u":"";}
+  function row(d){
+    var k=cls(d);
+    var right=d.p==null
+      ? '<span class="nop">Sin precio · edítalo</span>'
+      : '<span class="price">'+eur(d.p)+'</span>'+
+        (d.pct?'<span class="delta '+(d.pct<0?"d":"u")+'">'+(d.pct>0?"+":"")+d.pct+' %</span>':'')+
+        (d.pct&&d.pct<0?'<span class="was">'+eur(d.p0)+'</span>':'');
+    return '<article class="row '+k+'">'+
+      '<div class="thumb">'+icon(d.i)+'</div>'+
+      '<div class="mid">'+
+        '<a class="name" href="#">'+esc(d.n)+'</a>'+
+        '<div class="src"><span class="store">'+esc(d.s)+'</span>'+
+          (d.h.length>1?'<span>·</span><span>'+d.h.length+' registros</span>':'')+
+          (d.p==null?'<span>·</span><span style="color:var(--warn)">la tienda bloquea la lectura</span>':'')+
+        '</div>'+
+      '</div>'+
+      (d.h.length>1?'<div style="display:flex;align-items:center">'+spark(d.h,d.pct||0)+'</div>':'')+
+      '<div class="right">'+right+'</div>'+
+    '</article>';
+  }
+  function tile(d){
+    return '<article class="tile">'+
+      '<div class="ph">'+icon(d.i)+'</div>'+
+      '<div class="tb">'+
+        '<a class="name" href="#">'+esc(d.n)+'</a>'+
+        '<div class="src"><span class="store">'+esc(d.s)+'</span></div>'+
+        '<div class="prow">'+(d.p==null
+          ? '<span class="nop">Sin precio</span>'
+          : '<span class="price">'+eur(d.p)+'</span>'+(d.pct?'<span class="delta '+(d.pct<0?"d":"u")+'">'+(d.pct>0?"+":"")+d.pct+' %</span>':''))+
+        '</div>'+
+      '</div>'+
+    '</article>';
+  }
+  var st={q:"",sort:"drop",only:false,view:"list"};
+  var out=document.getElementById("out");
+  function render(){
+    var items=D.filter(function(d){
+      if(st.only&&!(d.pct!=null&&d.pct<0))return false;
+      if(!st.q)return true;
+      var q=st.q.toLowerCase();
+      return (d.n+" "+d.s+" "+d.c).toLowerCase().indexOf(q)>=0;
+    });
+    items.sort(function(a,b){
+      if(st.sort==="cheap")return (a.p==null?1e9:a.p)-(b.p==null?1e9:b.p);
+      if(st.sort==="exp")return (b.p==null?-1:b.p)-(a.p==null?-1:a.p);
+      if(st.sort==="new")return b.id-a.id;
+      return (a.pct==null?1:a.pct)-(b.pct==null?1:b.pct);
+    });
+    var g={};items.forEach(function(d){(g[d.c]=g[d.c]||[]).push(d);});
+    var keys=Object.keys(g).sort(function(a,b){return a.localeCompare(b,"es");});
+    if(!keys.length){out.innerHTML='<p style="text-align:center;color:var(--ink-mut);padding:40px 0">Nada que coincida.</p>';return;}
+    out.innerHTML=keys.map(function(c){
+      var arr=g[c],sum=arr.reduce(function(s,d){return s+(d.p||0);},0);
+      return '<h2 class="cat">'+esc(c)+' <b>'+arr.length+' · '+eur(sum)+'</b></h2>'+
+        (st.view==="list"
+          ? '<div class="list">'+arr.map(row).join("")+'</div>'
+          : '<div class="grid">'+arr.map(tile).join("")+'</div>');
+    }).join("");
+  }
+  document.getElementById("q").addEventListener("input",function(){st.q=this.value;render();});
+  document.getElementById("sort").addEventListener("change",function(){st.sort=this.value;render();});
+  document.getElementById("only").addEventListener("click",function(){
+    st.only=!st.only;this.setAttribute("aria-pressed",String(st.only));render();
+  });
+  document.getElementById("vList").addEventListener("click",function(){
+    st.view="list";this.setAttribute("aria-pressed","true");document.getElementById("vGrid").setAttribute("aria-pressed","false");render();
+  });
+  document.getElementById("vGrid").addEventListener("click",function(){
+    st.view="grid";this.setAttribute("aria-pressed","true");document.getElementById("vList").setAttribute("aria-pressed","false");render();
+  });
+  document.getElementById("theme").addEventListener("click",function(){
+    var r=document.documentElement;
+    var dark=r.getAttribute("data-theme")==="dark"||(!r.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme:dark)").matches);
+    r.setAttribute("data-theme",dark?"light":"dark");
+  });
+  document.getElementById("refresh").addEventListener("click",function(){
+    var b=this;b.disabled=true;b.textContent="Leyendo…";
+    setTimeout(function(){b.disabled=false;b.textContent="↻ Actualizar";},900);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
