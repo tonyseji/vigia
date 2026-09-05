@@ -26,7 +26,8 @@ y Vercel. Todo dentro de los planes gratuitos.
 ## Arrancar en local
 
 ```bash
-npm install
+npm install                             # imprescindible: esbuild y rollup traen
+                                        # binarios distintos por sistema operativo
 cp .env.example .env                    # y rellenar VITE_SUPABASE_ANON_KEY
 git config core.hooksPath .githooks     # guardia anti-secretos, una sola vez
 npm run dev
