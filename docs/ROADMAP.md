@@ -9,7 +9,7 @@
 | 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | ✅ 2026-09-05 |
 | 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | ✅ 2026-09-05 |
 | 5 | **Refresco** — botón manual, pase diario configurable y ajustes | ✅ 2026-09-06 (falta configurar Secrets en el Dashboard, ver abajo) |
-| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | Pendiente |
+| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub y Vercel listos, falta retirar la app vieja) |
 
 La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendido)
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
@@ -23,13 +23,15 @@ desplegado desde el 2026-09-06; sin esto configurado a mano en el Dashboard
 `run_scheduled_refresh()` pero la Edge Function fallará al autenticar o al
 firmar el push. Sin confirmar como hecho en ninguna sesión hasta ahora.
 
-**Subida a GitHub:** la condición original ("primera prueba de que la cosa
-funciona") ya se cumplió el 2026-09-05 — artículos reales guardados, editados
-y borrados de punta a punta. Sigue pospuesta porque Tony lo ha confirmado
-explícitamente en cada sesión, no porque falte algo técnico. Los commits se
-siguen haciendo en local, así que el historial no se pierde; lo único que se
-acepta mientras tanto es que no hay copia fuera de este ordenador. Se crea
-`tonyseji/vigia` y se sube todo el historial de golpe cuando Tony lo pida.
+**Subida a GitHub:** hecha el 2026-09-08. `tonyseji/vigia` (público), historial
+completo subido. Ver `docs/PROGRESO.md` (Sesión 8).
+
+**Vercel:** proyecto `vigia` conectado a `tonyseji/vigia`, deploy automático
+en cada push a `main`, producción en `https://vigia-lyart.vercel.app`.
+Variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. Pendiente:
+confirmar que las URLs de redirect de Supabase Auth incluyen este dominio, y
+decidir cuándo se retira la Edge Function `muebles` de la app vieja.
 
 ---
 

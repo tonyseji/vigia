@@ -669,3 +669,66 @@ casos donde se ve mal. Queda abierto como se documentó en `DECISIONES.md`
 ("Revisitar: si Tony sigue viendo miniaturas irreconocibles, considerar la
 vista 'Fotos' en rejilla"). No se ha decidido todavía si abordarlo ahora o
 seguir con la fase 6.
+
+---
+
+## 2026-09-08 (Sesión 8) — Fase 6: GitHub y Vercel
+
+### Contexto
+
+Tony eligió seguir con "el orden establecido" del `ROADMAP.md`: entre fase 6
+(Vercel + retirada de la app vieja) y B7 (SMTP propio), confirmó fase 6.
+Arrancarla exigía primero subir el repositorio a GitHub — pospuesto en cada
+sesión anterior a la espera de que Tony lo pidiera explícitamente (condición
+técnica ya cumplida desde el 2026-09-05) — porque Vercel despliega desde ahí.
+Se confirmó con Tony antes de tocar nada, al ser una acción visible en
+servicios externos.
+
+### Cambios
+
+**GitHub:** verificado el guardia anti-secretos (`.githooks/pre-commit`
+activo, `.gitignore` correcto, sin claves reales filtradas en el árbol) y
+`npm test` (24 tests) + `npm run build` en verde antes de commitear. Se
+consolidó en un commit todo el trabajo sin commitear de las sesiones 2 a 7
+(migraciones, Edge Functions, frontend completo, PWA). Se creó
+`tonyseji/vigia` (público) con `gh repo create --source=. --remote=origin` y
+se subió el historial completo con `git push -u origin main`.
+
+**Vercel:** CLI instalada y autenticada (login por device code, cuenta
+`tonyseji`, un solo equipo `tonysejis-projects`). `vercel link --repo`
+encontró un proyecto `vigia` ya existente vinculado a ese repo y lo enlazó
+(crea `.vercel/repo.json`, gitignorado). Encontrado y corregido un problema
+real: las tres variables de entorno (`VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`, `VITE_VAPID_PUBLIC_KEY`) ya estaban configuradas en
+el dashboard pero como tipo **Secret** (legado), que el build no puede leer
+— la app en producción cargaba en blanco con "Faltan VITE_SUPABASE_URL o
+VITE_SUPABASE_ANON_KEY" en consola pese a que las variables "existían". Se
+borraron y recrearon como tipo **Config** (el default moderno) para
+Production y Preview, con los mismos valores del `.env` local — las tres son
+públicas por diseño (documentado en `.env.example`: la publishable key solo
+sirve acompañada de sesión válida por RLS; la VAPID pública es pública por
+naturaleza del protocolo Web Push). Confirmado con Tony antes de leer el
+`.env` y antes de tocar las variables en el dashboard.
+
+### Verificación
+
+Deployment de producción verificado en el navegador contra el dominio
+estable `https://vigia-lyart.vercel.app`: la pantalla de login ("Vigía", campo
+de email, botón "Enviarme el enlace") renderiza correctamente y el bundle
+servido es el del build con las variables corregidas. `npm test` y
+`npm run build` en verde antes de cada commit.
+
+**Sin probar en esta sesión:** el flujo de login de verdad contra el dominio
+de Vercel (enlace mágico, `redirectTo` de Supabase Auth apuntando a este
+dominio nuevo) — solo se confirmó que la página carga y el cliente de
+Supabase se inicializa sin el error de variables ausentes.
+
+### Estado final
+
+Repositorio público en `https://github.com/tonyseji/vigia`, historial
+completo subido. Proyecto Vercel `vigia` conectado a esa rama `main` con
+deploy automático en cada push; producción sirviendo en
+`https://vigia-lyart.vercel.app`. Pendiente dentro de la fase 6: confirmar
+que Supabase Auth (URLs de redirect del enlace mágico) incluye el dominio de
+Vercel, y decidir cuándo se apaga la Edge Function `muebles` de la app
+vieja. `ROADMAP.md` y la línea de estado de `CLAUDE.md` actualizados.
