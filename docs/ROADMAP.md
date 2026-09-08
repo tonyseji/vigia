@@ -5,21 +5,31 @@
 | # | Fase | Estado |
 |---|---|---|
 | 1 | **Repositorio y esqueleto** — estructura, docs, configuración, CI | ✅ 2026-09-03 |
-| 2 | **Base de datos y acceso** — migraciones versionadas, enlace mágico, RLS | Pendiente |
-| 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | Pendiente |
-| 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | Pendiente |
-| 5 | **Refresco** — botón manual, pase diario configurable y ajustes | Pendiente |
+| 2 | **Base de datos y acceso** — migraciones versionadas, enlace mágico, RLS | ✅ 2026-09-05 |
+| 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | ✅ 2026-09-05 |
+| 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | ✅ 2026-09-05 |
+| 5 | **Refresco** — botón manual, pase diario configurable y ajustes | ✅ 2026-09-06 (falta configurar Secrets en el Dashboard, ver abajo) |
 | 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | Pendiente |
 
 La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendido)
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
 (reglas y convenciones) y `docs/DECISIONES.md`.
 
-**Subida a GitHub:** pospuesta a propósito hasta tener la primera prueba de que
-la cosa funciona (final de la fase 4). Los commits se siguen haciendo en local,
-así que el historial no se pierde; lo único que se acepta mientras tanto es que
-no hay copia fuera de este ordenador. En cuanto haya algo que enseñar, se crea
-`tonyseji/vigia` y se sube todo el historial de golpe.
+**Bloqueante para que el refresco automático y el push funcionen de verdad:**
+faltan los Secrets en el Dashboard de Supabase (`VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`). El código ya está
+desplegado desde el 2026-09-06; sin esto configurado a mano en el Dashboard
+(Claude Code no tiene acceso a esa pantalla), `pg_cron` sigue disparando
+`run_scheduled_refresh()` pero la Edge Function fallará al autenticar o al
+firmar el push. Sin confirmar como hecho en ninguna sesión hasta ahora.
+
+**Subida a GitHub:** la condición original ("primera prueba de que la cosa
+funciona") ya se cumplió el 2026-09-05 — artículos reales guardados, editados
+y borrados de punta a punta. Sigue pospuesta porque Tony lo ha confirmado
+explícitamente en cada sesión, no porque falte algo técnico. Los commits se
+siguen haciendo en local, así que el historial no se pierde; lo único que se
+acepta mientras tanto es que no hay copia fuera de este ordenador. Se crea
+`tonyseji/vigia` y se sube todo el historial de golpe cuando Tony lo pida.
 
 ---
 
@@ -39,9 +49,13 @@ Ordenado por lo que cuesta deshacerlo, no por lo que aporta hoy:
 
 | Qué | Por qué puede esperar |
 |---|---|
-| Notificaciones, panel de administración, app móvil | Se añaden encima sin tocar nada de lo anterior |
-| Listas compartidas, permisos, equipos | Con `user_id` ya puesto, es aditivo |
+| Panel de administración, app móvil nativa | Se añaden encima sin tocar nada de lo anterior |
 | Descubrimiento, landing, pagos, multi-idioma | Requieren saber quién es el usuario, y hoy no lo sabes |
+
+**Notificaciones** (push nativo VAPID) y **listas/carpetas compartidas**
+(jerarquía de dos niveles + invitación con aceptación) se construyeron el
+2026-09-06 — ver `docs/DECISIONES.md` y
+`docs/superpowers/specs/2026-09-06-carpetas-compartidas-design.md`.
 
 ---
 
@@ -49,9 +63,13 @@ Ordenado por lo que cuesta deshacerlo, no por lo que aporta hoy:
 
 | ID | Qué | Notas |
 |---|---|---|
-| B1 | Carpetas de organización (`folders`) | El agrupado por categoría de la app vieja pasa a ser carpetas propias del usuario. Decidir en la fase 2 si va en la primera migración o después. |
-| B2 | Precio manual para tiendas bloqueadas | Sube a la fase 4: no es backlog, es parte de añadir un artículo. Flujo en `docs/ARQUITECTURA.md`. |
-| B3 | Min/max histórico como referencia | La app vieja lo muestra. Decidir si se calcula en la consulta o se materializa en `items`. |
-| B4 | Aviso cuando un artículo baja de su mínimo histórico | Depende de B3. Sin notificaciones todavía: bastaría con destacarlo en la lista. |
-| B5 | Exportar la lista | Aún sin demanda real. Anotado para no olvidarlo. |
+| B1 | ~~Carpetas de organización (`folders`)~~ | **Cerrado 2026-09-05.** Entró en `001_schema_inicial.sql` de la fase 2: la tabla es pequeña y `items.itm_fld_id` ya la referenciaba en el esquema propuesto. |
+| B2 | ~~Precio manual para tiendas bloqueadas~~ | **Cerrado 2026-09-05.** Implementado en `useItems.js`/`AddItemForm.jsx`; probado con Kave Home real. |
+| B3 | ~~Min/max histórico como referencia~~ | **Cerrado 2026-09-06.** Materializado en `items` con trigger, migración `004_min_max_materializado.sql`. |
+| B4 | ~~Aviso cuando un artículo baja de su mínimo histórico~~ | **Cerrado 2026-09-06.** Push nativo (VAPID) con umbral configurable en ajustes; ver `docs/DECISIONES.md`. |
+| B5 | Exportar la lista | Aún sin demanda real. Anotado para no olvidarlo. El botón «Copiar para Claude» (2026-09-06) cubre el caso de uso de sacar los datos para trabajar fuera de la app. |
 | B6 | Refresco por artículo | Hoy la frecuencia es por usuario. Si aparece un artículo que sí merece más vigilancia que el resto, sería una decisión nueva. |
+| B7 | SMTP propio para Auth | El SMTP de pruebas de Supabase (límite bajo, sin garantía de entrega) no aguanta un ciclo de desarrollo con varios logins seguidos — bloqueó la sesión del 2026-09-05 con `429 over_email_send_rate_limit`. Configurar un proveedor (Resend u otro con plan gratuito) antes de la próxima sesión de pruebas intensivas. Independiente del push (que no usa SMTP). |
+| B8 | ~~Job `pg_cron` de refresco diario~~ | **Cerrado 2026-09-06.** `vigia.run_scheduled_refresh()` + `pg_cron` horario + `pg_net`, secreto en Vault. Migración `007_cron_refresco.sql`. |
+| B9 | ~~Camino `pg_net` para Amazon~~ | **Cerrado 2026-09-06.** RPCs `fetch_enqueue`/`fetch_result` recreadas en `vigia` (migración `008_fetch_via_pg_net.sql`), conectadas a `extract.ts` vía `setAltFetcher`. |
+| B10 | Miniaturas de artículo siguen mal en algunos casos | Ajuste del 2026-09-07 (68×68 px, recorte sesgado 50%/35%) mejora pero no resuelve del todo — Tony lo confirmó el 2026-09-08. Revisitar con la vista "Fotos" en rejilla (`docs/DISENO.md`) si sigue molestando. |

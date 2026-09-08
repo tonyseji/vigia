@@ -11,4 +11,8 @@ if (!url || !anonKey) {
 
 // Cliente unico para toda la app. Nunca instanciar createClient en otro sitio:
 // varias instancias se pisan la sesion en localStorage.
-export const supabase = createClient(url, anonKey)
+// schema: 'vigia' porque las tablas nuevas viven en su propio schema, no en
+// public (docs/DECISIONES.md, 2026-09-03) — public sigue siendo de la app vieja.
+export const supabase = createClient(url, anonKey, {
+  db: { schema: 'vigia' },
+})

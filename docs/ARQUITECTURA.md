@@ -148,14 +148,43 @@ Una fila por lectura. Es el corazón del proyecto: no se borra ni se compacta.
 ### `folders`
 
 Las carpetas del usuario. Sustituyen al campo `category` de texto libre de la
-app vieja.
+app vieja. Jerarquía de dos niveles desde 2026-09-06 (migración 009): una
+carpeta con `fld_parent_id = null` es de primer nivel, una subcarpeta cuelga
+de otra. Un trigger impide un tercer nivel.
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `fld_id` | uuid PK | |
-| `fld_usr_id` | uuid | FK a `auth.users`. |
+| `fld_usr_id` | uuid | FK a `auth.users`. Quien creó la carpeta, no necesariamente único visor si está compartida. |
 | `fld_name` | text | |
 | `fld_order` | int | Orden manual. |
+| `fld_parent_id` | uuid | FK a `folders`. Null = primer nivel. Máximo dos niveles. |
+
+### `folder_shares`
+
+Invitaciones a compartir una carpeta de **primer nivel** completa (con sus
+subcarpetas e items) con otra cuenta de Vigía. Ver
+`docs/superpowers/specs/2026-09-06-carpetas-compartidas-design.md` para el
+diseño completo y el razonamiento de seguridad.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `shr_id` | uuid PK | |
+| `shr_fld_id` | uuid | FK a `folders`. Debe ser de primer nivel (trigger). |
+| `shr_owner_usr_id` | uuid | Quien invita. |
+| `shr_invited_email` | text | Email invitado, normalizado. Clave hasta resolver `shr_invited_usr_id`. |
+| `shr_invited_usr_id` | uuid | FK a `auth.users`. Null si el email invitado no tiene cuenta todavía. |
+| `shr_fld_name` | text | Nombre de la carpeta en el momento de invitar, denormalizado: el invitado no puede leer `folders` de una invitación pendiente. |
+| `shr_status` | text | `pending` · `accepted` · `revoked`. |
+| `shr_created_at` / `shr_responded_at` | timestamptz | |
+
+Quien acepta una invitación ve y edita la carpeta, sus subcarpetas y los
+items dentro **igual que el dueño** (no hay rol de solo lectura en esta
+versión). La visibilidad se resuelve con la función `vigia.visible_folder_ids()`,
+usada en las políticas RLS de `folders`, `items` y `price_history`. Invitar
+pasa por la Edge Function `invite-to-folder`, que resuelve el email a
+`user_id` con `service_role` sin exponer al cliente si la cuenta existe o no
+(evita enumeración de cuentas por fuerza bruta).
 
 ### `user_settings`
 

@@ -35,8 +35,17 @@ pero nada del diseño actual debe darlo por supuesto.
 
 ## Estado actual
 
-**Fase 1 de 6 cerrada — esqueleto del repositorio.** Sin funcionalidad todavía.
-Siguiente: fase 2 (base de datos y acceso).
+**Fases 3, 4 y 5 cerradas.** Refresco automático (`pg_cron`+`pg_net`+Vault),
+push nativo VAPID con umbral configurable, carpetas con jerarquía de dos
+niveles y compartidas entre cuentas (invitación con aceptación), botón
+«Copiar para Claude», sidebar de navegación de carpetas y comparador de
+conjuntos (en memoria, sin persistir) implementados. Falta configurar los
+Secrets de Supabase (`VAPID_*`, `CRON_SECRET`) desde el Dashboard antes de
+que el pase automático funcione de verdad — sigue sin confirmarse hecho.
+Miniaturas de artículo (68×68, recorte sesgado) mejoradas el 2026-09-07 pero
+no resueltas del todo (backlog B10). Nada de esto está commiteado ni subido
+a GitHub. Siguiente: fase 6 (Vercel + retirada de la app vieja), o SMTP
+propio si toca seguir probando antes (backlog B7 en `ROADMAP.md`).
 
 La app antigua (Edge Function `muebles` en el mismo proyecto Supabase) **sigue
 viva y en uso**, y no se toca hasta la fase 6. Su código está en el primer
