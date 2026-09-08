@@ -9,19 +9,20 @@
 | 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | ✅ 2026-09-05 |
 | 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | ✅ 2026-09-05 |
 | 5 | **Refresco** — botón manual, pase diario configurable y ajustes | ✅ 2026-09-06 (falta configurar Secrets en el Dashboard, ver abajo) |
-| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub y Vercel listos, falta retirar la app vieja) |
+| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub, Vercel, Secrets, login y refresco verificados en producción 2026-09-09; falta solo retirar la app vieja) |
 
 La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendido)
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
 (reglas y convenciones) y `docs/DECISIONES.md`.
 
-**Bloqueante para que el refresco automático y el push funcionen de verdad:**
-faltan los Secrets en el Dashboard de Supabase (`VAPID_PUBLIC_KEY`,
-`VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`). El código ya está
-desplegado desde el 2026-09-06; sin esto configurado a mano en el Dashboard
-(Claude Code no tiene acceso a esa pantalla), `pg_cron` sigue disparando
-`run_scheduled_refresh()` pero la Edge Function fallará al autenticar o al
-firmar el push. Sin confirmar como hecho en ninguna sesión hasta ahora.
+**Login y refresco automático verificados en producción el 2026-09-09**
+(sesión 9, `docs/PROGRESO.md`): Secrets puestos en Supabase Dashboard →
+Edge Functions (par VAPID nuevo, no el original de la sesión 4, que se
+perdió; `CRON_SECRET` nuevo generado y sincronizado con Vault), y Redirect
+URL de `https://vigia-list.vercel.app` añadida en Authentication → URL
+Configuration. `run_scheduled_refresh()` responde `200` (antes `401`), y un
+login real por enlace mágico completa sesión contra el dominio de
+producción.
 
 **Subida a GitHub:** hecha el 2026-09-08. `tonyseji/vigia` (público), historial
 completo subido. Ver `docs/PROGRESO.md` (Sesión 8).
@@ -32,12 +33,8 @@ eligió este dominio corto tras comprobar que `vigia.vercel.app` y varias
 variantes ya pertenecían a otros usuarios del namespace global
 `*.vercel.app`; el alias autogenerado `vigia-lyart.vercel.app` se retiró).
 Variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. **Pendiente,
-solo hacible por Tony desde el Dashboard (el MCP de Supabase no expone esta
-pantalla, igual que los Secrets):** añadir `https://vigia-list.vercel.app` a
-Authentication → URL Configuration → Redirect URLs, si no el enlace mágico
-fallará al volver a este dominio. También queda decidir cuándo se retira la
-Edge Function `muebles` de la app vieja.
+`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. Queda decidir
+cuándo se retira la Edge Function `muebles` de la app vieja.
 
 ---
 
@@ -81,3 +78,4 @@ Ordenado por lo que cuesta deshacerlo, no por lo que aporta hoy:
 | B8 | ~~Job `pg_cron` de refresco diario~~ | **Cerrado 2026-09-06.** `vigia.run_scheduled_refresh()` + `pg_cron` horario + `pg_net`, secreto en Vault. Migración `007_cron_refresco.sql`. |
 | B9 | ~~Camino `pg_net` para Amazon~~ | **Cerrado 2026-09-06.** RPCs `fetch_enqueue`/`fetch_result` recreadas en `vigia` (migración `008_fetch_via_pg_net.sql`), conectadas a `extract.ts` vía `setAltFetcher`. |
 | B10 | Miniaturas de artículo siguen mal en algunos casos | Ajuste del 2026-09-07 (68×68 px, recorte sesgado 50%/35%) mejora pero no resuelve del todo — Tony lo confirmó el 2026-09-08. Revisitar con la vista "Fotos" en rejilla (`docs/DISENO.md`) si sigue molestando. |
+| B11 | Títulos de artículo mal extraídos en algunos casos | Visto el 2026-09-09 en producción con datos reales: un artículo de pccomponentes.com con título truncado/raro ("S₃ Q."). Sin investigar todavía si es un fallo puntual de ese producto o algo sistemático de `extract.ts`. |

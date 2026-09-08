@@ -35,16 +35,17 @@ pero nada del diseño actual debe darlo por supuesto.
 
 ## Estado actual
 
-**Fases 3, 4 y 5 cerradas. Fase 6 en curso.** Repositorio subido a GitHub
-(`tonyseji/vigia`, público) y proyecto Vercel conectado con deploy automático
-en cada push a `main` — producción en `https://vigia-list.vercel.app`
-(2026-09-08). Falta configurar los Secrets de Supabase (`VAPID_*`,
-`CRON_SECRET`) y añadir el dominio de Vercel a las Redirect URLs de
-Supabase Auth, ambos desde el Dashboard (Claude Code no tiene acceso a esas
-pantallas) — sigue sin confirmarse hecho ninguno de los dos. Miniaturas de
-artículo (68×68, recorte sesgado) mejoradas el 2026-09-07 pero no resueltas
-del todo (backlog B10). Siguiente dentro de la fase 6: decidir cuándo se
-retira la Edge Function `muebles` de la app vieja.
+**Fases 3, 4 y 5 cerradas. Fase 6 en curso, prácticamente cerrada.**
+Repositorio en GitHub (`tonyseji/vigia`, público), Vercel con deploy
+automático en cada push a `main` — producción en
+`https://vigia-list.vercel.app`. Secrets de Supabase (`VAPID_*`,
+`CRON_SECRET`) y Redirect URL de Auth configurados y verificados en
+producción el 2026-09-09: login por enlace mágico y refresco automático
+funcionan de extremo a extremo con datos reales. Miniaturas de artículo
+(68×68, recorte sesgado) mejoradas el 2026-09-07 pero no resueltas del todo
+(backlog B10); títulos de artículo mal extraídos vistos en algún caso
+(backlog B11). Siguiente dentro de la fase 6: decidir cuándo se retira la
+Edge Function `muebles` de la app vieja.
 
 La app antigua (Edge Function `muebles` en el mismo proyecto Supabase) **sigue
 viva y en uso**, y no se toca hasta la fase 6. Su código está en el primer

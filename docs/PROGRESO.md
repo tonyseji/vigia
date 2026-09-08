@@ -755,3 +755,85 @@ fallará al volver desde ahí) y confirmar los Secrets (`VAPID_*`,
 `CRON_SECRET`) arrastrados de la fase 5. También queda decidir cuándo se
 apaga la Edge Function `muebles` de la app vieja. `ROADMAP.md` y la línea de
 estado de `CLAUDE.md` actualizados.
+
+---
+
+## 2026-09-09 (Sesión 9) — Fase 6 cerrada: Secrets, Redirect URL y login/refresco verificados en producción
+
+### Contexto
+
+Sesión de continuación para probar lo construido hasta ahora y cerrar los
+dos pendientes manuales que bloqueaban la fase 6 desde la sesión 8: los
+Secrets de Supabase (`VAPID_*`, `CRON_SECRET`) y la Redirect URL de Auth.
+
+### Verificación inicial
+
+`npm run build` y `npm test` (24 tests) en verde. Producción
+(`https://vigia-list.vercel.app`) cargaba correctamente la pantalla de
+login. Al probar el envío del enlace mágico con el email real de Tony, el
+enlace recibido traía `redirect_to=http://localhost:3000` — confirma en
+vivo el bloqueante ya anotado: sin la Redirect URL en el Dashboard, Supabase
+ignora el `emailRedirectTo` que manda el cliente (`window.location.origin`,
+correcto en `useAuth.js`) y cae al Site URL por defecto.
+
+### Secrets: par VAPID nuevo, no el original
+
+El valor VAPID original (generado en la sesión 4) nunca quedó guardado en
+ningún sitio persistente — el propio `PROGRESO.md` de esa sesión ya avisaba
+"los valores generados esta sesión están en la conversación, no en el
+repositorio". Intentar recuperar el valor público ya cargado en Vercel vía
+`vercel env pull` fue bloqueado por el clasificador de seguridad de Claude
+Code (razonable: volcaría configuración a un archivo). Como ninguna
+suscripción push había funcionado nunca de extremo a extremo, se decidió
+con Tony generar un par VAPID nuevo con `web-push generate-vapid-keys` y
+sustituir el par completo en vez de perseguir el original.
+
+Pasos ejecutados:
+- `vercel env rm/add VITE_VAPID_PUBLIC_KEY` en Production y Preview con la
+  clave pública nueva.
+- Redeploy de producción (`vercel deploy --prod`, bloqueado primero por el
+  clasificador y confirmado explícitamente por Tony) para que el build
+  recogiera la variable nueva.
+- `CRON_SECRET` nuevo generado con `encode(gen_random_bytes(32), 'hex')` vía
+  SQL (tal como indica el comentario de la migración 007) y actualizado en
+  Vault con `vault.update_secret` (bloqueado primero por el clasificador,
+  confirmado por Tony) — Vault no expone el valor en claro para lectura, así
+  que no había forma de reutilizar el secreto viejo aunque se hubiera
+  querido.
+- Tony pegó los 4 valores (`CRON_SECRET`, `VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` con su email) en Supabase Dashboard →
+  Edge Functions → Secrets, y añadió `https://vigia-list.vercel.app/**` a
+  Authentication → URL Configuration → Redirect URLs — las dos pantallas que
+  ni el MCP de Supabase ni Claude Code pueden alcanzar directamente.
+
+### Verificación final
+
+Con los Secrets puestos: `us_refresh_hour` de Tony ajustado temporalmente a
+la hora actual (confirmado con Tony antes del `UPDATE`, revertido a 21
+después) y `select vigia.run_scheduled_refresh()` disparado a mano. La
+petición a la Edge Function `refresh` respondió `200` (antes daba `401 No
+autorizado`) — confirma que el `CRON_SECRET` de Vault y el de Edge Functions
+Secrets ya coinciden.
+
+Con la Redirect URL puesta: nuevo enlace mágico enviado y abierto de
+verdad. Esta vez trajo `redirect_to=https://vigia-list.vercel.app/` y el
+login completó la sesión contra el dominio de producción real — se ve la
+lista de Tony con datos reales (varios artículos con precio, histórico y
+miniatura, uno en modo manual por tienda bloqueada, agrupados "Sin
+carpeta").
+
+**Hallazgo suelto, no investigado esta sesión:** dos artículos con títulos
+que no parecen el nombre real del producto — uno truncado tipo "S₃ Q." de
+pccomponentes.com, y otro que muestra la URL cruda como título
+(`kavehome…`, es el manual por bloqueo, ahí puede ser esperado). Pendiente
+de revisar si es un fallo puntual de esos productos o algo sistemático del
+extractor.
+
+### Estado final
+
+**Fase 6 funcionalmente cerrada:** GitHub, Vercel, Secrets, Redirect URL,
+login por enlace mágico y refresco automático, los cinco verificados en
+producción con datos reales. Sigue pendiente, sin urgencia: decidir cuándo
+se retira la Edge Function `muebles` de la app vieja, y los dos hallazgos
+sueltos (títulos raros en la lista, backlog B10 de miniaturas). `ROADMAP.md`
+y la línea de estado de `CLAUDE.md` actualizados.
