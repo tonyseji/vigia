@@ -27,11 +27,17 @@ firmar el push. Sin confirmar como hecho en ninguna sesión hasta ahora.
 completo subido. Ver `docs/PROGRESO.md` (Sesión 8).
 
 **Vercel:** proyecto `vigia` conectado a `tonyseji/vigia`, deploy automático
-en cada push a `main`, producción en `https://vigia-lyart.vercel.app`.
+en cada push a `main`, producción en `https://vigia-list.vercel.app` (Tony
+eligió este dominio corto tras comprobar que `vigia.vercel.app` y varias
+variantes ya pertenecían a otros usuarios del namespace global
+`*.vercel.app`; el alias autogenerado `vigia-lyart.vercel.app` se retiró).
 Variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. Pendiente:
-confirmar que las URLs de redirect de Supabase Auth incluyen este dominio, y
-decidir cuándo se retira la Edge Function `muebles` de la app vieja.
+`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. **Pendiente,
+solo hacible por Tony desde el Dashboard (el MCP de Supabase no expone esta
+pantalla, igual que los Secrets):** añadir `https://vigia-list.vercel.app` a
+Authentication → URL Configuration → Redirect URLs, si no el enlace mágico
+fallará al volver a este dominio. También queda decidir cuándo se retira la
+Edge Function `muebles` de la app vieja.
 
 ---
 

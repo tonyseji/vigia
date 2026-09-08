@@ -713,22 +713,45 @@ naturaleza del protocolo Web Push). Confirmado con Tony antes de leer el
 ### Verificación
 
 Deployment de producción verificado en el navegador contra el dominio
-estable `https://vigia-lyart.vercel.app`: la pantalla de login ("Vigía", campo
-de email, botón "Enviarme el enlace") renderiza correctamente y el bundle
-servido es el del build con las variables corregidas. `npm test` y
-`npm run build` en verde antes de cada commit.
+estable (en ese momento `https://vigia-lyart.vercel.app`): la pantalla de
+login ("Vigía", campo de email, botón "Enviarme el enlace") renderiza
+correctamente y el bundle servido es el del build con las variables
+corregidas. `npm test` y `npm run build` en verde antes de cada commit.
 
 **Sin probar en esta sesión:** el flujo de login de verdad contra el dominio
 de Vercel (enlace mágico, `redirectTo` de Supabase Auth apuntando a este
 dominio nuevo) — solo se confirmó que la página carga y el cliente de
 Supabase se inicializa sin el error de variables ausentes.
 
+### Dominio final: `vigia-list.vercel.app`
+
+Continuación de la misma sesión: Tony pidió que el dominio fuera solo
+`vigia.vercel.app`. Comprobado que no es posible — los subdominios
+`*.vercel.app` son un namespace global (no por cuenta), y tanto `vigia`
+como varias variantes cortas (`vigia-precios`, `vigia-app`, etc.) ya
+pertenecen a otros usuarios de Vercel; `vercel domains add` devuelve
+`403 forbidden` en esos casos. Se probaron variantes más distintivas para
+confirmar el patrón (quedaron temporalmente como alias del proyecto y se
+retiraron con `vercel alias rm` en la misma sesión, sin dejar restos). Tony
+eligió y añadió él mismo `vigia-list.vercel.app` desde el dashboard; una vez
+confirmado que servía el deployment de producción, se retiró también el
+alias autogenerado `vigia-lyart.vercel.app` a petición suya, dejando un solo
+dominio público más los dos alias técnicos que Vercel gestiona en exclusiva
+(el de proyecto y el de rama `git-main`).
+
+**Nota de comando:** `vercel domains ls`/`rm` no gestiona los subdominios
+gratuitos `*.vercel.app` (solo dominios comprados/externos) — el comando
+correcto para verlos y quitarlos es `vercel alias ls` / `vercel alias rm`.
+
 ### Estado final
 
 Repositorio público en `https://github.com/tonyseji/vigia`, historial
 completo subido. Proyecto Vercel `vigia` conectado a esa rama `main` con
 deploy automático en cada push; producción sirviendo en
-`https://vigia-lyart.vercel.app`. Pendiente dentro de la fase 6: confirmar
-que Supabase Auth (URLs de redirect del enlace mágico) incluye el dominio de
-Vercel, y decidir cuándo se apaga la Edge Function `muebles` de la app
-vieja. `ROADMAP.md` y la línea de estado de `CLAUDE.md` actualizados.
+`https://vigia-list.vercel.app`. Pendiente dentro de la fase 6, solo hacible
+por Tony desde el Dashboard: añadir ese dominio a Authentication → URL
+Configuration → Redirect URLs de Supabase Auth (si no, el enlace mágico
+fallará al volver desde ahí) y confirmar los Secrets (`VAPID_*`,
+`CRON_SECRET`) arrastrados de la fase 5. También queda decidir cuándo se
+apaga la Edge Function `muebles` de la app vieja. `ROADMAP.md` y la línea de
+estado de `CLAUDE.md` actualizados.
