@@ -953,3 +953,55 @@ minigráfico es lo que se sacrifica). Pendiente: el mismo problema de falta
 de responsive puede afectar a otras partes de la interfaz (se vio de pasada
 que `InstallBanner` también se corta en 375px) — no investigado ni resuelto
 en esta sesión, queda para revisar si aparece como molestia real.
+
+---
+
+## 2026-09-09 (Sesión 11) — Retirada de la Edge Function `muebles`
+
+### Contexto
+
+Último pendiente conocido de la fase 6: decidir cuándo se retira la Edge
+Function `muebles` de la app vieja, que compartía proyecto Supabase
+(`ovmnzlbcmuppqctkyngi`) con Vigía pero vivía en el schema `public`, sin
+tocarse por regla de `CLAUDE.md` hasta esta fase.
+
+### Investigación antes de tocar nada
+
+Antes de asumir que ya no se usaba, se comprobó con datos:
+
+- `list_edge_functions` mostró `muebles` como `ACTIVE` en Supabase junto a
+  las 4 funciones de Vigía (`scrape`, `refresh`, `push-subscribe`,
+  `invite-to-folder`).
+- `list_tables` sobre el schema `public` mostró `items` y `price_history`
+  con **0 filas** cada una, y `settings` con 1 sola fila.
+- Una consulta a `function_edge_logs` (últimas 24h) no mostró ninguna
+  invocación a `muebles` — solo peticiones a `refresh` y `scrape`, la app
+  nueva.
+
+Con la función sin tráfico real y las tablas de la app vieja vacías, la
+conclusión fue que Tony ya había migrado del todo y no había nada que
+perder al apagarla. Se confirmó con Tony antes de borrar (acción
+irreversible en producción): primero la decisión de retirar ya, luego la
+confirmación explícita del borrado.
+
+### Cambios
+
+- Edge Function `muebles` borrada de Supabase con
+  `supabase functions delete muebles --project-ref ovmnzlbcmuppqctkyngi`
+  (CLI vía `npx`, no había tool MCP de borrado). Verificado con
+  `list_edge_functions` que ya no aparece.
+- Las tablas `public.items`, `public.price_history` y `public.settings`
+  **no se tocaron** — se decidió dejarlas por ahora: borrar tablas es más
+  delicado que borrar una función (irreversible, y sin la urgencia de dejar
+  de servir tráfico), así que queda como paso aparte.
+- `ROADMAP.md`: fase 6 actualizada (retirada hecha, queda solo limpiar
+  `public.*`); nueva entrada en la sección de fase 6 documentando la
+  investigación y el comando exacto usado.
+- `CLAUDE.md`: línea de «Estado actual» actualizada.
+
+### Estado final
+
+`muebles` retirada de producción. Fase 6 queda con un único pendiente:
+decidir cuándo (o si) se limpian las tablas `public.*` de la app vieja —
+sin prisa, porque ya no reciben escritura y no cuestan nada mientras
+existan en el plan gratuito.

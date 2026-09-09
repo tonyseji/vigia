@@ -47,12 +47,14 @@ funcionan de extremo a extremo con datos reales. Miniaturas de artículo
 que `ItemRow` no tenía breakpoint responsive y el título desaparecía en
 móvil (~375px); arreglado con reflow por debajo de 640px. Pendiente sin
 investigar: `InstallBanner` también se corta en móvil, visto de pasada.
-Siguiente dentro de la fase 6: decidir cuándo se retira la Edge Function
-`muebles` de la app vieja.
+Edge Function `muebles` de la app vieja **retirada de Supabase el
+2026-09-09** (0 invocaciones en 24h y tablas `public.items`/`price_history`
+vacías antes de borrar). Las tablas `public.*` siguen intactas por ahora,
+pendiente decidir cuándo se limpian.
 
-La app antigua (Edge Function `muebles` en el mismo proyecto Supabase) **sigue
-viva y en uso**, y no se toca hasta la fase 6. Su código está en el primer
-commit de este repo.
+La app antigua ya no está activa: su Edge Function se retiró el 2026-09-09
+(ver arriba). Las tablas `public.*` del mismo proyecto Supabase siguen sin
+tocarse. Su código sigue en el primer commit de este repo.
 
 ---
 

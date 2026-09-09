@@ -9,7 +9,7 @@
 | 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | ✅ 2026-09-05 |
 | 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | ✅ 2026-09-05 |
 | 5 | **Refresco** — botón manual, pase diario configurable y ajustes | ✅ 2026-09-06 (falta configurar Secrets en el Dashboard, ver abajo) |
-| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub, Vercel, Secrets, login y refresco verificados en producción 2026-09-09; falta solo retirar la app vieja) |
+| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub, Vercel, Secrets, login, refresco y retirada de la Edge Function `muebles` verificados en producción 2026-09-09; falta limpiar las tablas `public.*`) |
 
 La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendido)
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
@@ -33,8 +33,18 @@ eligió este dominio corto tras comprobar que `vigia.vercel.app` y varias
 variantes ya pertenecían a otros usuarios del namespace global
 `*.vercel.app`; el alias autogenerado `vigia-lyart.vercel.app` se retiró).
 Variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview. Queda decidir
-cuándo se retira la Edge Function `muebles` de la app vieja.
+`VITE_VAPID_PUBLIC_KEY`) configuradas en Production y Preview.
+
+**Retirada de la app vieja (sesión 11, 2026-09-09):** antes de borrar nada
+se comprobaron los logs de Edge Functions (`function_edge_logs`) de las
+últimas 24h — cero invocaciones a `muebles`, solo a `refresh`/`scrape` (la
+app nueva) — y las tablas `public.items`/`public.price_history` (0 filas
+cada una; `public.settings` con 1 fila). Con Tony confirmado, se borró la
+Edge Function `muebles` con `supabase functions delete muebles --project-ref
+ovmnzlbcmuppqctkyngi`. Las tablas `public.*` se dejaron intactas a
+propósito — borrarlas es un paso más delicado (irreversible) y no había
+prisa una vez apagada la función. Pendiente: decidir cuándo se limpian esas
+tablas.
 
 ---
 
