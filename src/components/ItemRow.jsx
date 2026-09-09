@@ -46,12 +46,12 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
 
   return (
     <article
-      className={`relative flex items-stretch gap-3 rounded-lg border p-2.5 pl-3 ${selected ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 sm:flex-nowrap ${selected ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
       {comparing && (
-        <label className="flex flex-none cursor-pointer items-center self-center pl-0.5">
+        <label className="order-0 flex flex-none cursor-pointer items-center self-center pl-0.5">
           <input
             type="checkbox"
             checked={selected}
@@ -62,7 +62,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         </label>
       )}
 
-      <div className="grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line bg-surface-2">
+      <div className="order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line bg-surface-2">
         {item.itm_image_url ? (
           <img
             src={item.itm_image_url}
@@ -75,7 +75,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+      <div className="order-2 flex min-w-0 basis-full flex-col justify-center gap-0.5 sm:basis-0 sm:flex-1">
         <a
           href={item.itm_url}
           target="_blank"
@@ -98,12 +98,12 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
       </div>
 
       {history.length > 1 && (
-        <div className="flex flex-none items-center">
+        <div className="order-4 hidden flex-none items-center sm:flex">
           <Sparkline values={history} direction={pct ?? 0} />
         </div>
       )}
 
-      <div className="flex min-w-[104px] flex-none flex-col items-end justify-center gap-1">
+      <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 sm:flex-none">
         {item.itm_price == null ? (
           <button
             type="button"
@@ -133,7 +133,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         )}
       </div>
 
-      <div className="relative flex-none self-center">
+      <div className="order-3 relative flex-none self-center">
         <button
           type="button"
           disabled={movingFolder}
@@ -186,7 +186,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         }}
         aria-label="Copiar para Claude"
         title="Copiar para Claude"
-        className="flex-none self-center rounded-md border border-line p-1.5 text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+        className="order-3 flex-none self-center rounded-md border border-line p-1.5 text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
       >
         {copied ? <IconCheck className="h-4 w-4 text-ok" /> : <IconCopiar className="h-4 w-4" />}
       </button>
@@ -196,7 +196,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         onClick={() => setEditing(true)}
         aria-label="Editar artículo"
         title="Editar"
-        className="flex-none self-center rounded-md border border-line p-1.5 text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+        className="order-3 flex-none self-center rounded-md border border-line p-1.5 text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 20h9" />

@@ -837,3 +837,119 @@ producción con datos reales. Sigue pendiente, sin urgencia: decidir cuándo
 se retira la Edge Function `muebles` de la app vieja, y los dos hallazgos
 sueltos (títulos raros en la lista, backlog B10 de miniaturas). `ROADMAP.md`
 y la línea de estado de `CLAUDE.md` actualizados.
+
+---
+
+## 2026-09-09 (Sesión 10) — Investigación de B11 (títulos mal extraídos): sin causa raíz encontrada
+
+### Contexto
+
+Tony pidió seguir con B11, el hallazgo suelto de la sesión 9: un artículo de
+pccomponentes.com mostraba en la lista un título truncado/raro ("S₃ Q.") en
+vez de su nombre real. Se abordó con la skill `systematic-debugging`: antes
+de tocar nada, buscar la causa raíz.
+
+### Investigación
+
+**Base de datos primero, sin asumir que el extractor era el culpable.** El
+artículo real (`itm_id 3af59106…`, añadido 2026-09-08) tiene en
+`vigia.items.itm_title` el valor correcto y completo: `Samsung QLED AI 43"
+TQ43Q8FAAUXXC UltraHD 4K Quantum HDR+ Tizen`. No es "S₃ Q." — el dato
+guardado nunca estuvo roto.
+
+Se preguntó a Tony cómo vio exactamente el título raro: confirmó que fue
+"cortado/raro en la lista de la app", no al mirar la base de datos. Esto
+descarta de entrada que `extract.ts` sea la causa (produce el título
+correcto, ya guardado) y apunta a un problema de renderizado, si es que
+existe.
+
+Se revisó `extract.ts` completo: el orden de prioridad de título es JSON-LD
+`name` → `og:title`/`twitter:title` → fallback específico de Amazon → 
+`<title>` de la página. Ninguna rama produce un resultado tipo "S₃ Q." para
+este HTML. Se revisó `ItemRow.jsx` (dónde se pinta `item.itm_title`): texto
+plano en JSX dentro de un `<a>` con `line-clamp-2`, sin ningún atributo
+`title="..."` que pudiera romperse con la comilla doble literal del título
+(las 43 pulgadas). Se revisó `useItems.js` y `refresh/index.ts`: ninguno
+reescribe `itm_title` después de crear el artículo — se escribe una sola vez
+al añadirlo.
+
+**Reproducción del layout real:** se montó una página aislada con el mismo
+CSS (`line-clamp-2`, `text-[14.5px]`, mismo ancho de fila en escritorio y en
+360px móvil) y el título real de BD, servida desde el propio `vigia-dev`
+(instancia de servidor propia de esta sesión, no la de Tony — no se tocó su
+servidor). Resultado: trunca de forma normal con "…" en ambos anchos
+("Samsung QLED AI 43" TQ43Q8FAAUXXC UltraHD 4K…"), no reproduce "S₃ Q." en
+ningún caso.
+
+### Continuación: causa raíz real encontrada con la sesión de Tony en producción
+
+Tony abrió su propio enlace mágico y quedó autenticado en
+`vigia-list.vercel.app` dentro del navegador de esta sesión. Con su lista
+real visible, el título del Samsung se veía correcto en escritorio
+(confirmando lo ya investigado), pero Tony señaló el problema de fondo: la
+app no tiene responsive probado, así que en pantallas estrechas el texto
+"se pierde entero". Redimensionar esa misma sesión real a 375px (móvil) lo
+confirmó de inmediato: **el título desaparecía por completo en las 5 filas
+de su lista**, no solo en el artículo original.
+
+Diagnóstico con DevTools sobre el DOM real: `ItemRow.jsx` mete 7 elementos
+de ancho fijo en una fila `flex` sin salto de línea (miniatura 68px,
+minigráfico 74px, precio 104px, selector de carpeta 74px, dos botones de
+30px, más los `gap-3` entre todos) — en un `article` de 335px de ancho útil
+en móvil, esos fijos ya suman más de 450px. El título es el único elemento
+`flex-1 min-w-0` de la fila, así que se lleva todo el déficit negativo y
+queda en `width: 0`: no se trunca, desaparece.
+
+### Diseño del fix, con brainstorming y companion visual
+
+Al ser una decisión de diseño no obvia (cómo reorganizar la fila), se
+abordó con la skill `brainstorming`. Se ofreció el companion visual
+(navegador local en `.superpowers/brainstorm/`, añadido a `.gitignore`) y
+Tony aceptó probarlo; la primera pantalla comparaba escritorio vs. el bug
+real en móvil y planteaba tres direcciones (mínimo, reflow completo, o ver
+ambas). En paralelo, Tony pidió usar directamente su sesión real ya abierta
+en el navegador integrado para probar las opciones con sus propios datos en
+vez de maquetas — se hizo así: CSS inyectado en vivo sobre
+`vigia-list.vercel.app` (sin tocar el deploy) mostrando la opción de reflow
+(título en su propia línea, precio/carpeta/acciones debajo, minigráfico
+oculto) sobre las 5 filas reales de Tony. Aprobado por Tony antes de tocar
+código.
+
+### Cambios
+
+`src/components/ItemRow.jsx`: el `<article>` pasa de `flex` a
+`flex flex-wrap ... sm:flex-nowrap`. El contenedor del título gana
+`basis-full sm:basis-0 sm:flex-1` (ocupa toda la línea por debajo de 640px,
+vuelve a ser el elemento flexible de siempre a partir de ahí). Precio,
+selector de carpeta y los dos botones de acción llevan `order-3` para
+apilarse juntos en la segunda línea en móvil. El minigráfico gana
+`hidden sm:flex` (oculto por debajo de 640px). Ninguna otra prop ni
+comportamiento cambia.
+
+**Detalle encontrado durante la verificación:** una primera versión solo
+reordenaba con `order-*` sin darle `basis-full` al título, y el resultado
+seguía siendo un título aplastado (aunque menos) porque compartía la primera
+"sub-línea" con la miniatura en vez de tener el ancho completo para él solo.
+Corregido antes de darlo por bueno.
+
+### Verificación
+
+Verificación visual con el componente real (no una maqueta aparte): harness
+temporal (`src/dev-preview-harness.jsx` + `dev-preview-harness.html`,
+borrados al terminar) que monta `ItemRow` con datos falsos pero fieles
+(incluido el título largo del Samsung), servido por el propio `vigia-dev`.
+Probado en 375px (móvil), 600px, 768px (tablet) y escritorio: título
+completo y legible en los anchos estrechos, layout de una sola línea sin
+cambios a partir de 640px. `npm test` (24 tests) y `npm run build` en verde
+tras el cambio.
+
+### Estado final
+
+**B11 cerrado** (`ROADMAP.md`): no era un bug del extractor ni de los datos,
+sino la falta de un breakpoint responsive en `ItemRow.jsx`. Arreglado y
+verificado con datos reales en varios anchos. Decisión de diseño documentada
+en `DECISIONES.md` (por qué apilar y no solo dar un ancho mínimo, por qué el
+minigráfico es lo que se sacrifica). Pendiente: el mismo problema de falta
+de responsive puede afectar a otras partes de la interfaz (se vio de pasada
+que `InstallBanner` también se corta en 375px) — no investigado ni resuelto
+en esta sesión, queda para revisar si aparece como molestia real.

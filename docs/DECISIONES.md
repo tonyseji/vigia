@@ -332,6 +332,34 @@ cualquier pack de iconos.
 **Revisitar:** Si aparece un gráfico con ejes, tooltips y zoom. Un histórico de
 precio con rango de fechas seleccionable ya estaría en ese terreno.
 
+### 2026-09-09 — `ItemRow` se apila en móvil; el minigráfico se oculta por debajo de 640px
+**Decisión:** La fila de artículo (`ItemRow.jsx`), diseñada como una sola línea
+horizontal densa, gana un breakpoint responsive con Tailwind: por debajo de
+`sm:` (640px) usa `flex-wrap` con el título en su propia línea completa
+(`basis-full`), y precio/variación/selector de carpeta/botones se apilan
+debajo en una segunda línea. El minigráfico (`Sparkline`) se oculta del todo
+en ese rango — no había sitio para él sin comprometer el resto. A partir de
+`sm:` el layout vuelve a ser la línea única original, sin ningún cambio.
+**Por qué:** Backlog B11 ("títulos mal extraídos") resultó no ser un bug del
+extractor: era que la fila, con 7 elementos de ancho fijo (miniatura,
+gráfico, precio, selector, dos botones), ya superaba el ancho disponible en
+un móvil normal (375px) antes de que el título tuviera una sola letra. Al ser
+el único elemento `flex-1` de la fila, se llevaba todo el déficit y colapsaba
+a `width: 0` — desaparecía por completo, no se truncaba. Confirmado con la
+sesión real de Tony en producción (`vigia-list.vercel.app`) redimensionada a
+375px: las 5 filas de su lista real perdían el título por igual, no solo la
+del hallazgo original.
+**Descartado:** (a) Dar al título un `min-width` fijo en vez de apilar —
+seguiría siendo una sola línea a cualquier ancho, pero habría que decidir
+cuánto quitarle a los demás elementos y en qué orden, sin garantía de que
+baste en pantallas muy estrechas. (b) Ocultar el selector de carpeta o los
+botones de acción en vez del gráfico — se descartó porque son acciones, no
+solo información, y esconderlas cambia lo que se puede hacer desde la lista,
+no solo cómo se ve.
+**Revisitar:** Si en algún momento el minigráfico se considera imprescindible
+también en móvil, valorar una versión más pequeña en la segunda línea en vez
+de ocultarlo del todo.
+
 ---
 
 ## Proceso

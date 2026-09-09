@@ -43,9 +43,12 @@ automático en cada push a `main` — producción en
 producción el 2026-09-09: login por enlace mágico y refresco automático
 funcionan de extremo a extremo con datos reales. Miniaturas de artículo
 (68×68, recorte sesgado) mejoradas el 2026-09-07 pero no resueltas del todo
-(backlog B10); títulos de artículo mal extraídos vistos en algún caso
-(backlog B11). Siguiente dentro de la fase 6: decidir cuándo se retira la
-Edge Function `muebles` de la app vieja.
+(backlog B10). Backlog B11 cerrado el 2026-09-09: no era el extractor, era
+que `ItemRow` no tenía breakpoint responsive y el título desaparecía en
+móvil (~375px); arreglado con reflow por debajo de 640px. Pendiente sin
+investigar: `InstallBanner` también se corta en móvil, visto de pasada.
+Siguiente dentro de la fase 6: decidir cuándo se retira la Edge Function
+`muebles` de la app vieja.
 
 La app antigua (Edge Function `muebles` en el mismo proyecto Supabase) **sigue
 viva y en uso**, y no se toca hasta la fase 6. Su código está en el primer

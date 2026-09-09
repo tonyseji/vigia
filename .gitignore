@@ -49,6 +49,7 @@ dumps/
 .aider*
 .vscode/
 .idea/
+.superpowers/
 
 # Notas privadas: cualquier cosa que se escriba aqui no se publica
 privado/
