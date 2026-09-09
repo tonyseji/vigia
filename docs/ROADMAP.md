@@ -9,7 +9,7 @@
 | 3 | **Función de extracción** — `extract.ts` al repo, con tests de las funciones puras | ✅ 2026-09-05 |
 | 4 | **Frontend** — la app con el diseño aprobado, incluido el aviso de tienda bloqueada | ✅ 2026-09-05 |
 | 5 | **Refresco** — botón manual, pase diario configurable y ajustes | ✅ 2026-09-06 (falta configurar Secrets en el Dashboard, ver abajo) |
-| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | 🔶 En curso desde 2026-09-08 (GitHub, Vercel, Secrets, login, refresco y retirada de la Edge Function `muebles` verificados en producción 2026-09-09; falta limpiar las tablas `public.*`) |
+| 6 | **Despliegue y retirada** — Vercel conectado, y se apaga la app vieja | ✅ 2026-09-09 |
 
 La fase 0 (revisión de la organización de Bilans para reaprovechar lo aprendido)
 se cerró el 2026-09-03; el resultado está repartido entre `CLAUDE.md`
@@ -41,10 +41,18 @@ se comprobaron los logs de Edge Functions (`function_edge_logs`) de las
 app nueva) — y las tablas `public.items`/`public.price_history` (0 filas
 cada una; `public.settings` con 1 fila). Con Tony confirmado, se borró la
 Edge Function `muebles` con `supabase functions delete muebles --project-ref
-ovmnzlbcmuppqctkyngi`. Las tablas `public.*` se dejaron intactas a
-propósito — borrarlas es un paso más delicado (irreversible) y no había
-prisa una vez apagada la función. Pendiente: decidir cuándo se limpian esas
-tablas.
+ovmnzlbcmuppqctkyngi`.
+
+Limpieza completa en la misma sesión: se encontró un cron job
+`muebles-refresh-precios` en `cron.job` (inactivo desde
+`desactivar_cron_app_vieja`, pero aún registrado con la clave de acceso
+vieja en texto plano en el header `x-key`). Con Tony confirmado de nuevo,
+la migración `supabase/migrations/014_limpiar_app_vieja.sql` hace
+`cron.unschedule` de ese job y `DROP TABLE` de `public.items`,
+`public.price_history` y `public.settings` (el HTML de la interfaz vieja,
+única fila con contenido, ya conservado en el primer commit del repo). El
+schema `public` queda vacío. Verificado con `list_tables` y `get_advisors`
+tras aplicar — sin tablas restantes y sin lints nuevos.
 
 ---
 

@@ -999,9 +999,51 @@ confirmación explícita del borrado.
   investigación y el comando exacto usado.
 - `CLAUDE.md`: línea de «Estado actual» actualizada.
 
-### Estado final
+### Estado final (primera parte)
 
 `muebles` retirada de producción. Fase 6 queda con un único pendiente:
 decidir cuándo (o si) se limpian las tablas `public.*` de la app vieja —
 sin prisa, porque ya no reciben escritura y no cuestan nada mientras
 existan en el plan gratuito.
+
+### Continuación: limpieza completa de `public.*`
+
+En la misma sesión Tony pidió limpiar ya el pendiente que quedaba. Antes de
+tocar nada se revisó si `public.settings` guardaba algo más que el HTML de
+la interfaz vieja (no: una sola fila, `key = 'ui_html'`, ya conservada en
+el primer commit del repo) y si había funciones o triggers propios en
+`public` que un `DROP TABLE` pudiera dejar rotos (no había ninguno).
+
+Al revisar `cron.job` para confirmar que no quedaba nada programado sobre
+la app vieja, apareció `muebles-refresh-precios`: inactivo desde la
+migración `desactivar_cron_app_vieja`, pero **seguía registrado en la base
+de datos con la clave de acceso vieja en texto plano** en el header `x-key`
+de su comando (`net.http_post` contra `/functions/v1/muebles/api/refresh`).
+Sin la Edge Function que llamaba, no tenía sentido dejarlo ni inactivo, así
+que se sumó a la limpieza.
+
+### Cambios (continuación)
+
+- `supabase/migrations/014_limpiar_app_vieja.sql`: nueva migración con
+  `select cron.unschedule('muebles-refresh-precios')` y `drop table if
+  exists` para `public.price_history`, `public.items` y `public.settings`,
+  en ese orden (por la FK de `price_history` hacia `items`). Escrita antes
+  de aplicar nada, siguiendo la regla de `CLAUDE.md` de que nada se aplica
+  en Supabase que no exista antes como archivo.
+- Aplicada con `apply_migration` tras confirmación explícita de Tony (acción
+  irreversible en producción).
+- Verificado después: `list_tables` sobre `public` devuelve 0 tablas;
+  `cron.job` solo conserva `vigia-refresco-horario` (activo); `get_advisors`
+  (security) no muestra ningún lint nuevo achacable a este cambio — los dos
+  que aparecen (`pg_net` en `public`, leaked password protection) son
+  preexistentes y ajenos a esta limpieza.
+- `ROADMAP.md`: fase 6 marcada ✅ cerrada del todo; entrada ampliada con el
+  hallazgo del cron y el detalle de la migración.
+- `CLAUDE.md`: «Estado actual» actualizado — fase 6 cerrada, app vieja sin
+  ningún rastro en Supabase salvo el código del primer commit.
+
+### Estado final
+
+Fase 6 cerrada por completo. La app vieja ya no existe en Supabase: sin
+Edge Function, sin cron, sin tablas. Solo queda su código en el primer
+commit del repo, como registro histórico.
