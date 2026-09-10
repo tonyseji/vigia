@@ -22,7 +22,7 @@ export default function ShareFolderModal({ folder, shares, onInvite, onRevoke, o
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-sm flex-col gap-3 rounded-lg border border-line bg-surface p-4"

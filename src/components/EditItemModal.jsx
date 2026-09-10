@@ -38,7 +38,7 @@ export default function EditItemModal({ item, folders, onSave, onDelete, onClose
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
       <form
         onSubmit={handleSave}
         onClick={(e) => e.stopPropagation()}

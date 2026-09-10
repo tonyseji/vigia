@@ -31,11 +31,16 @@ export function useFolderShares() {
   const invite = useCallback(async (folderId, email) => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return { error: 'Sesión expirada.' }
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-to-folder`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ fld_id: folderId, email }),
-    })
+    let res
+    try {
+      res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-to-folder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ fld_id: folderId, email }),
+      })
+    } catch {
+      return { error: 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.' }
+    }
     const data = await res.json().catch(() => ({}))
     if (!res.ok) return { error: data.error || 'No se pudo enviar la invitación.' }
     await reload()
