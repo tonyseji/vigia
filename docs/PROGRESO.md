@@ -1279,3 +1279,54 @@ exige login por enlace mágico; no hay entorno de prueba local sin auth) —
 `object-fit: contain` es comportamiento estándar de CSS, determinista en
 cualquier navegador, así que se dio por suficiente el build limpio.
 Backlog B10 cerrado en `docs/ROADMAP.md`.
+
+---
+
+## 2026-09-11 (Sesión 14) — Vista "Fotos": el hueco entre lo aprobado y lo construido
+
+### Contexto
+
+Tony pidió una revisión de diseño abierta ("qué nos queda por construir /
+mejorar en la app"). Comparando `docs/diseno-referencia.html` (prototipo
+aprobado el 2026-09-03) contra el código real, se encontró que el
+conmutador Lista/Fotos del prototipo nunca se implementó: `ItemList.jsx`
+solo tenía la vista Lista. No era un ajuste de pulido sino un modo entero
+del diseño aprobado que faltaba.
+
+Mostrado en el companion visual de brainstorming (comparación lado a lado
+del estado actual vs. la propuesta, con los tokens y componentes reales
+del proyecto), Tony confirmó construirla.
+
+### Cambios
+
+`src/components/ItemTile.jsx` (nuevo): tarjeta de la rejilla, hermana de
+`ItemRow.jsx` — imagen grande `aspect-4/3` con `object-contain` (mismo
+criterio que B10, sesión 13), franja de color arriba en vez de lateral,
+nombre + tienda + precio/variación, botón de editar que abre
+`EditItemModal` igual que la fila. Sin minigráfico, sin selector de
+carpeta ni copiar-para-Claude — vista secundaria "para comparar diseños,
+no precios" (`docs/DISENO.md`).
+
+`src/components/ItemList.jsx`: `useState('list')` para la vista activa,
+segmented control Lista/Fotos junto a los controles existentes
+(búsqueda/orden/solo bajadas), función `itemsView()` que decide entre
+`map(row)` en columna o `map(tile)` en rejilla (`grid-cols-[repeat(auto-fill,minmax(140px,1fr))]`,
+igual que la referencia) — usada en las dos ramas de render (agrupado por
+carpeta y lista plana).
+
+### Verificación
+
+Sin login real disponible (la app exige enlace mágico), se montó
+`ItemList` en un harness temporal (`dev-preview.jsx` + `dev-preview.html`,
+borrados al terminar, nunca commiteados) con datos de prueba que cubren
+los casos límite: imagen cuadrada, panorámica, sin imagen y sin precio.
+Verificado en el navegador: la rejilla renderiza con `object-contain` sin
+recortar ninguna imagen, el toggle cambia de vista correctamente, el modal
+de edición se abre desde la tarjeta con los datos correctos, y el layout
+responde bien en 375px (móvil).
+
+### Estado final
+
+Tests (24) y build en verde. Sin tocar BD ni Edge Functions. Backlog:
+vista Fotos ya no es un pendiente — ver `docs/ROADMAP.md`. Quedan B5
+(exportar), B6 (refresco por artículo), B7 (SMTP propio).

@@ -75,6 +75,10 @@ Ordenado por lo que cuesta deshacerlo, no por lo que aporta hoy:
 | Panel de administración, app móvil nativa | Se añaden encima sin tocar nada de lo anterior |
 | Descubrimiento, landing, pagos, multi-idioma | Requieren saber quién es el usuario, y hoy no lo sabes |
 
+**Vista "Fotos"** (rejilla, conmutador junto a Lista) construida el
+2026-09-11 (sesión 14): estaba en el prototipo aprobado
+(`docs/diseno-referencia.html`) pero nunca se había implementado.
+
 **Notificaciones** (push nativo VAPID) y **listas/carpetas compartidas**
 (jerarquía de dos niveles + invitación con aceptación) se construyeron el
 2026-09-06 — ver `docs/DECISIONES.md` y

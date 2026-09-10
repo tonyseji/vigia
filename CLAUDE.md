@@ -67,8 +67,10 @@ Ambos corregidos. `InstallBanner` cortado en viewports bajos (móvil
 horizontal o teclado abierto) arreglado el 2026-09-11 (sesión 12) con
 scroll en el overlay. Backlog B10 (miniaturas mal recortadas en fotos de
 ambiente) cerrado el 2026-09-11 (sesión 13): recorte fijo `object-cover`
-cambiado a `object-contain`, sin recorte nunca. Detalle en
-`docs/PROGRESO.md`, sesiones 10, 12 y 13.
+cambiado a `object-contain`, sin recorte nunca. Vista "Fotos" (rejilla,
+conmutador junto a Lista) construida el 2026-09-11 (sesión 14): estaba en
+el prototipo aprobado pero nunca se había implementado. Detalle en
+`docs/PROGRESO.md`, sesiones 10, 12, 13 y 14.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

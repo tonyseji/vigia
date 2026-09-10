@@ -3,6 +3,7 @@ import { priceChangePct } from '../lib/format.js'
 import { folderToText, copyToClipboard } from '../lib/clipboard.js'
 import { IconCopiar, IconCheck } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
+import ItemTile from './ItemTile.jsx'
 
 const SORTS = {
   drop: 'Mayor bajada',
@@ -53,6 +54,7 @@ export default function ItemList({
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
   const [onlyDrops, setOnlyDrops] = useState(false)
+  const [view, setView] = useState('list')
 
   const foldersById = useMemo(() => Object.fromEntries(folders.map((f) => [f.fld_id, f])), [folders])
 
@@ -108,6 +110,18 @@ export default function ItemList({
     )
   }
 
+  function tile(item) {
+    return <ItemTile key={item.itm_id} item={item} folders={folders} onUpdate={onUpdate} onDelete={onDelete} />
+  }
+
+  function itemsView(list) {
+    return view === 'list' ? (
+      <div className="flex flex-col gap-2">{list.map(row)}</div>
+    ) : (
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2.5">{list.map(tile)}</div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col gap-2">
@@ -155,6 +169,24 @@ export default function ItemList({
         >
           Solo bajadas
         </button>
+        <div className="flex overflow-hidden rounded-lg border border-line">
+          <button
+            type="button"
+            aria-pressed={view === 'list'}
+            onClick={() => setView('list')}
+            className="px-2.5 py-1.5 text-sm text-ink-mut outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+          >
+            Lista
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === 'photos'}
+            onClick={() => setView('photos')}
+            className="px-2.5 py-1.5 text-sm text-ink-mut outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:bg-accent-soft aria-pressed:text-accent"
+          >
+            Fotos
+          </button>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -173,7 +205,7 @@ export default function ItemList({
                 <span className="h-px flex-1 bg-line" />
                 <GroupCopyButton name={name} items={groupItems} />
               </h2>
-              <div className="flex flex-col gap-2">{groupItems.map(row)}</div>
+              {itemsView(groupItems)}
             </section>
           )
         })
@@ -187,7 +219,7 @@ export default function ItemList({
               {sorted.reduce((sum, i) => sum + (i.itm_price ?? 0), 0).toLocaleString('es-ES', { minimumFractionDigits: 0 })} €
             </b>
           </p>
-          {sorted.map(row)}
+          {itemsView(sorted)}
         </div>
       )}
     </div>
