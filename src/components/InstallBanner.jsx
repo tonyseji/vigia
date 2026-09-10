@@ -83,7 +83,7 @@ export default function InstallBanner() {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-5">
+    <div className="fixed inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/60 px-5 py-8">
       <div className="flex w-full max-w-sm flex-col items-center gap-5 rounded-lg border border-line bg-surface px-6 py-7 text-center">
         {mode === 'ios-safari' && <IosSafariContent onDone={dismissForever} onSnooze={dismissThisSession} />}
         {mode === 'ios-other' && <IosOtherContent onDone={dismissForever} onSnooze={dismissThisSession} />}

@@ -1190,3 +1190,41 @@ Auditoría completa sin más hallazgos: comparador, ajustes y copiar-para-
 Claude verificados en producción; los dos problemas nuevos (z-index de
 InstallBanner y fetch sin capturar en invitar) corregidos, probados
 (tests + build) y desplegados.
+
+---
+
+## 2026-09-11 (Sesión 12) — `InstallBanner` se cortaba en viewports bajos
+
+### Contexto
+
+Pendiente anotado "visto de pasada" en la sesión 10: `InstallBanner`
+también se corta en móvil. Se investigó reproduciendo el componente en el
+navegador (sin login real, montando su JSX real con Tailwind cargado) en
+varios tamaños de viewport.
+
+### Hallazgo
+
+En vertical (375×812, 375×667) la tarjeta cabe siempre, incluida la
+variante iOS con tres pasos (455 px de alto). El caso real que rompe es
+cualquier viewport **bajo**: móvil en horizontal, o vertical con el teclado
+abierto reduciendo la altura visible. El overlay era
+`fixed inset-0 flex items-center justify-center` sin `overflow` ni
+scroll: si la tarjeta superaba la altura del viewport, `items-center` la
+centraba cortándola simétricamente por arriba y por abajo, y no había
+manera de hacer scroll para llegar al botón "Ahora no" ni ver el título.
+Probado en 667×375: la tarjeta (455 px) no cabía en el viewport (375 px)
+y quedaba con `top: -40`, título tapado y botón de descarte fuera de
+pantalla.
+
+### Cambio
+
+`src/components/InstallBanner.jsx`: overlay con `overflow-y-auto` y
+`py-8` en vez de solo `px-5`. Con `flex` + `items-center` +
+`overflow-y-auto`, cuando el contenido excede el contenedor deja de
+recortarse sin más — se vuelve alcanzable con scroll. Verificado
+reproduciendo el mismo caso 667×375: `scrollHeight` (447) mayor que
+`clientHeight` (375), scroll disponible.
+
+### Estado final
+
+Tests (24) y build en verde. Sin tocar BD ni Edge Functions.

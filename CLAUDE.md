@@ -63,7 +63,9 @@ mover carpeta de `ItemRow`. Auditoría posterior del resto de la app (comparador
 Claude, verificados en producción) encontró dos más: overlay de
 `InstallBanner` tapando otros modales por z-index, y un `fetch` sin
 try/catch en invitar que dejaba el botón atascado tras un fallo de red.
-Ambos corregidos. Detalle en `docs/PROGRESO.md`, sesión 10.
+Ambos corregidos. `InstallBanner` cortado en viewports bajos (móvil
+horizontal o teclado abierto) arreglado el 2026-09-11 (sesión 12) con
+scroll en el overlay. Detalle en `docs/PROGRESO.md`, sesiones 10 y 12.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
