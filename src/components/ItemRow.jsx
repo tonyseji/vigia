@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
 import { itemToText, copyToClipboard } from '../lib/clipboard.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
@@ -22,11 +22,18 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
   const [copied, setCopied] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const pickerRef = useRef(null)
   const currentFolder = folders?.find((f) => f.fld_id === item.itm_fld_id)
 
   useEffect(() => {
     if (!pickerOpen) return
-    const close = () => setPickerOpen(false)
+    // capture, pero solo cierra si el click fue fuera del picker: si no, un
+    // click en una carpeta de la lista nunca llega a su botón porque el
+    // picker se desmonta antes de que React dispare ese onClick.
+    const close = (e) => {
+      if (pickerRef.current && pickerRef.current.contains(e.target)) return
+      setPickerOpen(false)
+    }
     document.addEventListener('click', close, true)
     return () => document.removeEventListener('click', close, true)
   }, [pickerOpen])
@@ -150,6 +157,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
 
         {pickerOpen && (
           <div
+            ref={pickerRef}
             onClick={(e) => e.stopPropagation()}
             className="absolute right-0 top-8 z-10 flex max-h-56 w-44 flex-col gap-0.5 overflow-y-auto rounded-lg border border-line bg-surface p-1 shadow-lg"
           >
