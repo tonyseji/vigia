@@ -69,8 +69,12 @@ scroll en el overlay. Backlog B10 (miniaturas mal recortadas en fotos de
 ambiente) cerrado el 2026-09-11 (sesión 13): recorte fijo `object-cover`
 cambiado a `object-contain`, sin recorte nunca. Vista "Fotos" (rejilla,
 conmutador junto a Lista) construida el 2026-09-11 (sesión 14): estaba en
-el prototipo aprobado pero nunca se había implementado. Detalle en
-`docs/PROGRESO.md`, sesiones 10, 12, 13 y 14.
+el prototipo aprobado pero nunca se había implementado. Sesión 15 (mismo
+día): añadido selector de carpeta y aviso de tienda bloqueada a la
+tarjeta de la vista Fotos, que faltaban. Pendiente sin confirmar: si el
+botón "Ahora no" de `InstallBanner` falla con toque real en móvil (solo
+se vio fallar con clics simulados en el entorno de prueba). Detalle en
+`docs/PROGRESO.md`, sesiones 10, 12, 13, 14 y 15.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

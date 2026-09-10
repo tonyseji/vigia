@@ -1330,3 +1330,74 @@ responde bien en 375px (móvil).
 Tests (24) y build en verde. Sin tocar BD ni Edge Functions. Backlog:
 vista Fotos ya no es un pendiente — ver `docs/ROADMAP.md`. Quedan B5
 (exportar), B6 (refresco por artículo), B7 (SMTP propio).
+
+---
+
+## 2026-09-11 (Sesión 15) — Vista Fotos en producción: carpeta, texto desbordado y un bug de `InstallBanner`
+
+### Contexto
+
+Con la vista Fotos ya en producción (commit `d23da08`), Tony reportó no
+ver ningún cambio en móvil, y por escrito dos problemas más: revisar que
+tamaños de texto/botones fueran consistentes, y que la vista Fotos no
+dejaba de forma sencilla asignar carpeta a un artículo.
+
+### Diagnóstico
+
+**"No veo ningún cambio" en móvil:** reproducido en el navegador contra
+`https://vigia-list.vercel.app` (deploy ya activo, confirmado por
+`git log` y por ver los artículos reales con `object-contain`
+funcionando). La causa: `InstallBanner` — el overlay a pantalla completa
+que invita a instalar la PWA — aparece encima de todo, incluido el
+conmutador Lista/Fotos nuevo, y en este entorno de prueba el botón
+"Ahora no" no respondía a clics simulados por eventos de puntero
+(`computer` tool), aunque `.click()` disparado directamente sí cerraba el
+banner sin problema — la lógica de `dismissThisSession()` en
+`InstallBanner.jsx` es correcta. Queda sin confirmar si el fallo de clic
+es solo del entorno de automatización o si también ocurre con toque real
+en un móvil — anotado como sospecha, no como bug confirmado del banner
+(no se ha tocado `InstallBanner.jsx` en esta sesión). Lo que sí explica
+la queja de Tony: el banner aparece en cada visita sin `sessionStorage`
+previo y tapa la interfaz nueva por completo, así que parece que la app
+no cambió.
+
+**Tamaños:** comparados los `text-[Npx]` de `ItemTile.jsx` contra
+`ItemRow.jsx` — la tarjeta usa valores algo menores (13px/14.5px nombre y
+precio, frente a 14.5px/17px en la fila) de forma deliberada, porque la
+tarjeta es más estrecha; no se encontró inconsistencia real, solo una
+escala distinta y coherente con el espacio disponible.
+
+**Carpeta:** confirmado con datos reales en producción — la tarjeta no
+tenía ningún indicador ni forma de cambiar la carpeta del artículo, a
+diferencia de la fila. Tampoco mostraba el aviso "la tienda bloquea la
+lectura" que sí tiene `ItemRow`. Eran omisiones reales del diseño de la
+sesión 14, no decisiones defendibles.
+
+### Cambios
+
+`src/components/ItemTile.jsx`: añadido el mismo selector de carpeta que
+`ItemRow.jsx` (botón con `IconEtiqueta` + nombre, desplegable con
+`Sin carpeta` y la lista de `folders`, cierre al clicar fuera) y el aviso
+de tienda bloqueada junto al dominio. Dos ajustes de layout que no tiene
+`ItemRow` por no hacer falta ahí: el texto de tienda bloqueada usa
+`flex-wrap` en vez de una sola línea (en una tarjeta angosta se salía del
+borde); el desplegable de carpeta se centra bajo su botón
+(`left-1/2 -translate-x-1/2`) en vez de anclarse a la derecha (`right-0`
+como en la fila) — en una rejilla de columnas estrechas, anclado a la
+derecha se cortaba fuera de la pantalla en la primera columna.
+
+### Verificación
+
+Mismo harness temporal que la sesión 14 (`dev-preview.jsx` +
+`dev-preview.html`, borrados al terminar). Verificado en escritorio y en
+375px: el selector de carpeta abre, se ve completo sin cortarse en
+ninguna columna, y el cambio se propaga correctamente (`onUpdate` recibe
+`{itm_fld_id: ...}`); el aviso de tienda bloqueada envuelve dentro de la
+tarjeta en vez de desbordarse.
+
+### Estado final
+
+Tests (24) y build en verde. Sin tocar BD ni Edge Functions. Pendiente
+sin confirmar (anotado, no backlog formal): si el botón "Ahora no" de
+`InstallBanner` falla también con toque real en móvil, no solo con clics
+simulados en este entorno — revisar si vuelve a reportarse.
