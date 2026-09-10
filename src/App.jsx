@@ -118,7 +118,7 @@ function Dashboard({ onSignOut, email }) {
       </div>
 
       <div className="mt-6">
-        <AddItemForm onAdd={addItem} onAddManual={addManualItem} />
+        <AddItemForm onAdd={addItem} onAddManual={addManualItem} folderId={selectedFolderId} />
       </div>
 
       {comparison.active && comparison.sets.length > 0 && (

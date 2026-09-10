@@ -3,7 +3,7 @@ import { useState } from 'react'
 /** Barra de añadir URL, con los tres estados de docs/DISENO.md: añadiendo,
  * error en palabras llanas sin perder la URL, y el aviso de tienda
  * bloqueada con la opción de guardar en modo manual. */
-export default function AddItemForm({ onAdd, onAddManual }) {
+export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
   const [url, setUrl] = useState('')
   const [status, setStatus] = useState('idle') // idle | adding | error | blocked
   const [errorMsg, setErrorMsg] = useState('')
@@ -14,7 +14,7 @@ export default function AddItemForm({ onAdd, onAddManual }) {
     if (!url.trim()) return
     setStatus('adding')
     setErrorMsg('')
-    const result = await onAdd(url.trim())
+    const result = await onAdd(url.trim(), folderId)
     if (result.blocked) {
       setStatus('blocked')
       return
@@ -30,7 +30,7 @@ export default function AddItemForm({ onAdd, onAddManual }) {
 
   async function handleManualSave() {
     const price = manualPrice.trim() ? Number(manualPrice.replace(',', '.')) : null
-    const result = await onAddManual(url.trim(), price)
+    const result = await onAddManual(url.trim(), price, folderId)
     if (result.error) {
       setStatus('error')
       setErrorMsg(result.error)

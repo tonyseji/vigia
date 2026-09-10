@@ -59,7 +59,7 @@ export function useItems() {
     return Boolean(data?.sr_blocked)
   }, [])
 
-  const addItem = useCallback(async (rawUrl) => {
+  const addItem = useCallback(async (rawUrl, folderId = null) => {
     const url = cleanUrl(rawUrl)
     const blocked = await checkBlocked(url)
     if (blocked) return { blocked: true }
@@ -76,6 +76,7 @@ export function useItems() {
       .from('items')
       .insert({
         itm_usr_id: userData.user.id,
+        itm_fld_id: folderId,
         itm_url: url,
         itm_title: fnData?.title ?? url,
         itm_image_url: fnData?.image ?? null,
@@ -106,13 +107,14 @@ export function useItems() {
   }, [checkBlocked, reload])
 
   /** Guarda un artículo bloqueado en modo manual, con el precio que teclee el usuario. */
-  const addManualItem = useCallback(async (rawUrl, price) => {
+  const addManualItem = useCallback(async (rawUrl, price, folderId = null) => {
     const url = cleanUrl(rawUrl)
     const { data: userData } = await supabase.auth.getUser()
     const { data: item, error } = await supabase
       .from('items')
       .insert({
         itm_usr_id: userData.user.id,
+        itm_fld_id: folderId,
         itm_url: url,
         itm_title: url,
         itm_price: price ?? null,
