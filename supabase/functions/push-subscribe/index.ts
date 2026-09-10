@@ -11,7 +11,7 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
-  "https://vigia.vercel.app",
+  "https://vigia-list.vercel.app",
   "null", // PWA standalone (Android/iOS homescreen)
 ];
 

@@ -12,7 +12,7 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
-  "https://vigia.vercel.app",
+  "https://vigia-list.vercel.app",
   "null", // PWA standalone (Android/iOS homescreen)
 ];
 

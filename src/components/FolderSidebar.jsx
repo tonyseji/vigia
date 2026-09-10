@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconCarpeta, IconChevronRight, IconMasOpciones, IconTodos } from './icons/index.jsx'
 
 /** Navegación por carpetas: árbol de dos niveles, clic en una carpeta filtra
  * la lista de artículos. Las acciones (renombrar, subcarpeta, compartir,
- * borrar) viven en un menú «⋮» que solo aparece al pasar el ratón sobre la
- * fila, no como botones de texto siempre visibles (docs/DECISIONES.md
- * 2026-09-06, "El sidebar de carpetas sustituye al modal de gestión"). */
+ * borrar) viven en un menú «⋮», no como botones de texto siempre visibles
+ * (docs/DECISIONES.md 2026-09-06, "El sidebar de carpetas sustituye al modal
+ * de gestión"). En desktop ese botón solo aparece al pasar el ratón; por
+ * debajo de md es siempre visible porque no hay hover en pantallas táctiles. */
 export default function FolderSidebar({
   foldersTree,
   countByFolder,
@@ -25,12 +26,17 @@ export default function FolderSidebar({
   const [renamingId, setRenamingId] = useState(null)
   const [renamingName, setRenamingName] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const menuRef = useRef(null)
 
   useEffect(() => {
     if (openMenuId == null) return
-    const closeOnOutsideClick = () => setOpenMenuId(null)
-    // capture: se cierra antes de que el propio botón "⋮" reciba su click,
-    // por eso ese botón alterna el estado en vez de solo abrirlo.
+    // capture, pero solo cierra si el click fue fuera del menú abierto: si
+    // no, un click dentro (Renombrar, Compartir…) nunca llega a su botón
+    // porque el menú se desmonta antes de que React dispare ese onClick.
+    const closeOnOutsideClick = (e) => {
+      if (menuRef.current && menuRef.current.contains(e.target)) return
+      setOpenMenuId(null)
+    }
     document.addEventListener('click', closeOnOutsideClick, true)
     return () => document.removeEventListener('click', closeOnOutsideClick, true)
   }, [openMenuId])
@@ -97,6 +103,7 @@ export default function FolderSidebar({
             sharedBadge={!folder.isOwner}
             menuOpen={openMenuId === folder.fld_id}
             onMenuToggle={() => setOpenMenuId(openMenuId === folder.fld_id ? null : folder.fld_id)}
+            menuRef={menuRef}
             renaming={renamingId === folder.fld_id}
             renamingName={renamingName}
             onRenamingNameChange={setRenamingName}
@@ -139,6 +146,7 @@ export default function FolderSidebar({
                   onClick={() => onSelect(child.fld_id)}
                   menuOpen={openMenuId === child.fld_id}
                   onMenuToggle={() => setOpenMenuId(openMenuId === child.fld_id ? null : child.fld_id)}
+                  menuRef={menuRef}
                   renaming={renamingId === child.fld_id}
                   renamingName={renamingName}
                   onRenamingNameChange={setRenamingName}
@@ -231,6 +239,7 @@ function FolderRow({
   menu,
   menuOpen,
   onMenuToggle,
+  menuRef,
   renaming,
   renamingName,
   onRenamingNameChange,
@@ -279,12 +288,12 @@ function FolderRow({
       </button>
 
       {menu && (
-        <div className="relative flex-none">
+        <div className="relative flex-none" ref={menuOpen ? menuRef : undefined}>
           <button
             type="button"
             onClick={onMenuToggle}
             aria-label="Más opciones"
-            className={`flex h-6 w-6 items-center justify-center rounded text-ink-mut outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent ${menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded text-ink-mut outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent ${menuOpen ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100'}`}
           >
             <IconMasOpciones className="h-4 w-4" />
           </button>
