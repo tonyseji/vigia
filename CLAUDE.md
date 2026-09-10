@@ -59,7 +59,11 @@ sin responder en móvil (botón "⋮" invisible + listener de cierre que
 rompía sus propios clicks), artículo nuevo sin heredar la carpeta
 seleccionada, `index.html` sin `Cache-Control` (móvil servía versión
 vieja tras deploy), y el mismo bug de listener de cierre en el picker de
-mover carpeta de `ItemRow`. Detalle en `docs/PROGRESO.md`, sesión 10.
+mover carpeta de `ItemRow`. Auditoría posterior del resto de la app (comparador, ajustes, copiar para
+Claude, verificados en producción) encontró dos más: overlay de
+`InstallBanner` tapando otros modales por z-index, y un `fetch` sin
+try/catch en invitar que dejaba el botón atascado tras un fallo de red.
+Ambos corregidos. Detalle en `docs/PROGRESO.md`, sesión 10.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

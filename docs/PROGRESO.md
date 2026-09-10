@@ -1145,3 +1145,48 @@ compartir carpeta, menú de carpeta en móvil, carpeta al añadir artículo,
 caché de `index.html`, y el picker de mover artículo de carpeta. Ningún
 cambio de schema; nada pendiente de migración. Tony confirmó al final de
 la sesión que ya todo funciona.
+
+### Continuación: auditoría del resto de la app
+
+Tras confirmar los cinco fixes, Tony pidió revisar que el resto de la app
+funcionara bien. Se lanzó un agente Explore a auditar estáticamente todos
+los componentes y hooks restantes buscando el mismo patrón de bug (listener
+de captura robando clicks, `opacity-0` sin breakpoint táctil, z-index
+solapados, forms anidados, `stopPropagation` en la fase equivocada, estados
+de carga que no se resetean tras un error), mientras en paralelo se probó
+en vivo en producción: Ajustes, Comparador (seleccionar, guardar conjunto,
+terminar) y "Copiar para Claude" — los tres funcionan correctamente.
+
+La auditoría no encontró más casos del bug de listener de captura (ya no
+quedan usos de `document.addEventListener('click', ...)` fuera de los dos
+ya arreglados), pero sí dos problemas reales nuevos:
+
+1. **`InstallBanner` tapaba otros modales.** Pinta un overlay a pantalla
+   completa con `z-30`, igual que el drawer móvil de carpetas, pero
+   `EditItemModal`/`SettingsModal`/`ShareFolderModal` usaban `z-20`: en
+   móvil, si el banner de instalación seguía sin descartar, tapaba
+   cualquiera de esos tres modales sin ninguna pista visual de que había
+   algo detrás. Subidos a `z-40`.
+2. **`useFolderShares.invite()` sin try/catch alrededor del `fetch`.** Un
+   fallo de red real (no un error HTTP) lanzaba una excepción sin capturar
+   y dejaba `sending=true` para siempre en `ShareFolderModal`,
+   inhabilitando el botón "Invitar" hasta cerrar el modal.
+
+De paso, se confirmó que el `confirm()` nativo para borrar un artículo
+(`EditItemModal`) no funciona dentro del navegador de pruebas de esta
+sesión porque ese entorno suprime los diálogos nativos de JS — no es un
+bug de la app, solo una limitación del entorno de prueba.
+
+### Cambios (continuación)
+
+- `src/components/EditItemModal.jsx`, `SettingsModal.jsx`,
+  `ShareFolderModal.jsx`: overlay subido de `z-20` a `z-40`.
+- `src/hooks/useFolderShares.js`: `fetch` de `invite()` envuelto en
+  try/catch, con mensaje de error de conexión.
+
+### Estado final (continuación)
+
+Auditoría completa sin más hallazgos: comparador, ajustes y copiar-para-
+Claude verificados en producción; los dos problemas nuevos (z-index de
+InstallBanner y fetch sin capturar en invitar) corregidos, probados
+(tests + build) y desplegados.
