@@ -14,7 +14,7 @@ import ShareFolderModal from './components/ShareFolderModal.jsx'
 import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
-import { IconEngranaje, IconMenu } from './components/icons/index.jsx'
+import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
 
 export default function App() {
   const { session, loading, signInWithEmail, signOut } = useAuth()
@@ -72,22 +72,28 @@ function Dashboard({ onSignOut, email }) {
           </button>
           <h1 className="font-display text-2xl font-bold tracking-tight">Vigía</h1>
         </div>
-        <div className="flex items-center gap-3 text-sm text-ink-mut">
+        <div className="flex items-center gap-2 text-sm text-ink-mut sm:gap-3">
           <button
             type="button"
             onClick={refreshAll}
             disabled={refreshing || items.length === 0}
-            className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+            aria-label={refreshing ? 'Leyendo…' : 'Actualizar precios'}
+            title="Actualizar precios"
+            className="rounded-lg bg-accent p-1.5 font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60 sm:px-3 sm:py-1.5"
           >
-            {refreshing ? 'Leyendo…' : '↻ Actualizar'}
+            <IconActualizar className={`h-4 w-4 sm:hidden ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{refreshing ? 'Leyendo…' : '↻ Actualizar'}</span>
           </button>
           <button
             type="button"
             aria-pressed={comparison.active}
             onClick={() => (comparison.active ? comparison.stop() : comparison.start())}
-            className="rounded-lg border border-line px-3 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-ink"
+            aria-label="Comparar"
+            title="Comparar"
+            className="rounded-lg border border-line p-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-ink sm:px-3 sm:py-1.5"
           >
-            Comparar
+            <IconComparar className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Comparar</span>
           </button>
           <button
             type="button"
@@ -102,7 +108,7 @@ function Dashboard({ onSignOut, email }) {
           <button
             type="button"
             onClick={onSignOut}
-            className="rounded-lg border border-line px-3 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            className="hidden rounded-lg border border-line px-3 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent sm:block"
           >
             Salir
           </button>
@@ -200,6 +206,16 @@ function Dashboard({ onSignOut, email }) {
               folderShares={folderShares}
               onShare={setSharingFolder}
             />
+            <div className="mt-auto flex flex-col gap-2 border-t border-line pt-3">
+              <span className="truncate text-xs text-ink-mut">{email}</span>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="rounded-lg border border-line px-3 py-1.5 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                Salir
+              </button>
+            </div>
           </div>
         </div>
       )}

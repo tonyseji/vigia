@@ -1401,3 +1401,64 @@ Tests (24) y build en verde. Sin tocar BD ni Edge Functions. Pendiente
 sin confirmar (anotado, no backlog formal): si el botón "Ahora no" de
 `InstallBanner` falla también con toque real en móvil, no solo con clics
 simulados en este entorno — revisar si vuelve a reportarse.
+
+---
+
+## 2026-09-11 (Sesión 16) — Cabecera móvil: de botones de texto desbordados a iconos
+
+### Contexto
+
+Tras el fix de la sesión 15, Tony reportó que en móvil el botón
+"Actualizar" se veía "gigante" y pidió revisar las botoneras y su
+posición para que fueran cómodas e intuitivas. Reproducido en el
+navegador contra producción en 375px: la cabecera tenía 5 controles en
+una sola fila sin breakpoints (Actualizar con texto, Comparar con texto,
+icono de ajustes, email, botón Salir) — no colapsaba, se desbordaba por
+el lateral derecho cortando literalmente "Salir" fuera de la pantalla.
+"Actualizar" no era más grande que los demás en tamaño de fuente, pero
+llamaba más la atención por ser el único con fondo de color sólido
+(`bg-accent`) en un espacio ya apretado.
+
+Mostradas dos opciones en el companion visual (A: los tres controles
+principales como iconos siempre visibles; B: solo Actualizar visible y
+el resto en un menú "⋮" como el que ya usan las carpetas), Tony eligió A.
+
+### Decisión de diseño (email y "Salir", no cubiertos por la opción A)
+
+La opción A dejaba sin resolver dónde iban el email y "Salir" al quitarles
+el espacio en la cabecera. Se llevaron al panel de carpetas que ya se
+desliza en móvil (`showSidebarMobile` en `App.jsx`), en un pie separado
+por una línea — evita añadir un cuarto icono a la cabecera y reutiliza un
+panel que ya existe, en vez de inventar un menú de cuenta nuevo.
+
+### Cambios
+
+`src/components/icons/index.jsx`: dos iconos nuevos, `IconActualizar`
+(flecha circular) e `IconComparar` (líneas con viñetas), SVG a mano como
+el resto del barrel.
+
+`src/App.jsx`: los botones Actualizar/Comparar/Ajustes muestran solo el
+icono por debajo de `sm:` (640px) y el texto completo desde `sm:` en
+adelante, sin tocar el layout de escritorio. Actualizar usa
+`animate-spin` en su icono mientras `refreshing` es true (antes el texto
+cambiaba a "Leyendo…", que ya no cabe en el icono). Email y "Salir" se
+ocultan de la cabecera por debajo de `sm:` (`hidden sm:inline` /
+`hidden sm:block`) y se añaden al pie del panel de carpetas móvil.
+
+### Verificación
+
+Harness temporal (`dev-preview.jsx` con solo la cabecera y el panel de
+carpetas, sin los hooks reales; `dev-preview.html`, ambos borrados al
+terminar). Encontrado y corregido en el propio harness: sin el meta
+`viewport` en el HTML, el navegador emulado reportaba `innerWidth: 981`
+en vez de 375, dando un falso positivo de que el breakpoint no
+funcionaba — el `index.html` real de la app ya tiene ese meta, así que no
+era un problema del código de producción. Con el meta añadido al harness,
+verificado en 375px: cabecera con tres iconos del mismo tamaño sin
+desbordar, icono de actualizar con opacidad reducida durante el refresco,
+y email + Salir visibles y funcionales en el panel de carpetas. En
+escritorio (fuera de emulación), la cabecera queda idéntica a antes.
+
+### Estado final
+
+Tests (24) y build en verde. Sin tocar BD ni Edge Functions.

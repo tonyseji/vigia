@@ -170,3 +170,20 @@ export function IconMenu(props) {
     </svg>
   )
 }
+
+export function IconActualizar(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+      <path d="M21 4v5h-5" />
+    </svg>
+  )
+}
+
+export function IconComparar(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M7 8h13M7 16h13M3 8h.01M3 16h.01" />
+    </svg>
+  )
+}

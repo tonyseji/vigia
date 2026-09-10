@@ -73,8 +73,11 @@ el prototipo aprobado pero nunca se había implementado. Sesión 15 (mismo
 día): añadido selector de carpeta y aviso de tienda bloqueada a la
 tarjeta de la vista Fotos, que faltaban. Pendiente sin confirmar: si el
 botón "Ahora no" de `InstallBanner` falla con toque real en móvil (solo
-se vio fallar con clics simulados en el entorno de prueba). Detalle en
-`docs/PROGRESO.md`, sesiones 10, 12, 13, 14 y 15.
+se vio fallar con clics simulados en el entorno de prueba). Cabecera
+móvil rehecha el 2026-09-11 (sesión 16): Actualizar/Comparar/Ajustes
+pasan a icono por debajo de 640px (antes se desbordaban), email y Salir
+se movieron al panel de carpetas móvil. Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15 y 16.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
