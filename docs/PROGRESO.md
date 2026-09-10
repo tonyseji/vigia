@@ -1047,3 +1047,101 @@ que se sumó a la limpieza.
 Fase 6 cerrada por completo. La app vieja ya no existe en Supabase: sin
 Edge Function, sin cron, sin tablas. Solo queda su código en el primer
 commit del repo, como registro histórico.
+
+---
+
+## 2026-09-10 (Sesión 10) — Cuatro bugs post-fase 6: compartir, botones móviles, carpeta al añadir y caché
+
+### Contexto
+
+Primera sesión de uso real tras cerrar la fase 6, y salieron cuatro fallos
+en cadena reportados por Tony según los iba encontrando en el móvil y en
+producción. Ninguno tocó el schema de Supabase; todos eran de frontend,
+CORS o cabeceras de caché.
+
+### Hallazgo 1 — Compartir carpeta fallaba por CORS
+
+`invite-to-folder` y `push-subscribe` tenían `https://vigia.vercel.app` en
+`ALLOWED_ORIGINS`, pero el dominio real de producción es
+`https://vigia-list.vercel.app` (ver `CLAUDE.md`). El navegador bloqueaba
+la respuesta por CORS al invitar a compartir. Corregido en ambas Edge
+Functions y redesplegadas.
+
+### Hallazgo 2 — Ningún botón de carpeta respondía en móvil
+
+Al investigar "no funciona el compartir carpeta", Tony precisó que en
+realidad **ningún** botón del menú de carpeta (renombrar, subcarpeta,
+compartir, borrar) respondía en móvil. Dos bugs superpuestos en
+`FolderSidebar.jsx`:
+
+1. El botón "⋮" que abre ese menú estaba en `opacity-0`, visible solo con
+   `hover` — inexistente en pantallas táctiles, así que quedaba invisible.
+2. El listener que cierra el menú al hacer click fuera estaba en fase de
+   `capture` sobre `document` y cerraba ante **cualquier** click, incluidos
+   los de sus propios botones internos: el menú se desmontaba antes de que
+   React llegara a disparar el `onClick` de "Renombrar"/"Compartir"/etc.
+
+Arreglado: el botón "⋮" es siempre visible por debajo de `md`; el listener
+ahora usa una `ref` al contenedor del menú abierto y solo cierra si el
+click fue realmente fuera.
+
+### Hallazgo 3 — Artículo nuevo se guardaba siempre "Sin carpeta"
+
+`addItem`/`addManualItem` en `useItems.js` nunca insertaban `itm_fld_id`:
+el artículo nuevo caía siempre en "Sin carpeta" sin importar qué carpeta
+estuviera seleccionada, porque `AddItemForm` ni siquiera recibía esa
+información. Ahora `App.jsx` pasa `selectedFolderId` hasta el insert.
+Verificado que la política RLS `items_all` cubre tanto carpetas propias
+como compartidas visibles (`with check` por `itm_usr_id` o
+`visible_folder_ids()`).
+
+### Hallazgo 4 — Móvil seguía sirviendo la versión vieja tras cada deploy
+
+Tras el fix del hallazgo 2, Tony seguía viendo el bug en el móvil aunque en
+escritorio ya funcionaba. `vercel.json` daba `Cache-Control: immutable` a
+`/assets/*` (correcto, llevan hash) pero **`index.html` no tenía ninguna
+regla propia**: el navegador móvil, sobre todo la PWA instalada en modo
+standalone, podía seguir sirviendo el HTML viejo — apuntando al bundle JS
+anterior — bastante después de cada deploy. Añadida una regla
+`Cache-Control: no-cache` para todo lo que no sea `/assets/`.
+
+### Hallazgo 5 — El picker de "asignar a carpeta" en cada artículo tampoco aplicaba
+
+Cerrada la PWA y reabierta tras el hallazgo 4, compartir/editar/menú de
+carpeta ya funcionaban, pero mover un artículo de carpeta desde su propia
+fila (`ItemRow.jsx`, el botón con la etiqueta de carpeta) seguía sin
+efecto. Mismo bug que el hallazgo 2: el listener de cierre en captura
+sobre `document` cerraba el picker antes de que el click en una opción
+(`moveTo(folderId)`) llegara a ejecutarse. Mismo arreglo: `ref` al
+contenedor del picker, cerrar solo si el click fue fuera.
+
+Verificado en producción de punta a punta: se movió un artículo real de
+"Muebles" a "Salon" y viceversa, confirmando el fix antes de darlo por
+bueno — los intentos previos de reproducirlo habían fallado por errores
+de la propia prueba (URLs de producto inventadas que no existen, y un
+campo de texto que no se limpiaba entre intentos), no por el código.
+
+### Cambios
+
+- `supabase/functions/invite-to-folder/index.ts`,
+  `supabase/functions/push-subscribe/index.ts`: dominio corregido en
+  `ALLOWED_ORIGINS`, redesplegadas.
+- `src/components/FolderSidebar.jsx`: botón "⋮" visible por debajo de
+  `md`; listener de cierre con `ref` en vez de cerrar ante cualquier click.
+- `src/hooks/useItems.js`, `src/components/AddItemForm.jsx`, `src/App.jsx`:
+  `folderId`/`selectedFolderId` propagado hasta el insert de `items`.
+- `vercel.json`: `Cache-Control: no-cache` para todo excepto `/assets/`.
+- `src/components/ItemRow.jsx`: mismo arreglo de `ref` que en
+  `FolderSidebar.jsx`, aplicado al picker de mover carpeta.
+- Cuatro commits, cada uno probado (tests + build) y verificado en vivo en
+  `https://vigia-list.vercel.app` antes de darlo por cerrado; el último
+  (picker de `ItemRow`) con reproducción real del bug en producción antes
+  y después del fix.
+
+### Estado final
+
+Los cinco fallos confirmados arreglados y verificados en producción:
+compartir carpeta, menú de carpeta en móvil, carpeta al añadir artículo,
+caché de `index.html`, y el picker de mover artículo de carpeta. Ningún
+cambio de schema; nada pendiente de migración. Tony confirmó al final de
+la sesión que ya todo funciona.

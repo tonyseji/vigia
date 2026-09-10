@@ -52,7 +52,14 @@ retirada de Supabase (0 invocaciones en 24h antes de borrar). Limpieza
 completa con la migración `014_limpiar_app_vieja.sql`: cron job inactivo
 `muebles-refresh-precios` (guardaba la clave vieja en texto plano) y las
 tablas `public.items`/`price_history`/`settings` eliminadas. El schema
-`public` queda vacío.
+`public` queda vacío. Primera sesión de uso real (2026-09-10) sacó cinco
+bugs, todos arreglados y verificados en producción: CORS de
+compartir/push por dominio antiguo en `ALLOWED_ORIGINS`, menú de carpeta
+sin responder en móvil (botón "⋮" invisible + listener de cierre que
+rompía sus propios clicks), artículo nuevo sin heredar la carpeta
+seleccionada, `index.html` sin `Cache-Control` (móvil servía versión
+vieja tras deploy), y el mismo bug de listener de cierre en el picker de
+mover carpeta de `ItemRow`. Detalle en `docs/PROGRESO.md`, sesión 10.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
