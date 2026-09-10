@@ -74,8 +74,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
           <img
             src={item.itm_image_url}
             alt=""
-            className="h-full w-full object-cover"
-            style={{ objectPosition: '50% 35%' }}
+            className="h-full w-full object-contain"
           />
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-7 w-7 text-ink-mut opacity-85" />

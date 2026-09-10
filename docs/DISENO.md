@@ -41,7 +41,7 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 | Elemento | Regla |
 |---|---|
 | Franja lateral | Verde si el precio ha bajado, rojo si ha subido, ámbar si no hay precio. Es lo que permite escanear la lista sin leer. |
-| Miniatura | 54×54. Si no hay imagen, un icono según el tipo de producto sobre fondo `surface-2`. |
+| Miniatura | 68×68, `object-contain` (la imagen completa, sin recortar) sobre fondo `surface-2`. Si no hay imagen, un icono según el tipo de producto sobre el mismo fondo. |
 | Nombre | Máximo dos líneas, y es el enlace a la tienda. |
 | Segunda línea | Dominio de la tienda · nº de registros · en ámbar, «la tienda bloquea la lectura» cuando aplica. |
 | Minigráfico | Solo si hay dos o más registros. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |

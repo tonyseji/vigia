@@ -1228,3 +1228,54 @@ reproduciendo el mismo caso 667×375: `scrollHeight` (447) mayor que
 ### Estado final
 
 Tests (24) y build en verde. Sin tocar BD ni Edge Functions.
+
+---
+
+## 2026-09-11 (Sesión 13) — Miniaturas de artículo (B10): de recorte fijo a imagen completa
+
+### Contexto
+
+De los pendientes del backlog (B5 exportar, B6 refresco por artículo, B7
+SMTP propio, B10 miniaturas), Tony priorizó B10. Preguntado por el caso
+concreto, la respuesta fue que el resultado varía mucho según la tienda:
+no era un problema de ajustar el porcentaje de recorte, sino estructural.
+
+### Diagnóstico
+
+`ItemRow.jsx` usaba `object-cover` con `objectPosition: '50% 35%'` fijo
+para las 68×68. Ese recorte fijo asume una foto de catálogo con el
+producto centrado y algo desplazado hacia arriba — funciona con fotos de
+producto tipo ficha técnica, pero falla con fotos de ambiente/lifestyle
+(el producto es pequeño dentro de la imagen, en una posición que varía
+tienda a tienda). Ningún porcentaje fijo cubre ambos casos.
+
+### Decisión
+
+Entre las opciones (imagen completa con `object-contain`, recorte
+adaptable por proporción detectada en el navegador, o dejar de perseguir
+esto en la miniatura y mejorar en su lugar la vista "Fotos" en rejilla),
+Tony eligió `object-contain`: la imagen se muestra siempre entera, nunca
+se corta nada, a cambio de dejar ver el fondo `surface-2` en los lados
+cuando la proporción no es cuadrada. Es el cambio más simple, sin lógica
+nueva ni heurística que pueda seguir fallando en casos concretos —
+coherente con "cero dependencias nuevas sin justificación". La vista
+"Fotos" en rejilla mencionada en `docs/DISENO.md` no existe todavía en el
+código; no se ha tocado en esta sesión.
+
+### Cambio
+
+`src/components/ItemRow.jsx`: la miniatura pasa de `object-cover` +
+`objectPosition` fijo a `object-contain`, sin posición explícita (deja de
+tener sentido con `contain`). El contenedor (68×68, `surface-2`, borde,
+esquinas redondeadas) no cambia. `docs/DISENO.md` actualizado para
+reflejar `object-contain` en vez de la referencia antigua a 54×54 +
+recorte sesgado (ya desactualizada desde el ajuste del 2026-09-07).
+
+### Estado final
+
+Tests (24) y build en verde. Cambio de una propiedad CSS, sin tocar BD ni
+Edge Functions. No verificado con datos reales en el navegador (la app
+exige login por enlace mágico; no hay entorno de prueba local sin auth) —
+`object-fit: contain` es comportamiento estándar de CSS, determinista en
+cualquier navegador, así que se dio por suficiente el build limpio.
+Backlog B10 cerrado en `docs/ROADMAP.md`.

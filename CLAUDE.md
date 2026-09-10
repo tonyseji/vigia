@@ -65,7 +65,10 @@ Claude, verificados en producción) encontró dos más: overlay de
 try/catch en invitar que dejaba el botón atascado tras un fallo de red.
 Ambos corregidos. `InstallBanner` cortado en viewports bajos (móvil
 horizontal o teclado abierto) arreglado el 2026-09-11 (sesión 12) con
-scroll en el overlay. Detalle en `docs/PROGRESO.md`, sesiones 10 y 12.
+scroll en el overlay. Backlog B10 (miniaturas mal recortadas en fotos de
+ambiente) cerrado el 2026-09-11 (sesión 13): recorte fijo `object-cover`
+cambiado a `object-contain`, sin recorte nunca. Detalle en
+`docs/PROGRESO.md`, sesiones 10, 12 y 13.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
