@@ -1462,3 +1462,65 @@ escritorio (fuera de emulación), la cabecera queda idéntica a antes.
 ### Estado final
 
 Tests (24) y build en verde. Sin tocar BD ni Edge Functions.
+
+---
+
+## 2026-09-28 (Sesión 17) — Login en iPhone instalado y carpetas compartidas que no se veían
+
+### Contexto
+
+Tony reportó dos problemas de uso real: (1) en iPhone, con Vigía añadida a
+la pantalla de inicio, nunca se queda la sesión — el enlace del correo abre
+Safari, entra ahí, pero la app instalada sigue pidiendo correo (en Android
+sí funciona); (2) compartió la carpeta «Pisito» con otra persona, a él le
+sale como compartida, pero la invitada no ve nada.
+
+### Diagnóstico
+
+**Compartir:** la invitación estaba bien (`accepted`, con `usr_id`
+resuelto). Simulando en producción la RLS con la identidad de la invitada
+(`set local role authenticated` + `request.jwt.claims`, con rollback),
+cualquier `select` sobre `folders` fallaba con `stack depth limit exceeded`:
+`visible_folder_ids()` era `SECURITY INVOKER` y su consulta a `folders`
+volvía a pasar por la política de `folders`, que la vuelve a llamar. Al
+dueño no le pasaba porque el plan resolvía el OR por `fld_usr_id` sin llegar
+a la subconsulta. El frontend hace `data ?? []` y mostraba vacío.
+
+**iPhone:** en iOS la app de pantalla de inicio no comparte almacenamiento
+con Safari y los enlaces siempre abren Safari. No hay ajuste que lo
+arregle mientras el acceso dependa de abrir un enlace.
+
+**Hallazgo extra al probar la 015:** la invitada podía crear un artículo
+suyo con `itm_fld_id` de una carpeta ajena no compartida (hacía falta el
+UUID). `WITH CHECK` de `items_all` no miraba la carpeta.
+
+### Cambios
+
+- `supabase/migrations/015_visible_folders_sin_recursion.sql`:
+  `visible_folder_ids()` a `SECURITY DEFINER`. Aplicada en producción.
+- `supabase/migrations/016_items_carpeta_visible.sql`: la carpeta de
+  destino de un artículo tiene que ser null o visible. Aplicada.
+- **Rama `login-codigo` (no en `main`):** `src/lib/otp.js` (+ 10 tests),
+  `verifyCode` en `useAuth.js` y pantalla de código en `Login.jsx`. Aparcado
+  porque requiere cambiar las plantillas de correo de Supabase, y Tony
+  prefirió dejarlo para más adelante y priorizar compartir.
+
+### Verificación
+
+- RLS en producción con los tres usuarios reales (rollback): la invitada ve
+  «Pisito» (1 artículo, 3 precios); ningún usuario ve carpetas ajenas;
+  invitada puede añadir/editar/meter precio en la carpeta compartida, no
+  puede crear ni mover artículos a una carpeta ajena; el dueño sigue
+  pudiendo todo. Sin residuos.
+- Login en local contra Supabase real (375px): la pantalla del código se
+  recupera tras recargar; un código falso llega a `POST /auth/v1/verify`
+  (403 `otp_expired` en los logs de Auth) y la app muestra el error; "Usar
+  otro email" limpia el pendiente.
+- Tests (34) y build en verde.
+
+### Estado final
+
+Compartir arreglado en producción (solo BD, sin despliegue). Login por
+código aparcado en `login-codigo`: para retomarlo, plantillas "Magic Link" y
+"Confirm signup" con `{{ .Token }}`, merge y prueba en iPhone real (el
+aislamiento de almacenamiento de iOS no se puede emular).

@@ -76,8 +76,12 @@ botón "Ahora no" de `InstallBanner` falla con toque real en móvil (solo
 se vio fallar con clics simulados en el entorno de prueba). Cabecera
 móvil rehecha el 2026-09-11 (sesión 16): Actualizar/Comparar/Ajustes
 pasan a icono por debajo de 640px (antes se desbordaban), email y Salir
-se movieron al panel de carpetas móvil. Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15 y 16.
+se movieron al panel de carpetas móvil. Sesión 17 (2026-09-28): carpetas
+compartidas invisibles para el invitado (recursión RLS en
+`visible_folder_ids`, migraciones 015/016 aplicadas) . Login por código para
+el iPhone instalado construido pero aparcado en la rama `login-codigo`
+(falta cambiar plantillas de correo con `{{ .Token }}`). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16 y 17.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

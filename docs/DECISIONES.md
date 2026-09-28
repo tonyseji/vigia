@@ -845,3 +845,42 @@ de forma sensible, y no se buscó ningún rodeo.
 **Pendiente (backlog B7):** configurar SMTP propio (Resend u otro proveedor
 con plan gratuito) antes de la próxima sesión de pruebas intensivas con login.
 **Revisitar:** En cuanto se retome el trabajo de auth/login con datos reales.
+
+### 2026-09-28 — Acceso por código de 6 dígitos además del enlace mágico
+**Contexto:** en iPhone, con Vigía añadida a la pantalla de inicio, nunca se
+quedaba la sesión: el enlace del correo siempre abre Safari, y en iOS la app
+instalada tiene un almacenamiento **separado** del de Safari. La sesión se
+guardaba en Safari y la app seguía sin sesión, pidiendo otro correo. En
+Android funciona porque Chrome y la app instalada comparten almacenamiento.
+No es un fallo de configuración: ningún ajuste hace que un enlace abra la
+app instalada en iOS.
+**Decisión:** el mismo correo de `signInWithOtp` trae un código además del
+enlace (plantilla "Magic Link" y "Confirm signup" con `{{ .Token }}`), y la
+pantalla de login pasa a pedir el código tras enviar el correo
+(`verifyOtp({ email, token, type: 'email' })`). El enlace sigue funcionando
+en el ordenador. El email pendiente se recuerda en `localStorage` una hora,
+porque iOS puede recargar la app al volver de Correo y se perdería el paso.
+**Descartado:** contraseñas (más fricción y más superficie de ataque para
+una app personal); login con Google/Apple (depende de configurar
+proveedores externos y sigue abriendo ventanas fuera de la app en iOS).
+**Estado:** construido y verificado en local en la rama `login-codigo`,
+**no desplegado**. Tony decidió no cambiar las plantillas de correo de
+momento (el conector de Supabase no tiene acceso a la config de Auth, solo
+a BD) y priorizar compartir. Sin `{{ .Token }}` en la plantilla, la
+pantalla pediría un código que el correo no trae, por eso no va a `main`.
+**Revisitar:** al retomar el login en iPhone: cambiar plantillas, merge de
+`login-codigo`, probar en iPhone real. Si el SMTP integrado (B7) limita
+envíos, configurar SMTP propio.
+
+### 2026-09-28 — `visible_folder_ids()` pasa a SECURITY DEFINER
+**Contexto:** con una invitación aceptada, toda consulta del invitado a
+`folders`/`items`/`price_history` fallaba con `stack depth limit exceeded`:
+la función era `SECURITY INVOKER`, consultaba `folders`, y la política de
+`folders` volvía a llamarla. Al dueño no le pasaba por el plan de consulta.
+El frontend traga el error y muestra la lista vacía: "la otra persona no ve
+nada".
+**Decisión:** `SECURITY DEFINER` con `search_path` fijado y EXECUTE solo para
+`authenticated` (migración 015). Sigue filtrando por `auth.uid()`, no amplía
+lo visible. De paso, la 016 obliga a que la carpeta de destino de un
+artículo sea una que el usuario pueda ver (antes podía colgar un artículo
+suyo de una carpeta ajena si conocía su UUID).
