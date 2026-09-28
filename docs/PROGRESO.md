@@ -1500,6 +1500,12 @@ UUID). `WITH CHECK` de `items_all` no miraba la carpeta.
   `visible_folder_ids()` a `SECURITY DEFINER`. Aplicada en producción.
 - `supabase/migrations/016_items_carpeta_visible.sql`: la carpeta de
   destino de un artículo tiene que ser null o visible. Aplicada.
+- `supabase/migrations/017_folder_shares_sin_escritura_directa.sql`: sin
+  INSERT/UPDATE directo en `folder_shares` para `authenticated`. Antes
+  cualquiera podía insertarse una invitación aceptada a una carpeta ajena
+  (reproducido: de 0 a 2 artículos ajenos visibles) o cambiar la carpeta de
+  su invitación. El frontend nunca escribía directo (Edge Function + RPCs).
+  Aplicada y verificada: ataque bloqueado, ver/revocar por RPC intactos.
 - **Rama `login-codigo` (no en `main`):** `src/lib/otp.js` (+ 10 tests),
   `verifyCode` en `useAuth.js` y pantalla de código en `Login.jsx`. Aparcado
   porque requiere cambiar las plantillas de correo de Supabase, y Tony
