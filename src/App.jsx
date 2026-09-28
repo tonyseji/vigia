@@ -6,6 +6,7 @@ import { useFolderShares } from './hooks/useFolderShares.js'
 import { useSettings } from './hooks/useSettings.js'
 import { useComparison } from './hooks/useComparison.js'
 import Login from './components/Login.jsx'
+import PasswordFields from './components/PasswordFields.jsx'
 import AddItemForm from './components/AddItemForm.jsx'
 import ItemList from './components/ItemList.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
@@ -30,17 +31,36 @@ function captureJoinToken() {
 }
 
 export default function App() {
-  const { session, loading, signInWithEmail, signOut } = useAuth()
+  const auth = useAuth()
   const [joining] = useState(captureJoinToken)
 
-  if (loading) return null
+  if (auth.loading) return null
 
-  if (!session) return <Login onSignIn={signInWithEmail} joining={joining} />
+  if (!auth.session) return <Login auth={auth} joining={joining} />
 
-  return <Dashboard onSignOut={signOut} email={session.user.email} />
+  if (auth.recovering) return <RecoveryScreen onSave={auth.updatePassword} onSkip={auth.finishRecovery} />
+
+  return <Dashboard onSignOut={auth.signOut} email={auth.session.user.email} onChangePassword={auth.updatePassword} />
 }
 
-function Dashboard({ onSignOut, email }) {
+/** Tras abrir el correo de "recuperar contraseña" ya hay sesión, pero antes
+ * de entrar en la app se elige la contraseña nueva. */
+function RecoveryScreen({ onSave, onSkip }) {
+  return (
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-5 py-10">
+      <h1 className="font-display text-3xl font-bold tracking-tight">Elige tu contraseña</h1>
+      <p className="text-sm text-ink-mut">
+        Con ella podrás entrar desde cualquier dispositivo, también desde la app instalada en el iPhone.
+      </p>
+      <PasswordFields onSave={onSave} />
+      <button type="button" onClick={onSkip} className="self-start text-sm text-accent underline">
+        Ahora no, ir a mi lista
+      </button>
+    </main>
+  )
+}
+
+function Dashboard({ onSignOut, email, onChangePassword }) {
   const { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload: reloadItems } =
     useItems()
   const { folders, foldersTree, createFolder, renameFolder, deleteFolder, reload: reloadFolders } = useFolders()
@@ -282,7 +302,12 @@ function Dashboard({ onSignOut, email }) {
       )}
 
       {showSettings && settings && (
-        <SettingsModal settings={settings} onSave={saveSettings} onClose={() => setShowSettings(false)} />
+        <SettingsModal
+          settings={settings}
+          onSave={saveSettings}
+          onChangePassword={onChangePassword}
+          onClose={() => setShowSettings(false)}
+        />
       )}
 
       {sharingFolder && (

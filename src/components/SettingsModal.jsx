@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
+import PasswordFields from './PasswordFields.jsx'
 
 const REFRESH_LABELS = {
   off: 'Apagado',
@@ -10,11 +11,12 @@ const REFRESH_LABELS = {
 
 /** Ajustes de refresco automático, umbral de aviso y notificaciones push,
  * más la gestión de carpetas. Mismo patrón visual que EditItemModal. */
-export default function SettingsModal({ settings, onSave, onClose }) {
+export default function SettingsModal({ settings, onSave, onChangePassword, onClose }) {
   const [form, setForm] = useState(settings)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const push = usePushNotifications()
+  const [showPassword, setShowPassword] = useState(false)
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -190,6 +192,24 @@ export default function SettingsModal({ settings, onSave, onClose }) {
             <p className="text-sm text-bad" role="alert">
               {push.error}
             </p>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Contraseña</h4>
+          <p className="text-sm text-ink-mut">
+            Con contraseña entras sin esperar ningún correo, también desde la app instalada en el iPhone.
+          </p>
+          {showPassword ? (
+            <PasswordFields onSave={onChangePassword} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowPassword(true)}
+              className="self-start rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              Poner o cambiar contraseña
+            </button>
           )}
         </section>
 

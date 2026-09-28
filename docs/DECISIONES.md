@@ -863,6 +863,9 @@ porque iOS puede recargar la app al volver de Correo y se perdería el paso.
 **Descartado:** contraseñas (más fricción y más superficie de ataque para
 una app personal); login con Google/Apple (depende de configurar
 proveedores externos y sigue abriendo ventanas fuera de la app en iOS).
+**Superada el 2026-09-29** por email + contraseña (ver más abajo): el
+descarte de contraseñas era un error de criterio, es justo lo que funciona
+en Bilans.
 **Estado:** construido y verificado en local en la rama `login-codigo`,
 **no desplegado**. Tony decidió no cambiar las plantillas de correo de
 momento (el conector de Supabase no tiene acceso a la config de Auth, solo
@@ -901,3 +904,21 @@ correo se abre en otro navegador (el interno de Gmail) sin el token guardado.
 entraría); mantener email + aviso por WhatsApp (dos pasos para lo mismo).
 **Revisitar:** si hace falta un rol de solo lectura, o si la Edge Function
 `invite-to-folder` debe retirarse del todo (hoy sin uso desde la interfaz).
+
+### 2026-09-29 — Entrar con email + contraseña (sustituye al código de 6 dígitos)
+**Contexto:** Tony señaló que en Bilans el login funciona en la app
+instalada del iPhone. Mirado `Bilans/app/src/services/auth.js`: Bilans usa
+email + contraseña y Google (ID token), las dos se completan **dentro** de
+la app; el correo solo se usa para confirmar la cuenta o recuperar la
+contraseña. El problema de Vigía era depender de abrir un enlace del correo.
+**Decisión:** contraseña como acceso principal, igual que Bilans. No exige
+tocar la configuración de Auth de Supabase (el proveedor email ya admite
+contraseña; verificado con un `grant_type=password` real). Las cuentas que
+entraban por enlace ponen su contraseña una vez: desde Ajustes («Poner o
+cambiar contraseña») o con «He olvidado mi contraseña» (el correo abre el
+navegador, allí se elige, y luego se entra en la app con ella). El enlace
+mágico se queda como alternativa en la misma pantalla. Mínimo 8 caracteres.
+**Descartado:** el código de 6 dígitos (rama `login-codigo`) — exigía
+cambiar plantillas de correo y seguía dependiendo de recibir un correo en
+cada entrada. Google — Tony lo deja para más adelante.
+**Revisitar:** botón de Google como en Bilans, si Tony lo pide.

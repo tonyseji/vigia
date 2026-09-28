@@ -1581,3 +1581,49 @@ Eligió el enlace de invitación (ver DECISIONES 2026-09-29).
 
 Pendiente de Tony: prueba real — crear enlace de «Pisito», mandarlo y
 abrirlo con otra cuenta; comprobar que aparece la carpeta.
+
+---
+
+## 2026-09-29 (Sesión 17, cont.) — Entrar con contraseña, como Bilans
+
+### Contexto
+
+Tony no quiere tocar las plantillas de correo y preguntó por qué Bilans no
+tiene el problema del iPhone. Bilans entra con contraseña o Google, dentro
+de la app; Vigía solo con enlace del correo. Eligió contraseña (Google, de
+momento no). Ver DECISIONES 2026-09-29.
+
+### Cambios
+
+- `src/lib/authForm.js` (+ 11 tests): detectar el hash `type=recovery`,
+  validar contraseña (mín. 8, repetición), mensajes de error por código.
+- `src/lib/supabase.js`: `openedFromPasswordRecovery`, leído antes de
+  `createClient` (supabase-js limpia el hash y emite `PASSWORD_RECOVERY` en
+  un `setTimeout` que puede adelantarse a React).
+- `useAuth.js`: `signInWithPassword`, `signUpWithPassword`,
+  `sendPasswordReset`, `updatePassword`, estado `recovering`; la URL de
+  vuelta de todos los correos lleva la invitación pendiente si la hay.
+- `Login.jsx`: cuatro modos (entrar, crear cuenta, olvidé, enlace).
+- `PasswordFields.jsx`: elegir contraseña sin `<form>` propio (vive dentro
+  del formulario de Ajustes; Enter guarda la contraseña, no los ajustes).
+- `App.jsx`: pantalla «Elige tu contraseña» tras el correo de recuperación.
+- `SettingsModal.jsx`: sección «Contraseña».
+
+### Verificación
+
+- Local contra Supabase real, 375px: credenciales inventadas → en los logs
+  de Auth `grant_type=password` → `invalid_credentials`, y la app muestra el
+  mensaje que remite a «He olvidado mi contraseña». Validaciones de crear
+  cuenta (corta, no coinciden) sin llamar al servidor. «Olvidé» con email
+  inexistente → aviso de correo enviado. No se crearon cuentas.
+- `PasswordFields` en harness temporal dentro de un `<form>` (borrado):
+  Enter no envía el formulario padre, `same_password` en español, al
+  guardar vacía campos y confirma.
+- No verificado: entrar con una contraseña real y el enlace de
+  recuperación de extremo a extremo (exige el correo de Tony).
+- Tests (46) y build en verde.
+
+### Estado final
+
+La rama `login-codigo` queda obsoleta. Pendiente de Tony: poner su
+contraseña (Ajustes u «olvidé») y entrar con ella en la app del iPhone.

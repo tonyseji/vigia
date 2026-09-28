@@ -78,9 +78,10 @@ móvil rehecha el 2026-09-11 (sesión 16): Actualizar/Comparar/Ajustes
 pasan a icono por debajo de 640px (antes se desbordaban), email y Salir
 se movieron al panel de carpetas móvil. Sesión 17 (2026-09-28): carpetas
 compartidas invisibles para el invitado (recursión RLS en
-`visible_folder_ids`, migraciones 015/016 aplicadas) . Login por código para
-el iPhone instalado construido pero aparcado en la rama `login-codigo`
-(falta cambiar plantillas de correo con `{{ .Token }}`). 2026-09-29:
+`visible_folder_ids`, migraciones 015/016 aplicadas) . 2026-09-29: login con
+email + contraseña (como Bilans) para que la app instalada del iPhone
+guarde la sesión; enlace mágico como alternativa; rama `login-codigo`
+obsoleta.
 compartir pasa a enlace de invitación de un solo uso (7 días), migraciones
 017 (cierra autoinvitación a carpetas ajenas) y 018. Detalle en `docs/PROGRESO.md`,
 sesiones 10, 12, 13, 14, 15, 16 y 17.

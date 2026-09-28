@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { isRecoveryHash } from './authForm.js'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -13,6 +14,10 @@ if (!url || !anonKey) {
 // varias instancias se pisan la sesion en localStorage.
 // schema: 'vigia' porque las tablas nuevas viven en su propio schema, no en
 // public (docs/DECISIONES.md, 2026-09-03) — public sigue siendo de la app vieja.
+// Se lee ANTES de createClient: supabase-js limpia el hash de la URL al
+// procesar el enlace de "recuperar contraseña".
+export const openedFromPasswordRecovery = typeof window !== 'undefined' && isRecoveryHash(window.location.hash)
+
 export const supabase = createClient(url, anonKey, {
   db: { schema: 'vigia' },
 })

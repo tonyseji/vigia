@@ -13,7 +13,7 @@
 |---|---|---|
 | Frontend | Vercel | App Vite + React. Habla con Supabase directamente, con la sesión del usuario. |
 | Base de datos | Supabase | Schema `vigia`: `items`, `price_history`, `folders`, `user_settings`, `store_rules`. RLS por `user_id`. |
-| Auth | Supabase | Enlace mágico por email. Sin contraseñas. (Login por código para iPhone construido y aparcado en la rama `login-codigo`, ver DECISIONES 2026-09-28.) |
+| Auth | Supabase | Email + contraseña (principal) y enlace mágico por email (alternativa). Ver DECISIONES 2026-09-29. |
 | Función `scrape` | Supabase Edge Functions | Recibe una URL, devuelve título, imagen y precio. |
 | Refresco automático | `pg_cron` (Supabase) | **Un solo pase al día.** Lo puede apagar o acelerar el usuario desde ajustes. |
 | Refresco manual | Botón en la app | Siempre disponible, no depende del cron. Es el camino principal. |
