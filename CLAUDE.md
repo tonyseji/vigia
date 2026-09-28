@@ -98,7 +98,7 @@ rastro.
 |---|---|
 | Frontend | Vite + React 18 (lib + hooks, sin librería de estado) + Tailwind CSS v4 |
 | Base de datos | Supabase (PostgreSQL) — proyecto `muebles` (`ovmnzlbcmuppqctkyngi`), schema `vigia` |
-| Auth | Supabase Auth — enlace mágico por email |
+| Auth | Supabase Auth — email + contraseña (enlace mágico como alternativa) |
 | Lectura de precios | Edge Function `scrape` (Deno/TypeScript) |
 | Refresco | Botón manual + un pase diario configurable (`pg_cron`) |
 | Deploy | Vercel (plan Hobby) |
