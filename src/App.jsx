@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useItems } from './hooks/useItems.js'
 import { useFolders } from './hooks/useFolders.js'
@@ -15,20 +15,35 @@ import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
+import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
+
+/** Si se abre la app con un enlace de invitación (?unirse=...), guarda el
+ * token para usarlo en cuanto haya sesión y lo quita de la barra de
+ * direcciones. Devuelve si hay una invitación esperando. */
+function captureJoinToken() {
+  const token = readJoinToken(window.location.search)
+  if (token) {
+    savePendingJoin(token)
+    window.history.replaceState(null, '', removeJoinParam(window.location.href))
+  }
+  return loadPendingJoin() != null
+}
 
 export default function App() {
   const { session, loading, signInWithEmail, signOut } = useAuth()
+  const [joining] = useState(captureJoinToken)
 
   if (loading) return null
 
-  if (!session) return <Login onSignIn={signInWithEmail} />
+  if (!session) return <Login onSignIn={signInWithEmail} joining={joining} />
 
   return <Dashboard onSignOut={signOut} email={session.user.email} />
 }
 
 function Dashboard({ onSignOut, email }) {
-  const { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll } = useItems()
-  const { folders, foldersTree, createFolder, renameFolder, deleteFolder } = useFolders()
+  const { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload: reloadItems } =
+    useItems()
+  const { folders, foldersTree, createFolder, renameFolder, deleteFolder, reload: reloadFolders } = useFolders()
   const folderShares = useFolderShares()
   const { settings, save: saveSettings } = useSettings()
   const comparison = useComparison()
@@ -36,6 +51,34 @@ function Dashboard({ onSignOut, email }) {
   const [showSidebarMobile, setShowSidebarMobile] = useState(false)
   const [selectedFolderId, setSelectedFolderId] = useState(null)
   const [sharingFolder, setSharingFolder] = useState(null)
+  const [joinResult, setJoinResult] = useState(null) // { ok, text }
+  const { acceptShareLink, acceptShare } = folderShares
+
+  // Enlace de invitación pendiente (abierto antes o durante el login): se
+  // usa una sola vez al entrar. Se borra antes de la llamada para que el
+  // doble efecto de StrictMode no lo intente dos veces.
+  useEffect(() => {
+    const token = loadPendingJoin()
+    if (!token) return
+    clearPendingJoin()
+    acceptShareLink(token).then(async (result) => {
+      if (result.error) {
+        setJoinResult({ ok: false, text: result.error })
+        return
+      }
+      await Promise.all([reloadFolders(), reloadItems()])
+      setSelectedFolderId(result.folderId)
+      setJoinResult({ ok: true, text: `Te has unido a la carpeta «${result.folderName}».` })
+    })
+  }, [acceptShareLink, reloadFolders, reloadItems])
+
+  // Aceptar una invitación cambia qué carpetas y artículos se ven: sin
+  // recargarlos, la carpeta no aparecía hasta recargar la página.
+  async function handleAcceptInvite(shareId) {
+    const result = await acceptShare(shareId)
+    if (!result.error) await Promise.all([reloadFolders(), reloadItems()])
+    return result
+  }
 
   const itemsById = useMemo(() => Object.fromEntries(items.map((i) => [i.itm_id, i])), [items])
 
@@ -116,9 +159,27 @@ function Dashboard({ onSignOut, email }) {
       </header>
 
       <div className="mt-6">
+        {joinResult && (
+          <div
+            role="status"
+            className={`mb-2 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
+              joinResult.ok ? 'border-accent bg-accent-soft' : 'border-line bg-surface text-bad'
+            }`}
+          >
+            <span>{joinResult.text}</span>
+            <button
+              type="button"
+              onClick={() => setJoinResult(null)}
+              aria-label="Cerrar aviso"
+              className="flex-none rounded px-1.5 text-ink-mut outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              ×
+            </button>
+          </div>
+        )}
         <PendingInvitesBanner
           invites={folderShares.pendingForMe}
-          onAccept={folderShares.acceptShare}
+          onAccept={handleAcceptInvite}
           onReject={folderShares.rejectShare}
         />
       </div>
@@ -228,7 +289,7 @@ function Dashboard({ onSignOut, email }) {
         <ShareFolderModal
           folder={sharingFolder}
           shares={folderShares.sharesByFolder(sharingFolder.fld_id)}
-          onInvite={folderShares.invite}
+          onCreateLink={folderShares.createShareLink}
           onRevoke={folderShares.revokeShare}
           onClose={() => setSharingFolder(null)}
         />

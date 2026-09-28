@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { buildShareUrl, joinErrorMessage } from '../lib/shareLink.js'
 
 /** Invitaciones a compartir carpetas: las que yo he emitido como dueño, y
  * las que me han hecho a mí como invitado. Ver docs/superpowers/specs/
@@ -28,23 +29,21 @@ export function useFolderShares() {
 
   const pendingForMe = shares.filter((s) => s.shr_invited_usr_id === userId && s.shr_status === 'pending')
 
-  const invite = useCallback(async (folderId, email) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return { error: 'Sesión expirada.' }
-    let res
-    try {
-      res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-to-folder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ fld_id: folderId, email }),
-      })
-    } catch {
-      return { error: 'No se pudo conectar. Comprueba tu conexión e inténtalo de nuevo.' }
-    }
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) return { error: data.error || 'No se pudo enviar la invitación.' }
+  /** Crea un enlace de invitación de un solo uso (7 días) para una carpeta
+   * de primer nivel. Devuelve la URL lista para mandar. */
+  const createShareLink = useCallback(async (folderId) => {
+    const { data, error } = await supabase.rpc('create_folder_share_link', { p_fld_id: folderId })
+    if (error || !data) return { error: 'No se pudo crear el enlace. Inténtalo de nuevo.' }
     await reload()
-    return {}
+    return { url: buildShareUrl(window.location.origin, data) }
+  }, [reload])
+
+  /** Unirse a una carpeta con el token de un enlace de invitación. */
+  const acceptShareLink = useCallback(async (token) => {
+    const { data, error } = await supabase.rpc('accept_folder_share_link', { p_token: token })
+    if (error) return { error: joinErrorMessage(error.message) }
+    await reload()
+    return { folderId: data.fld_id, folderName: data.fld_name }
   }, [reload])
 
   const acceptShare = useCallback(async (shareId) => {
@@ -68,5 +67,5 @@ export function useFolderShares() {
     return {}
   }, [reload])
 
-  return { shares, sharesByFolder, pendingForMe, loading, invite, acceptShare, rejectShare, revokeShare }
+  return { shares, sharesByFolder, pendingForMe, loading, createShareLink, acceptShareLink, acceptShare, rejectShare, revokeShare }
 }

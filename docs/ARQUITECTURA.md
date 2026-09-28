@@ -172,19 +172,33 @@ diseño completo y el razonamiento de seguridad.
 | `shr_id` | uuid PK | |
 | `shr_fld_id` | uuid | FK a `folders`. Debe ser de primer nivel (trigger). |
 | `shr_owner_usr_id` | uuid | Quien invita. |
-| `shr_invited_email` | text | Email invitado, normalizado. Clave hasta resolver `shr_invited_usr_id`. |
+| `shr_invited_email` | text | Email invitado, normalizado. Null en un enlace de invitación sin usar (se rellena al aceptarlo). |
 | `shr_invited_usr_id` | uuid | FK a `auth.users`. Null si el email invitado no tiene cuenta todavía. |
 | `shr_fld_name` | text | Nombre de la carpeta en el momento de invitar, denormalizado: el invitado no puede leer `folders` de una invitación pendiente. |
 | `shr_status` | text | `pending` · `accepted` · `revoked`. |
+| `shr_token` | text | Token de un enlace de invitación sin usar (único). Null tras aceptarlo: un solo uso. |
+| `shr_expires_at` | timestamptz | Caducidad del enlace (7 días). |
 | `shr_created_at` / `shr_responded_at` | timestamptz | |
 
 Quien acepta una invitación ve y edita la carpeta, sus subcarpetas y los
 items dentro **igual que el dueño** (no hay rol de solo lectura en esta
 versión). La visibilidad se resuelve con la función `vigia.visible_folder_ids()`,
-usada en las políticas RLS de `folders`, `items` y `price_history`. Invitar
-pasa por la Edge Function `invite-to-folder`, que resuelve el email a
-`user_id` con `service_role` sin exponer al cliente si la cuenta existe o no
-(evita enumeración de cuentas por fuerza bruta).
+usada en las políticas RLS de `folders`, `items` y `price_history`
+(`SECURITY DEFINER` desde la migración 015, para no recursar en la RLS de
+`folders`).
+
+**Invitar (desde 2026-09-29) es con un enlace:** la RPC
+`create_folder_share_link` (solo el dueño, carpeta de primer nivel) crea una
+fila `pending` con token y devuelve el token; la app arma
+`/?unirse=<token>` y lo manda con el menú de compartir del móvil o lo copia.
+Quien lo abre guarda el token hasta tener sesión y llama a
+`accept_folder_share_link`, que valida (pendiente, sin usar, sin caducar, no
+es tu carpeta), rellena email y usuario, pasa a `accepted` y borra el token.
+El cliente no puede escribir en `folder_shares` directamente (migración
+017): solo leer y, el dueño, borrar. La Edge Function `invite-to-folder`
+(invitar por email) sigue desplegada pero la interfaz ya no la usa; las
+invitaciones por email ya existentes siguen funcionando con el aviso de
+invitaciones pendientes.
 
 ### `user_settings`
 

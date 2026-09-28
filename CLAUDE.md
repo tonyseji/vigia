@@ -80,7 +80,9 @@ se movieron al panel de carpetas móvil. Sesión 17 (2026-09-28): carpetas
 compartidas invisibles para el invitado (recursión RLS en
 `visible_folder_ids`, migraciones 015/016 aplicadas) . Login por código para
 el iPhone instalado construido pero aparcado en la rama `login-codigo`
-(falta cambiar plantillas de correo con `{{ .Token }}`). Detalle en `docs/PROGRESO.md`,
+(falta cambiar plantillas de correo con `{{ .Token }}`). 2026-09-29:
+compartir pasa a enlace de invitación de un solo uso (7 días), migraciones
+017 (cierra autoinvitación a carpetas ajenas) y 018. Detalle en `docs/PROGRESO.md`,
 sesiones 10, 12, 13, 14, 15, 16 y 17.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados

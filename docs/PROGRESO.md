@@ -1530,3 +1530,54 @@ Compartir arreglado en producción (solo BD, sin despliegue). Login por
 código aparcado en `login-codigo`: para retomarlo, plantillas "Magic Link" y
 "Confirm signup" con `{{ .Token }}`, merge y prueba en iPhone real (el
 aislamiento de almacenamiento de iOS no se puede emular).
+
+---
+
+## 2026-09-29 (Sesión 17, cont.) — Compartir con enlace de invitación
+
+### Contexto
+
+Con las carpetas compartidas ya visibles (015), Tony priorizó hacer
+compartir más sencillo que el correo y aparcar el login por código.
+Eligió el enlace de invitación (ver DECISIONES 2026-09-29).
+
+### Cambios
+
+- `supabase/migrations/018_enlace_invitacion.sql`: `shr_token`,
+  `shr_expires_at`, email nullable, RPCs `create_folder_share_link` y
+  `accept_folder_share_link`. Aplicada.
+- `src/lib/shareLink.js` (+ 11 tests): construir/leer el enlace, guardar el
+  token hasta el login, etiquetas del modal, mensajes de error.
+- `ShareFolderModal.jsx`: «Crear enlace de invitación» → «Enviar…»
+  (`navigator.share`) / «Copiar enlace»; si el portapapeles falla, el
+  enlace queda en un campo seleccionable con aviso. Lista con Activo /
+  Pendiente / Caduca el X / Caducado, reenviar enlaces sin usar, Quitar.
+- `App.jsx`: captura `?unirse=` al abrir (lo quita de la URL), se une al
+  entrar y muestra «Te has unido a «X»» y selecciona la carpeta. **Bug
+  aparte arreglado:** aceptar una invitación solo recargaba las
+  invitaciones, no carpetas ni artículos — la carpeta no salía hasta
+  recargar la página.
+- `Login.jsx`: aviso «Te han invitado a una carpeta…» si hay token.
+- `useAuth.js`: el token viaja en `emailRedirectTo`.
+
+### Verificación
+
+- BD con los usuarios reales (rollback): crear enlace (32 chars); otro
+  usuario no puede crear enlace de carpeta ajena; el dueño no puede
+  aceptar el suyo; la invitada no puede leer el token antes de aceptar;
+  al aceptar pasa de 0 a 2 artículos visibles; reutilizar el enlace falla;
+  enlace caducado falla; si ya estaba invitada, se reutiliza su fila (sigue
+  habiendo 1). `anon` no puede ejecutar ninguna de las dos RPC.
+- App local sin sesión: `/?unirse=<token>` guarda el token, limpia la URL y
+  muestra el aviso en el login.
+- Modal en harness temporal a 375px (borrado al terminar): crear, enviar
+  (título/texto/URL correctos), copiar con portapapeles bloqueado (sale el
+  campo y el aviso), quitar; sin desbordamiento.
+- No verificado de extremo a extremo con dos cuentas reales en el navegador:
+  entrar exige leer el correo. Queda para Tony (ver Estado final).
+- Tests (35) y build en verde.
+
+### Estado final
+
+Pendiente de Tony: prueba real — crear enlace de «Pisito», mandarlo y
+abrirlo con otra cuenta; comprobar que aparece la carpeta.

@@ -180,5 +180,5 @@ export function useItems() {
     return {}
   }, [reload])
 
-  return { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll }
+  return { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload }
 }

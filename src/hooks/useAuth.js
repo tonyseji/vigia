@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { buildShareUrl, loadPendingJoin } from '../lib/shareLink.js'
 
 /**
  * Sesion de Supabase Auth (enlace magico por email). Un solo sitio que
@@ -32,9 +33,16 @@ export function useAuth() {
   }, [])
 
   const signInWithEmail = useCallback(async (email) => {
+    // Con una invitación pendiente, el enlace del correo lleva el token: el
+    // correo puede abrirse en otro navegador (el interno de Gmail, p. ej.)
+    // que no tiene el token guardado. Si Supabase no admite esa URL de
+    // vuelta, usa la Site URL y queda el token guardado en este navegador.
+    const joinToken = loadPendingJoin()
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: joinToken ? buildShareUrl(window.location.origin, joinToken) : window.location.origin,
+      },
     })
     return { error }
   }, [])

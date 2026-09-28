@@ -884,3 +884,20 @@ nada".
 lo visible. De paso, la 016 obliga a que la carpeta de destino de un
 artículo sea una que el usuario pueda ver (antes podía colgar un artículo
 suyo de una carpeta ajena si conocía su UUID).
+
+### 2026-09-29 — Compartir carpeta con un enlace de invitación, no por email
+**Contexto:** invitar por email no mandaba ningún correo: la otra persona
+tenía que entrar en Vigía con ese email exacto y encontrar un aviso que no
+sabía que existía. Tony pidió algo más sencillo que el correo.
+**Decisión:** el modal de compartir crea un enlace (`/?unirse=<token>`) que
+se manda con el menú de compartir del sistema (WhatsApp, Mensajes…) o se
+copia. Quien lo abre entra con su cuenta y se une solo. Cada enlace sirve
+**una vez** y caduca a los **7 días**, para que reenviarlo no cuele a nadie
+más; el dueño ve quién se unió (con su email) y puede quitarle el acceso. Se
+quita el formulario de email de la interfaz (una sola forma de invitar). El
+token viaja también en la URL de vuelta del correo de login, por si ese
+correo se abre en otro navegador (el interno de Gmail) sin el token guardado.
+**Descartado:** enlace reutilizable (cualquiera que lo reciba reenviado
+entraría); mantener email + aviso por WhatsApp (dos pasos para lo mismo).
+**Revisitar:** si hace falta un rol de solo lectura, o si la Edge Function
+`invite-to-folder` debe retirarse del todo (hoy sin uso desde la interfaz).

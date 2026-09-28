@@ -3,7 +3,7 @@ import { useState } from 'react'
 // Enlace magico por email: sin contrasena. Tres estados segun docs/DISENO.md
 // (enviando, "mira tu correo", error en palabras llanas). Solo tokens de
 // @theme, ningun hex suelto.
-export default function Login({ onSignIn }) {
+export default function Login({ onSignIn, joining = false }) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState('')
@@ -28,6 +28,11 @@ export default function Login({ onSignIn }) {
         Seguimiento de precios
       </p>
       <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Vigía</h1>
+      {joining && (
+        <p className="mt-4 rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm">
+          Te han invitado a una carpeta. Entra con tu email y te unirás al terminar.
+        </p>
+      )}
 
       {status === 'sent' ? (
         <p className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-ink-mut">
