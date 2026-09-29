@@ -56,7 +56,7 @@ Dos caminos, y el principal es el manual:
 | Camino | Cuándo | Qué hace |
 |---|---|---|
 | **Botón «Actualizar precios»** | Cuando el usuario quiere | Refresca todo lo que no sea manual. Es el camino principal y no depende de ningún cron. |
-| **Pase automático diario** | Una vez al día, a la hora elegida | Recorre los artículos que lleven más de ~20 h sin mirar. Se puede apagar. |
+| **Pase automático** | Una vez al día a la hora elegida, o cada 12 h / 6 h | Recorre los artículos que lleven sin mirar una hora menos que el intervalo (20 h, 11 h o 5 h). Se puede apagar. |
 
 La frecuencia automática es una preferencia del usuario, no una constante del
 código: `apagado` · `diario` (por defecto) · `cada 12 h` · `cada 6 h`. Las dos
@@ -202,7 +202,9 @@ invitaciones pendientes.
 
 ### `user_settings`
 
-Una fila por usuario. Preferencias, no datos.
+Una fila por usuario. Preferencias, no datos. La crea un trigger en
+`auth.users` al registrarse (migración 019): sin ella la cuenta no entra en
+el pase automático ni recibe avisos.
 
 | Campo | Tipo | Notas |
 |---|---|---|

@@ -574,6 +574,14 @@ artículo, no un log.
 **Revisitar:** Si algún día se quiere un historial de "qué avisos se han
 mandado" visible para el usuario (más que el estado actual), eso sí justificaría
 la tabla.
+**Corregida el 2026-09-29 (sesión 19):** «nunca se resetea al subir» no
+hacía lo que prometía. Con aviso a 90 €, subida a 120 € y bajada a 100 €, la
+regla `nuevo < itm_notified_price` callaba la segunda bajada porque 100 no
+baja de 90. Ahora, si el precio sube por encima de `itm_notified_price`, esa
+columna se vacía y la próxima bajada vuelve a avisar
+(`supabase/functions/refresh/notify.ts`). El umbral en % o en € de Ajustes es
+lo que evita el ruido de precios que oscilan. «Vuelve a haber stock» ya no
+pasa por esta regla: avisa aunque el precio no baje del último aviso.
 
 ### 2026-09-06 — El umbral del aviso es configurable, con dos condiciones que lo puentean
 **Decisión:** `user_settings` gana `us_notify_enabled`, `us_notify_kind`

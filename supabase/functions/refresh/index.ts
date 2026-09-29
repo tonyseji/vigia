@@ -11,6 +11,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { extractFromUrl, setAltFetcher } from "../scrape/extract.ts";
 import { sendPush, type PushSubscriptionRow } from "./push.ts";
+import { type Alert, alertReasons, buildPushBody, cronCutoffHours, type NotifySettings, resetsNotified } from "./notify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -66,52 +67,11 @@ interface ItemRow {
   itm_id: string;
   itm_usr_id: string;
   itm_url: string;
+  itm_title: string | null;
   itm_price: number | null;
   itm_min_price: number | null;
   itm_in_stock: boolean | null;
   itm_notified_price: number | null;
-}
-
-interface NotifySettings {
-  us_notify_enabled: boolean;
-  us_notify_kind: "any" | "pct" | "eur";
-  us_notify_pct: number;
-  us_notify_eur: number;
-  us_notify_min_hist: boolean;
-  us_notify_back_in_stock: boolean;
-}
-
-function shouldNotify(
-  settings: NotifySettings,
-  prev: number | null,
-  next: number,
-  prevMin: number | null,
-  wasInStock: boolean | null,
-  nowInStock: boolean | undefined,
-  alreadyNotified: number | null,
-): boolean {
-  if (!settings.us_notify_enabled) return false;
-  if (alreadyNotified != null && next >= alreadyNotified) return false;
-
-  const esBajada = prev != null && next < prev;
-  const esMinHistorico = prevMin != null && next < prevMin;
-  const vuelveAStock = wasInStock === false && nowInStock === true;
-
-  let superaUmbral = false;
-  if (esBajada) {
-    if (settings.us_notify_kind === "any") superaUmbral = true;
-    else if (settings.us_notify_kind === "pct") {
-      superaUmbral = ((prev! - next) / prev!) * 100 >= settings.us_notify_pct;
-    } else if (settings.us_notify_kind === "eur") {
-      superaUmbral = (prev! - next) >= settings.us_notify_eur;
-    }
-  }
-
-  return (
-    superaUmbral ||
-    (settings.us_notify_min_hist && esMinHistorico) ||
-    (settings.us_notify_back_in_stock && vuelveAStock)
-  );
 }
 
 Deno.serve(async (req) => {
@@ -164,42 +124,39 @@ Deno.serve(async (req) => {
     throw new Error("Tiempo de espera agotado (pg_net)");
   });
 
-  const cutoff = mode === "cron"
-    ? new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString()
-    : new Date().toISOString();
+  const { data: settingsRows, error: settingsError } = await admin
+    .from("user_settings")
+    .select("us_usr_id, us_refresh_mode, us_notify_enabled, us_notify_kind, us_notify_pct, us_notify_eur, us_notify_min_hist, us_notify_back_in_stock")
+    .in("us_usr_id", userIds);
+  if (settingsError) return json({ error: "No se pudieron leer los ajustes" }, 500);
+  const settingsByUser = new Map((settingsRows ?? []).map((s) => [s.us_usr_id, s as NotifySettings]));
 
-  const { data: items, error: itemsError } = await admin
-    .from("items")
-    .select("itm_id, itm_usr_id, itm_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
-    .in("itm_usr_id", userIds)
-    .eq("itm_is_manual", false)
-    .or(`itm_last_checked_at.is.null,itm_last_checked_at.lt.${cutoff}`)
-    .order("itm_last_checked_at", { ascending: true, nullsFirst: true })
-    .limit(BATCH_LIMIT);
+  // Modo user: todos sus articulos. Modo cron: solo los que llevan sin leerse
+  // lo que marque el modo de cada usuario (6h/12h/diario); una consulta por
+  // usuario para que cada uno use su propio corte.
+  const items: ItemRow[] = [];
+  for (const userId of userIds) {
+    if (items.length >= BATCH_LIMIT) break;
+    const hours = mode === "cron" ? cronCutoffHours(settingsByUser.get(userId)?.us_refresh_mode ?? "daily") : 0;
+    const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+    const { data, error: itemsError } = await admin
+      .from("items")
+      .select("itm_id, itm_usr_id, itm_url, itm_title, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
+      .eq("itm_usr_id", userId)
+      .eq("itm_is_manual", false)
+      .or(`itm_last_checked_at.is.null,itm_last_checked_at.lt.${cutoff}`)
+      .order("itm_last_checked_at", { ascending: true, nullsFirst: true })
+      .limit(BATCH_LIMIT - items.length);
+    if (itemsError) return json({ error: "No se pudo leer la lista de articulos" }, 500);
+    items.push(...((data ?? []) as ItemRow[]));
+  }
 
-  if (itemsError) return json({ error: "No se pudo leer la lista de articulos" }, 500);
-
-  const toRefresh = (items ?? []) as ItemRow[];
+  const toRefresh = items;
 
   const { data: rules } = await admin.from("store_rules").select("sr_domain, sr_blocked");
   const blockedDomains = new Set((rules ?? []).filter((r) => r.sr_blocked).map((r) => r.sr_domain));
 
-  const uniqueUserIds = [...new Set(toRefresh.map((it) => it.itm_usr_id))];
-  const { data: settingsRows } = uniqueUserIds.length > 0
-    ? await admin
-      .from("user_settings")
-      .select("us_usr_id, us_notify_enabled, us_notify_kind, us_notify_pct, us_notify_eur, us_notify_min_hist, us_notify_back_in_stock")
-      .in("us_usr_id", uniqueUserIds)
-    : { data: [] as (NotifySettings & { us_usr_id: string })[] };
-  const settingsByUser = new Map((settingsRows ?? []).map((s) => [s.us_usr_id, s as NotifySettings]));
-
-  interface DropInfo {
-    itemId: string;
-    title: string;
-    pct: number;
-    newPrice: number;
-  }
-  const dropsByUser = new Map<string, DropInfo[]>();
+  const alertsByUser = new Map<string, (Alert & { itemId: string })[]>();
   let updated = 0;
   let failed = 0;
   const deadline = Date.now() + TIME_BUDGET_MS;
@@ -236,6 +193,9 @@ Deno.serve(async (req) => {
           itm_in_stock: extracted.inStock ?? null,
           itm_last_checked_at: new Date().toISOString(),
           itm_last_error: null,
+          // El precio ha vuelto a subir por encima del ultimo aviso: la
+          // proxima bajada tiene que volver a avisar (notify.ts).
+          ...(resetsNotified(item.itm_notified_price, next) ? { itm_notified_price: null, itm_notified_at: null } : {}),
         }).eq("itm_id", item.itm_id);
 
         await admin.from("price_history").insert({
@@ -248,19 +208,26 @@ Deno.serve(async (req) => {
         updated++;
 
         const settings = settingsByUser.get(item.itm_usr_id);
-        if (settings && shouldNotify(
-          settings,
-          prev,
-          next,
-          prevMin,
-          item.itm_in_stock,
-          extracted.inStock,
-          item.itm_notified_price,
-        )) {
-          const pct = prev != null && prev > 0 ? Math.round(((prev - next) / prev) * 100) : 0;
-          const list = dropsByUser.get(item.itm_usr_id) ?? [];
-          list.push({ itemId: item.itm_id, title: extracted.title ?? item.itm_url, pct, newPrice: next });
-          dropsByUser.set(item.itm_usr_id, list);
+        const reasons = settings
+          ? alertReasons(settings, {
+            prev,
+            next,
+            prevMin,
+            wasInStock: item.itm_in_stock,
+            nowInStock: extracted.inStock,
+            alreadyNotified: item.itm_notified_price,
+          })
+          : [];
+        if (reasons.length > 0) {
+          const list = alertsByUser.get(item.itm_usr_id) ?? [];
+          list.push({
+            itemId: item.itm_id,
+            title: item.itm_title ?? extracted.title ?? item.itm_url,
+            reasons,
+            prev,
+            next,
+          });
+          alertsByUser.set(item.itm_usr_id, list);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Error desconocido";
@@ -274,7 +241,7 @@ Deno.serve(async (req) => {
   }
 
   let notified = 0;
-  for (const [userId, drops] of dropsByUser) {
+  for (const [userId, alerts] of alertsByUser) {
     const { data: subs } = await admin
       .from("push_subscriptions")
       .select("psub_id, psub_endpoint, psub_p256dh, psub_auth")
@@ -283,11 +250,7 @@ Deno.serve(async (req) => {
 
     if (!subs || subs.length === 0) continue;
 
-    const body = drops.length === 1
-      ? `${drops[0].title}: ${drops[0].pct > 0 ? `-${drops[0].pct} %` : "ha bajado de precio"}`
-      : `${drops.length} artículos han bajado: ${
-        drops.slice(0, 3).map((d) => `${d.title} -${d.pct}%`).join(", ")
-      }${drops.length > 3 ? ` y ${drops.length - 3} más` : ""}`;
+    const body = buildPushBody(alerts);
 
     const payload = JSON.stringify({ title: "Vigía", body, tag: "vigia-drops" });
 
@@ -304,12 +267,12 @@ Deno.serve(async (req) => {
     // Solo se marca como notificado si el push salio bien; si no, se
     // reintenta en la pasada siguiente (docs/DECISIONES.md, idempotencia).
     if (anySent) {
-      notified += drops.length;
-      await Promise.all(drops.map((d) =>
+      notified += alerts.length;
+      await Promise.all(alerts.map((a) =>
         admin.from("items").update({
-          itm_notified_price: d.newPrice,
+          itm_notified_price: a.next,
           itm_notified_at: new Date().toISOString(),
-        }).eq("itm_id", d.itemId)
+        }).eq("itm_id", a.itemId)
       ));
     }
   }

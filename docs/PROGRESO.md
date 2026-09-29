@@ -1669,3 +1669,54 @@ recursión RLS de B14 se vio durante días como «no tengo carpetas».
 
 B16 cerrado. Siguen pendientes de Tony las pruebas de la sesión 17
 (contraseña en el iPhone y enlace de invitación con otra cuenta).
+
+---
+
+## 2026-09-29 (Sesión 19) — Avisos de precio: revisión y cuatro arreglos
+
+### Contexto
+
+Tony preguntó si las alertas funcionan y cómo se avisa. Revisión del código y
+de producción: el aviso es solo push nativo (Web Push/VAPID), por
+dispositivo, sin correo ni aviso dentro de la app. Estado real: 0
+dispositivos suscritos, ningún precio ha cambiado en 3 semanas, así que nunca
+ha llegado un aviso. El cron funciona (72 ejecuciones correctas en 3 días) y
+Ajustes guarda bien. Se encontraron cuatro fallos y Tony pidió arreglarlos.
+
+### Cambios
+
+- **Cuentas sin `user_settings`** (2 de 3): la fila solo se creaba al pulsar
+  Guardar en Ajustes, y sin ella la cuenta no entraba en el pase automático
+  ni recibía avisos (una llevaba desde el 19 sin refrescarse). Migración
+  `019_ajustes_al_registrarse.sql`: trigger en `auth.users` que crea la fila
+  (mismo patrón que `resolve_pending_shares`) y relleno de las que faltaban.
+- **«Cada 6 h» / «Cada 12 h» eran diarios en la práctica**: `refresh` solo
+  leía artículos con más de 20 h sin mirar. Ahora el corte va por usuario
+  según su modo (5 h / 11 h / 20 h, los márgenes de `run_scheduled_refresh`),
+  con una consulta por usuario.
+- **Rebote de precio sin aviso**: avisar a 90, subir a 120, bajar a 100 no
+  avisaba. Si el precio sube por encima de `itm_notified_price` se vacía.
+  «Vuelve a haber stock» ya no depende de esa columna. Corrección anotada en
+  `DECISIONES.md` bajo la decisión de idempotencia.
+- **Texto del aviso**: decía «ha bajado de precio» al volver el stock, y
+  podía salir «-0%». Ahora nombra el motivo (`-10 %`, «mínimo histórico»,
+  «vuelve a haber stock») y el precio. Usa el título guardado del artículo.
+- Lógica pura sacada a `supabase/functions/refresh/notify.ts` con 21 tests
+  (`notify.test.ts`, Vitest como `extract.test.ts`).
+
+### Verificación
+
+- Tests (71) y build en verde.
+- Migración aplicada; las 3 cuentas tienen fila. Advisors sin avisos nuevos.
+- `refresh` desplegada (`--no-verify-jwt`; antes se comprobó que la versión
+  en producción era la del repo). Pase real en modo cron para la cuenta que
+  llevaba parada desde el 19: `200`, 3 revisados, 2 actualizados, 1 fallo
+  (B19, un artículo de IKEA sin precio).
+- No verificado: un push llegando a un dispositivo (no hay ninguno suscrito,
+  B17) ni un cambio real de precio.
+
+### Estado final
+
+Pendiente de Tony: activar notificaciones en el iPhone (B17). Nuevos en el
+backlog: B17, B18 (avisos para invitados, decisión de Cowork), B19.
+
