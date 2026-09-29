@@ -9,12 +9,15 @@ export function useFolderShares() {
   const [shares, setShares] = useState([])
   const [userId, setUserId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
+  // Mismo criterio que useFolders: un fallo de lectura avisa, no vacía (B16).
   const reload = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser()
     setUserId(userData?.user?.id ?? null)
-    const { data } = await supabase.from('folder_shares').select('*').order('shr_created_at', { ascending: false })
-    setShares(data ?? [])
+    const { data, error } = await supabase.from('folder_shares').select('*').order('shr_created_at', { ascending: false })
+    if (!error) setShares(data ?? [])
+    setLoadError(Boolean(error))
     setLoading(false)
   }, [])
 
@@ -67,5 +70,5 @@ export function useFolderShares() {
     return {}
   }, [reload])
 
-  return { shares, sharesByFolder, pendingForMe, loading, createShareLink, acceptShareLink, acceptShare, rejectShare, revokeShare }
+  return { shares, sharesByFolder, pendingForMe, loading, loadError, reload, createShareLink, acceptShareLink, acceptShare, rejectShare, revokeShare }
 }

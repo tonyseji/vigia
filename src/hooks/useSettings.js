@@ -18,15 +18,19 @@ const DEFAULTS = {
 export function useSettings() {
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
+  // Los valores por defecto son solo para quien aún no tiene fila, nunca
+  // para un fallo de lectura: si no, guardar Ajustes pisaría los reales (B16).
   const reload = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser()
     if (!userData?.user) {
       setLoading(false)
       return
     }
-    const { data } = await supabase.from('user_settings').select('*').eq('us_usr_id', userData.user.id).maybeSingle()
-    setSettings(data ?? { ...DEFAULTS, us_usr_id: userData.user.id })
+    const { data, error } = await supabase.from('user_settings').select('*').eq('us_usr_id', userData.user.id).maybeSingle()
+    if (!error) setSettings(data ?? { ...DEFAULTS, us_usr_id: userData.user.id })
+    setLoadError(Boolean(error))
     setLoading(false)
   }, [])
 
@@ -47,5 +51,5 @@ export function useSettings() {
     return {}
   }, [])
 
-  return { settings, loading, save }
+  return { settings, loading, loadError, reload, save }
 }

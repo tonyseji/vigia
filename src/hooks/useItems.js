@@ -21,7 +21,9 @@ export function useItems() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
+  // Mismo criterio que useFolders: un fallo de lectura avisa, no vacía (B16).
   const reload = useCallback(async () => {
     const { data, error } = await supabase
       .from('items')
@@ -37,6 +39,7 @@ export function useItems() {
         })),
       )
     }
+    setLoadError(Boolean(error))
     setLoading(false)
   }, [])
 
@@ -180,5 +183,5 @@ export function useItems() {
     return {}
   }, [reload])
 
-  return { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload }
+  return { items, loading, loadError, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload }
 }

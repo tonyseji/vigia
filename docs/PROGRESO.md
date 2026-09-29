@@ -1627,3 +1627,45 @@ momento no). Ver DECISIONES 2026-09-29.
 
 La rama `login-codigo` queda obsoleta. Pendiente de Tony: poner su
 contraseña (Ajustes u «olvidé») y entrar con ella en la app del iPhone.
+
+---
+
+## 2026-09-29 (Sesión 18) — Un fallo de lectura ya no parece una lista vacía (B16)
+
+### Contexto
+
+Backlog B16: los hooks hacían `data ?? []` sin mirar `error`, y así la
+recursión RLS de B14 se vio durante días como «no tengo carpetas».
+
+### Cambios
+
+- `src/lib/loadErrors.js` (+ 4 tests): `loadErrorMessage` arma el texto
+  del aviso nombrando lo que falló (artículos, carpetas, invitaciones,
+  ajustes).
+- `useItems`, `useFolders`, `useFolderShares`, `useSettings`: nuevo
+  `loadError`. Si la lectura falla se conservan los datos anteriores en vez
+  de vaciarlos. `useFolderShares` y `useSettings` exponen `reload`.
+- `useSettings`: **bug aparte**. Ante un fallo de lectura cargaba los
+  valores por defecto; abrir y guardar Ajustes habría pisado los reales.
+  Ahora los valores por defecto son solo para quien aún no tiene fila.
+- `App.jsx`: aviso (`role="alert"`, tokens `bad`/`bad-soft`) con
+  «Reintentar», que recarga solo lo que falló.
+- `ItemList.jsx`: si la lectura de artículos falló y no hay ninguno, no
+  enseña «Pega la URL de un producto…», que haría creer que la lista está
+  vacía de verdad.
+
+### Verificación
+
+- Harness temporal a 375px con Supabase simulado (borrado al terminar):
+  las cuatro lecturas fallando → aviso con las cuatro y sin el texto de
+  lista vacía; «Reintentar» con solo carpetas fallando → aviso reducido a
+  «carpetas» y el artículo visible; todo recuperado → aviso fuera, carpeta
+  y artículo visibles; solo ajustes fallando desde el inicio → el modal de
+  Ajustes no se abre con valores por defecto. Consola sin errores.
+- No verificado contra un fallo real de Supabase en producción.
+- Tests (50) y build en verde.
+
+### Estado final
+
+B16 cerrado. Siguen pendientes de Tony las pruebas de la sesión 17
+(contraseña en el iPhone y enlace de invitación con otra cuenta).

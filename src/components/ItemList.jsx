@@ -44,6 +44,7 @@ export default function ItemList({
   items,
   folders,
   loading,
+  loadFailed,
   onUpdate,
   onDelete,
   groupByFolder = true,
@@ -131,6 +132,10 @@ export default function ItemList({
       </div>
     )
   }
+
+  // Si la lectura falló, el aviso de App ya lo explica: invitar a pegar la
+  // primera URL haría creer que la lista está vacía de verdad (B16).
+  if (items.length === 0 && loadFailed) return null
 
   if (items.length === 0) {
     return (

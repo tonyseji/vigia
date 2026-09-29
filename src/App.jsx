@@ -16,6 +16,7 @@ import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
+import { loadErrorMessage } from './lib/loadErrors.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
 
 /** Si se abre la app con un enlace de invitación (?unirse=...), guarda el
@@ -61,11 +62,29 @@ function RecoveryScreen({ onSave, onSkip }) {
 }
 
 function Dashboard({ onSignOut, email, onChangePassword }) {
-  const { items, loading, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload: reloadItems } =
-    useItems()
-  const { folders, foldersTree, createFolder, renameFolder, deleteFolder, reload: reloadFolders } = useFolders()
+  const {
+    items,
+    loading,
+    loadError: itemsLoadError,
+    refreshing,
+    addItem,
+    addManualItem,
+    updateItem,
+    deleteItem,
+    refreshAll,
+    reload: reloadItems,
+  } = useItems()
+  const {
+    folders,
+    foldersTree,
+    loadError: foldersLoadError,
+    createFolder,
+    renameFolder,
+    deleteFolder,
+    reload: reloadFolders,
+  } = useFolders()
   const folderShares = useFolderShares()
-  const { settings, save: saveSettings } = useSettings()
+  const { settings, loadError: settingsLoadError, reload: reloadSettings, save: saveSettings } = useSettings()
   const comparison = useComparison()
   const [showSettings, setShowSettings] = useState(false)
   const [showSidebarMobile, setShowSidebarMobile] = useState(false)
@@ -98,6 +117,25 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     const result = await acceptShare(shareId)
     if (!result.error) await Promise.all([reloadFolders(), reloadItems()])
     return result
+  }
+
+  const loadErrorText = loadErrorMessage({
+    items: itemsLoadError,
+    folders: foldersLoadError,
+    shares: folderShares.loadError,
+    settings: settingsLoadError,
+  })
+  const [retrying, setRetrying] = useState(false)
+
+  async function retryLoad() {
+    setRetrying(true)
+    await Promise.all([
+      itemsLoadError && reloadItems(),
+      foldersLoadError && reloadFolders(),
+      folderShares.loadError && folderShares.reload(),
+      settingsLoadError && reloadSettings(),
+    ])
+    setRetrying(false)
   }
 
   const itemsById = useMemo(() => Object.fromEntries(items.map((i) => [i.itm_id, i])), [items])
@@ -179,6 +217,22 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
       </header>
 
       <div className="mt-6">
+        {loadErrorText && (
+          <div
+            role="alert"
+            className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-bad bg-bad-soft px-3 py-2 text-sm text-bad"
+          >
+            <span>{loadErrorText} Lo que ves puede estar incompleto.</span>
+            <button
+              type="button"
+              onClick={retryLoad}
+              disabled={retrying}
+              className="flex-none rounded-lg border border-bad px-3 py-1 font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+            >
+              {retrying ? 'Reintentando…' : 'Reintentar'}
+            </button>
+          </div>
+        )}
         {joinResult && (
           <div
             role="status"
@@ -235,6 +289,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             items={visibleItems}
             folders={folders}
             loading={loading}
+            loadFailed={itemsLoadError}
             onUpdate={updateItem}
             onDelete={deleteItem}
             groupByFolder={selectedFolderId == null}

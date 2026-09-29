@@ -10,12 +10,16 @@ export function useFolders() {
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState(null)
+  const [loadError, setLoadError] = useState(false)
 
+  // Si la lectura falla se conservan las carpetas que ya había y se avisa:
+  // vaciar la lista escondió la recursión RLS de B14 durante días (B16).
   const reload = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser()
     setUserId(userData?.user?.id ?? null)
-    const { data } = await supabase.from('folders').select('*').order('fld_order')
-    setFolders(data ?? [])
+    const { data, error } = await supabase.from('folders').select('*').order('fld_order')
+    if (!error) setFolders(data ?? [])
+    setLoadError(Boolean(error))
     setLoading(false)
   }, [])
 
@@ -80,5 +84,5 @@ export function useFolders() {
     return {}
   }, [reload])
 
-  return { folders, foldersTree, loading, createFolder, renameFolder, deleteFolder, reload }
+  return { folders, foldersTree, loading, loadError, createFolder, renameFolder, deleteFolder, reload }
 }

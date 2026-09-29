@@ -83,8 +83,9 @@ email + contraseña (como Bilans) para que la app instalada del iPhone
 guarde la sesión; enlace mágico como alternativa; rama `login-codigo`
 obsoleta.
 compartir pasa a enlace de invitación de un solo uso (7 días), migraciones
-017 (cierra autoinvitación a carpetas ajenas) y 018. Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16 y 17.
+017 (cierra autoinvitación a carpetas ajenas) y 018. Sesión 18: los
+fallos de lectura de BD se avisan en vez de verse como lista vacía (B16). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17 y 18.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
