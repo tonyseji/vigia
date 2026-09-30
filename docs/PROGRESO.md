@@ -1757,3 +1757,8 @@ sigue sin contraseña.
 La invitada tiene que usar «He olvidado mi contraseña (o nunca puse una)»:
 el correo de recuperar sí se envía. Si ese correo tampoco llega, el problema
 es de entrega (SMTP de pruebas, B7), no de la confirmación.
+
+Decidido con Tony: se mantiene «Confirm email». Hasta hoy los correos han
+llegado (las 3 cuentas confirmaron en menos de 20 s), pero el SMTP de pruebas
+de Supabase no garantiza la entrega y tiene un límite bajo por hora. Si falla
+de verdad, el paso es B7 (SMTP propio, p. ej. Resend gratuito).
