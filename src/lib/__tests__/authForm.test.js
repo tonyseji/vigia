@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { isRecoveryHash, passwordProblem, authErrorMessage, MIN_PASSWORD } from '../authForm.js'
+import { isRecoveryHash, passwordProblem, authErrorMessage, signUpOutcome, MIN_PASSWORD } from '../authForm.js'
+
+describe('signUpOutcome', () => {
+  it('cuenta nueva con sesión directa', () => {
+    expect(signUpOutcome({ session: {}, user: { identities: [{}] } }, null)).toBe('session')
+  })
+  it('cuenta nueva pendiente de confirmar por correo', () => {
+    expect(signUpOutcome({ session: null, user: { identities: [{}] } }, null)).toBe('confirm')
+  })
+  it('email que ya tenía cuenta: Supabase devuelve identities vacío y no manda correo', () => {
+    expect(signUpOutcome({ session: null, user: { identities: [] } }, null)).toBe('exists')
+  })
+  it('error de Supabase', () => {
+    expect(signUpOutcome({ session: null, user: null }, { status: 429 })).toBe('error')
+  })
+})
 
 describe('isRecoveryHash', () => {
   it('detecta el enlace de recuperar contraseña', () => {

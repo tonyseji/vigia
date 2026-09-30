@@ -1720,3 +1720,40 @@ Ajustes guarda bien. Se encontraron cuatro fallos y Tony pidió arreglarlos.
 Pendiente de Tony: activar notificaciones en el iPhone (B17). Nuevos en el
 backlog: B17, B18 (avisos para invitados, decisión de Cowork), B19.
 
+
+## 2026-10-01 (Sesión 20) — «Crear cuenta» con un email que ya tenía cuenta (B20)
+
+### Contexto
+
+Tony: crear cuenta o poner contraseña no funciona porque pide confirmar por
+correo y el correo nunca llega; proponía quitar la confirmación. Los logs de
+Auth del 2026-09-30 dicen otra cosa: la cuenta de la invitada existe y está
+confirmada desde el 25 (entró con enlace mágico). Intentó entrar con
+contraseña (`invalid_credentials`) y después «Crear cuenta» dos veces
+(`user_repeated_signup`). Con un email ya registrado Supabase no da error ni
+manda correo (evita enumerar cuentas), y la app decía «te hemos enviado un
+correo». Quitar la confirmación no lo habría arreglado: la cuenta ya existe y
+sigue sin contraseña.
+
+### Cambios
+
+- `signUpOutcome` en `src/lib/authForm.js`: distingue sesión directa,
+  pendiente de confirmar y **email ya registrado** (`user.identities` vacío,
+  la señal que documenta Supabase). 4 tests nuevos.
+- `Login.jsx`: en ese caso pasa sola a «Recuperar contraseña» con el email
+  ya escrito y explica que basta con «Enviarme el correo» para ponerle
+  contraseña. El aviso de confirmar ya no mezcla los dos casos.
+- «Confirm email» en Supabase se deja como está (ver B20).
+
+### Verificación
+
+- Tests (75) y build en verde.
+- No probado en el navegador contra Supabase real: habría que dar de alta un
+  email ajeno o el de Tony con una contraseña de prueba. Comportamiento de
+  `identities: []` confirmado en la documentación de Supabase.
+
+### Estado final
+
+La invitada tiene que usar «He olvidado mi contraseña (o nunca puse una)»:
+el correo de recuperar sí se envía. Si ese correo tampoco llega, el problema
+es de entrega (SMTP de pruebas, B7), no de la confirmación.

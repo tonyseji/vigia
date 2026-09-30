@@ -58,10 +58,15 @@ export default function Login({ auth, joining = false }) {
     }
     // En 'password' (y en 'signup' sin confirmación) la sesión llega por
     // useAuth y esta pantalla desaparece sola.
-    if (mode === 'signup' && result.needsConfirmation) {
+    if (mode === 'signup' && result.outcome === 'exists') {
+      // Supabase no manda ningún correo en este caso: se lleva a poner
+      // contraseña por el correo de recuperar, con el email ya escrito.
+      switchMode('forgot')
       setNotice(
-        'Te hemos enviado un correo para confirmar la cuenta. Ábrelo y después entra aquí con tu contraseña. Si ya tenías cuenta en Vigía, usa «He olvidado mi contraseña» para ponerle una.',
+        'Ya tienes cuenta con este email (seguramente entraste antes con un enlace). Pulsa «Enviarme el correo», elige ahí tu contraseña y después entra con ella.',
       )
+    } else if (mode === 'signup' && result.outcome === 'confirm') {
+      setNotice('Te hemos enviado un correo para confirmar la cuenta. Ábrelo y después entra aquí con tu contraseña.')
     } else if (mode === 'forgot') {
       setNotice('Te hemos enviado un correo. Ábrelo, elige tu contraseña y después entra con ella desde la app.')
     } else if (mode === 'magic') {

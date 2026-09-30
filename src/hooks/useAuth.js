@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase, openedFromPasswordRecovery } from '../lib/supabase.js'
 import { buildShareUrl, loadPendingJoin } from '../lib/shareLink.js'
+import { signUpOutcome } from '../lib/authForm.js'
 
 /**
  * Sesion de Supabase Auth: email + contraseña (principal, funciona en la app
@@ -58,16 +59,15 @@ export function useAuth() {
     return { error }
   }, [])
 
-  /** Crea la cuenta. Si Supabase exige confirmar el email, no hay sesión
-   * hasta abrir el correo; si ya existía la cuenta, Supabase no lo dice
-   * (evita enumerar cuentas) y tampoco hay sesión. */
+  /** Crea la cuenta. `outcome` dice si entró ya, si hay que confirmar por
+   * correo o si el email ya tenía cuenta (entonces no se manda correo). */
   const signUpWithPassword = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: returnUrl() },
     })
-    return { error, needsConfirmation: !error && !data.session }
+    return { error, outcome: signUpOutcome(data, error) }
   }, [])
 
   const sendPasswordReset = useCallback(async (email) => {

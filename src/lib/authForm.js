@@ -16,6 +16,16 @@ export function passwordProblem(password, repeat) {
   return null
 }
 
+/** Qué pasó al crear la cuenta. Si el email ya tenía cuenta confirmada,
+ * Supabase no da error ni manda correo (evita enumerar cuentas): devuelve un
+ * usuario con `identities` vacío. Es la señal documentada para detectarlo. */
+export function signUpOutcome(data, error) {
+  if (error) return 'error'
+  if (data?.session) return 'session'
+  if (Array.isArray(data?.user?.identities) && data.user.identities.length === 0) return 'exists'
+  return 'confirm'
+}
+
 export function authErrorMessage(error) {
   const code = error?.code
   if (code === 'invalid_credentials') {
