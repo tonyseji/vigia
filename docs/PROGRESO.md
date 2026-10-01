@@ -1813,8 +1813,20 @@ Tony elige leer desde el navegador; se monta el botón en la misma sesión:
 - **No verificado:** el guardado con sesión iniciada (habría que entrar con
   la contraseña de Tony) ni el arrastre real a la barra de marcadores.
 
+Tony lo prueba en su Chrome con un artículo de IKEA: funciona (en logs,
+`POST items` y `POST price_history` 201). Pide que quede claro qué artículos
+no tienen precio automático:
+
+- La etiqueta de los artículos manuales pasa de «la tienda bloquea la
+  lectura» a **«sin precio automático»**, con explicación al pasar el ratón
+  (`MANUAL_HINT`), en Lista y en Fotos.
+- `saveFromBrowser` pone `itm_is_manual` según la tienda también al
+  actualizar un artículo existente, y avisa si falla el insert del histórico.
+- El aviso de confirmación, en tienda bloqueada, dice que no hay precio
+  automático y cómo actualizarlo.
+
 ### Estado final
 
-Pendiente de Tony: arrastrar el botón desde Ajustes en su Chrome y probarlo
-en una ficha de Maisons du Monde.
+Botón probado por Tony en IKEA. Pendiente: verlo en una ficha de Maisons du
+Monde con la etiqueta nueva.
 

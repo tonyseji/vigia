@@ -145,8 +145,7 @@ export function useItems() {
   /** Guarda lo que manda el botón del navegador (src/lib/browserImport.js).
    * Si el artículo ya está en la lista, solo apunta el precio nuevo (y
    * rellena título e imagen si se guardó a mano y no los tenía). Si no,
-   * lo crea; en una tienda bloqueada queda en modo manual, porque el pase
-   * automático no puede leerla. */
+   * lo crea. */
   const saveFromBrowser = useCallback(async (data, folderId = null) => {
     const url = cleanUrl(data.url)
     const now = new Date().toISOString()
@@ -159,6 +158,9 @@ export function useItems() {
       .eq('itm_url', url)
       .maybeSingle()
     if (findError) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
+    // Tienda bloqueada = el pase automático no puede leerla: queda en modo
+    // manual (etiqueta «sin precio automático»), también si ya existía.
+    const manual = await checkBlocked(url)
 
     let itemId = existing?.itm_id
     if (existing) {
@@ -169,6 +171,7 @@ export function useItems() {
           itm_in_stock: data.inStock,
           itm_last_checked_at: now,
           itm_last_error: null,
+          itm_is_manual: manual,
           ...(existing.itm_title === existing.itm_url ? { itm_title: data.title } : {}),
           ...(!existing.itm_image_url && data.image ? { itm_image_url: data.image } : {}),
         })
@@ -186,7 +189,7 @@ export function useItems() {
           itm_price: data.price,
           itm_currency: data.currency,
           itm_in_stock: data.inStock,
-          itm_is_manual: await checkBlocked(url),
+          itm_is_manual: manual,
           itm_last_checked_at: now,
         })
         .select('itm_id')
@@ -195,14 +198,15 @@ export function useItems() {
       itemId = item.itm_id
     }
 
-    await supabase.from('price_history').insert({
+    const { error: historyError } = await supabase.from('price_history').insert({
       ph_itm_id: itemId,
       ph_price: data.price,
       ph_in_stock: data.inStock,
       ph_source: 'browser',
     })
     await reload()
-    return { updated: Boolean(existing), previousPrice: existing?.itm_price ?? null }
+    if (historyError) return { error: 'Se guardó el precio, pero no quedó en el histórico. Vuelve a pulsar el botón.' }
+    return { updated: Boolean(existing), previousPrice: existing?.itm_price ?? null, manual }
   }, [checkBlocked, reload])
 
   /** Refresca todos los artículos del usuario. La lógica vive en la Edge

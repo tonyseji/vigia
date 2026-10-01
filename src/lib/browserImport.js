@@ -8,6 +8,10 @@
  * enlace hecho a mano por otra persona no puede meter artículos en tu lista.
  */
 
+/** Explicación de la etiqueta «sin precio automático» (ItemRow, ItemTile). */
+export const MANUAL_HINT =
+  'Esta tienda no deja leer el precio desde Vigía: no se actualiza solo. Para apuntar el de hoy, pulsa el botón + Vigía en su ficha o edítalo a mano.'
+
 const HASH_KEY = 'importar'
 const STORAGE_KEY = 'vigia.pendingImport'
 

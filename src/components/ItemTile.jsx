@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MANUAL_HINT } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
@@ -84,7 +85,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
           {item.itm_is_manual && (
             <>
               <span>·</span>
-              <span className="text-warn">bloquea la lectura</span>
+              <span className="text-warn" title={MANUAL_HINT}>sin precio automático</span>
             </>
           )}
         </div>

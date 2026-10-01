@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MANUAL_HINT } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
 import { itemToText, copyToClipboard } from '../lib/clipboard.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
@@ -97,7 +98,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
           {item.itm_is_manual && (
             <>
               <span>·</span>
-              <span className="text-warn">la tienda bloquea la lectura</span>
+              <span className="text-warn" title={MANUAL_HINT}>sin precio automático</span>
             </>
           )}
         </div>

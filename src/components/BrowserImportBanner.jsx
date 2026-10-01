@@ -17,10 +17,13 @@ export default function BrowserImportBanner({ data, onSave, onClose }) {
       return
     }
     setStatus('done')
-    if (!result.updated) setMessage('Guardado en tu lista.')
+    let text
+    if (!result.updated) text = 'Guardado en tu lista.'
     else if (result.previousPrice != null && result.previousPrice !== data.price)
-      setMessage(`Ya lo tenías: precio actualizado de ${formatPrice(result.previousPrice)} a ${formatPrice(data.price)}.`)
-    else setMessage('Ya lo tenías: precio apuntado, sin cambios.')
+      text = `Ya lo tenías: precio actualizado de ${formatPrice(result.previousPrice)} a ${formatPrice(data.price)}.`
+    else text = 'Ya lo tenías: precio apuntado, sin cambios.'
+    if (result.manual) text += ' Esta tienda no tiene precio automático: para actualizarlo, vuelve a pulsar + Vigía en su ficha.'
+    setMessage(text)
   }
 
   return (
