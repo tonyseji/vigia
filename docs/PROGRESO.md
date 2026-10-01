@@ -2019,5 +2019,5 @@ iPhone».
 
 ### Estado final
 
-Pendiente de Tony: reinstalar Vigía en Android y probar Compartir; crear el
-atajo en el iPhone.
+Probado por Tony en Android el mismo día: Compartir → Vigía funciona.
+Pendiente: crear y probar el atajo en el iPhone.
