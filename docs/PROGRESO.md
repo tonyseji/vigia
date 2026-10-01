@@ -1825,8 +1825,20 @@ no tienen precio automático:
 - El aviso de confirmación, en tienda bloqueada, dice que no hay precio
   automático y cómo actualizarlo.
 
+Tony lo prueba en la mesita de Maisons du Monde: funciona. Pide logo,
+nombre más claro y que guarde sin confirmar:
+
+- Nombre del marcador: «👁️ Guardar en Vigía». Chrome no deja poner icono a
+  un marcador `javascript:`; el ojo del logo va como emoji.
+- Guardado directo: el botón lleva una clave aleatoria guardada en este
+  navegador (`getOrCreateBookmarkletKey`); con la clave correcta
+  `BrowserImportBanner` guarda al abrir (`isTrustedImport`). Sin ella sigue
+  pidiendo confirmar. 4 tests nuevos (90 en total).
+- Favicon de la app en la pestaña (`index.html` no tenía).
+
 ### Estado final
 
-Botón probado por Tony en IKEA. Pendiente: verlo en una ficha de Maisons du
-Monde con la etiqueta nueva.
+Botón probado por Tony en IKEA y en Maisons du Monde. Pendiente: que Tony
+cambie el marcador por el nuevo (el viejo no lleva clave y pide confirmar) y
+compruebe el guardado directo.
 

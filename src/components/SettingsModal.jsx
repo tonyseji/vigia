@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import PasswordFields from './PasswordFields.jsx'
-import { buildBookmarklet } from '../lib/browserImport.js'
+import { buildBookmarklet, getOrCreateBookmarkletKey, BOOKMARK_TITLE } from '../lib/browserImport.js'
 
 const REFRESH_LABELS = {
   off: 'Apagado',
@@ -245,22 +245,23 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
 
 /** Botón «Guardar en Vigía» para la barra de marcadores (src/lib/browserImport.js).
  * El href `javascript:` se pone a mano: React 18 avisa si lo recibe por
- * props. Pulsarlo aquí no hace nada; hay que arrastrarlo. */
+ * props. Lleva la clave de este navegador, con la que Vigía guarda sin
+ * preguntar. Pulsarlo aquí no hace nada; hay que arrastrarlo. */
 function BookmarkletSection() {
   const linkRef = useRef(null)
   const [hint, setHint] = useState(false)
 
   useEffect(() => {
-    linkRef.current?.setAttribute('href', buildBookmarklet(window.location.origin))
+    linkRef.current?.setAttribute('href', buildBookmarklet(window.location.origin, getOrCreateBookmarkletKey()))
   }, [])
 
   return (
     <section className="hidden flex-col gap-2 sm:flex">
       <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Botón para el navegador</h4>
       <p className="text-sm text-ink-mut">
-        Para tiendas que no dejan leer el precio, como Maisons du Monde. Arrastra el botón a la barra de
-        marcadores; luego, en la ficha de un producto, púlsalo y Vigía se abrirá con el artículo listo para
-        guardar. Si ya lo tienes en la lista, apunta el precio de hoy.
+        Arrástralo a la barra de marcadores. En la ficha de un producto, púlsalo y se guarda en Vigía; si ya lo
+        tenías, apunta el precio de hoy. Sirve sobre todo para tiendas que no dejan leer el precio, como Maisons
+        du Monde. Si lo arrastraste antes de hoy, cámbialo por este: el viejo pide confirmar cada vez.
       </p>
       <a
         ref={linkRef}
@@ -270,7 +271,7 @@ function BookmarkletSection() {
         }}
         className="self-start cursor-grab rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent"
       >
-        + Vigía
+        {BOOKMARK_TITLE}
       </a>
       {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
     </section>

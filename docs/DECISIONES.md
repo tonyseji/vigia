@@ -931,7 +931,7 @@ cambiar plantillas de correo y seguía dependiendo de recibir un correo en
 cada entrada. Google — Tony lo deja para más adelante.
 **Revisitar:** botón de Google como en Bilans, si Tony lo pide.
 
-### 2026-10-01 — Botón «+ Vigía» en la barra de marcadores para tiendas que bloquean
+### 2026-10-01 — Botón «Guardar en Vigía» en la barra de marcadores para tiendas que bloquean
 **Contexto:** Maisons du Monde pasó a DataDome; desde el servidor no hay
 forma de bajar la ficha (pruebas en `docs/TIENDAS.md`). En el navegador del
 usuario sí carga, con el precio en JSON-LD.
@@ -947,5 +947,14 @@ marca con `ph_source = 'browser'` (migración 020). Se instala desde Ajustes
 exige login propio, instalación en modo desarrollador o la Chrome Web Store,
 y mantenimiento. Servicio de scraping con plan gratuito — dependencia
 externa, pocos créditos para tiendas con anti-bot y sin garantía de pasar.
-**Revisitar:** la extensión, si el segundo clic (confirmar) molesta en el uso
-real; un atajo de iOS para hacer lo mismo desde el iPhone.
+**Corrección (mismo día, Tony):** guardar sin confirmar. El botón lleva una
+clave aleatoria que Vigía crea y guarda en `localStorage` al mostrarlo en
+Ajustes; si el `#importar=` trae esa clave, se guarda directamente. Sin
+clave o con otra (enlace fabricado, otro navegador, botón viejo) se sigue
+pidiendo confirmar, así que la protección se mantiene. No hace falta BD: la
+clave solo autoriza a añadir artículos desde este navegador. Nombre en la
+barra: «👁️ Guardar en Vigía» (Chrome no admite icono propio en un marcador
+`javascript:`).
+**Revisitar:** la extensión, si hace falta refresco automático para tiendas
+bloqueadas (abrir sus fichas en segundo plano con Chrome abierto; sin
+probar si DataDome lo deja pasar); un atajo de iOS para el iPhone.

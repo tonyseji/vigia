@@ -1,12 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatPrice } from '../lib/format.js'
 
-/** Confirmación de lo que manda el botón del navegador (src/lib/browserImport.js).
- * Nada se guarda sin pulsar «Guardar»: los datos llegan en una URL que
+/** Lo que manda el botón del navegador (src/lib/browserImport.js). Con
+ * `autoSave` (botón creado en este navegador, clave correcta) se guarda al
+ * abrir; si no, espera a «Guardar»: los datos llegan en una URL que
  * cualquiera podría haber escrito. */
-export default function BrowserImportBanner({ data, onSave, onClose }) {
-  const [status, setStatus] = useState('idle') // idle | saving | done | error
+export default function BrowserImportBanner({ data, autoSave = false, onSave, onClose }) {
+  const [status, setStatus] = useState(autoSave ? 'saving' : 'idle') // idle | saving | done | error
   const [message, setMessage] = useState('')
+  // StrictMode repite los efectos en desarrollo: sin esto se guardaría dos veces.
+  const started = useRef(false)
+
+  useEffect(() => {
+    if (!autoSave || started.current) return
+    started.current = true
+    handleSave()
+  }, [autoSave])
 
   async function handleSave() {
     setStatus('saving')
@@ -22,7 +31,7 @@ export default function BrowserImportBanner({ data, onSave, onClose }) {
     else if (result.previousPrice != null && result.previousPrice !== data.price)
       text = `Ya lo tenías: precio actualizado de ${formatPrice(result.previousPrice)} a ${formatPrice(data.price)}.`
     else text = 'Ya lo tenías: precio apuntado, sin cambios.'
-    if (result.manual) text += ' Esta tienda no tiene precio automático: para actualizarlo, vuelve a pulsar + Vigía en su ficha.'
+    if (result.manual) text += ' Esta tienda no tiene precio automático: para actualizarlo, vuelve a pulsar «Guardar en Vigía» en su ficha.'
     setMessage(text)
   }
 

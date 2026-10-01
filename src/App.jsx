@@ -19,7 +19,7 @@ import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
-import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport } from './lib/browserImport.js'
+import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport, isTrustedImport } from './lib/browserImport.js'
 
 /** Si se abre la app con un enlace de invitación (?unirse=...), guarda el
  * token para usarlo en cuanto haya sesión y lo quita de la barra de
@@ -276,6 +276,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
         {browserImport && (
           <BrowserImportBanner
             data={browserImport}
+            autoSave={isTrustedImport(browserImport)}
             onSave={(data) => saveFromBrowser(data, selectedFolderId)}
             onClose={() => setBrowserImport(null)}
           />

@@ -8,9 +8,12 @@ import {
   savePendingImport,
   loadPendingImport,
   clearPendingImport,
+  getOrCreateBookmarkletKey,
+  isTrustedImport,
 } from '../browserImport.js'
 
 const ORIGIN = 'https://vigia-list.vercel.app'
+const KEY = '0123456789abcdef0123456789abcdef'
 
 /** Página mínima: solo lo que usa el botón (querySelector/All, title). */
 function fakePage({ jsonLd = [], metas = {}, canonical = null, title = 'Página', href = 'https://tienda.test/p/1' }) {
@@ -28,10 +31,10 @@ function fakePage({ jsonLd = [], metas = {}, canonical = null, title = 'Página'
 }
 
 /** Ejecuta el botón sobre la página y devuelve lo que abriría (o la alerta). */
-function runBookmarklet(page) {
+function runBookmarklet(page, key = KEY) {
   const opened = []
   const alerts = []
-  const run = new Function('document', 'location', 'window', 'alert', bookmarkletSource(ORIGIN))
+  const run = new Function('document', 'location', 'window', 'alert', bookmarkletSource(ORIGIN, key))
   run(page.document, page.location, { open: (url) => opened.push(url) }, (msg) => alerts.push(msg))
   return { opened, alerts }
 }
@@ -60,6 +63,7 @@ describe('botón del navegador', () => {
       price: 289,
       currency: 'EUR',
       inStock: true,
+      key: KEY,
     })
   })
 
@@ -88,8 +92,14 @@ describe('botón del navegador', () => {
     expect(alerts).toHaveLength(1)
   })
 
+  it('un botón sin clave (o con una mal formada) manda key null', () => {
+    const page = fakePage({ jsonLd: [MDM] })
+    expect(readImport(new URL(runBookmarklet(page, '').opened[0]).hash).key).toBeNull()
+    expect(readImport(new URL(runBookmarklet(page, "x'+alert(1)+'").opened[0]).hash).key).toBeNull()
+  })
+
   it('el enlace es un javascript: de una sola línea', () => {
-    const link = buildBookmarklet(ORIGIN)
+    const link = buildBookmarklet(ORIGIN, KEY)
     expect(link.startsWith('javascript:')).toBe(true)
     expect(decodeURIComponent(link.slice('javascript:'.length))).not.toContain('\n')
     expect(decodeURIComponent(link)).toContain(`'${ORIGIN}/#importar='`)
@@ -115,6 +125,7 @@ describe('parseImport', () => {
       price: 120,
       currency: 'EUR',
       inStock: null,
+      key: null,
     })
     expect(parseImport({ ...ok, t: 'x'.repeat(500) }).title).toHaveLength(300)
   })
@@ -161,7 +172,7 @@ const broken = {
 }
 
 describe('importación pendiente', () => {
-  const data = { url: 'https://tienda.test/p', title: 'Mesa', image: null, price: 120, currency: 'EUR', inStock: null }
+  const data = { url: 'https://tienda.test/p', title: 'Mesa', image: null, price: 120, currency: 'EUR', inStock: null, key: KEY }
 
   it('se guarda, se recupera validada y se borra', () => {
     const storage = memoryStorage()
@@ -178,5 +189,28 @@ describe('importación pendiente', () => {
     expect(() => savePendingImport(data, broken)).not.toThrow()
     expect(loadPendingImport(broken)).toBeNull()
     expect(() => clearPendingImport(broken)).not.toThrow()
+  })
+})
+
+describe('clave del botón', () => {
+  it('se crea una vez y se reutiliza', () => {
+    const storage = memoryStorage()
+    const key = getOrCreateBookmarkletKey(storage)
+    expect(key).toMatch(/^[0-9a-f]{32}$/)
+    expect(getOrCreateBookmarkletKey(storage)).toBe(key)
+  })
+
+  it('solo se fía de un botón con la clave de este navegador', () => {
+    const storage = memoryStorage()
+    getOrCreateBookmarkletKey(storage, () => KEY)
+    expect(isTrustedImport({ key: KEY }, storage)).toBe(true)
+    expect(isTrustedImport({ key: 'f'.repeat(32) }, storage)).toBe(false)
+    expect(isTrustedImport({ key: null }, storage)).toBe(false)
+    expect(isTrustedImport({ key: KEY }, memoryStorage())).toBe(false)
+    expect(isTrustedImport({ key: KEY }, broken)).toBe(false)
+  })
+
+  it('sin almacenamiento devuelve una clave igualmente', () => {
+    expect(getOrCreateBookmarkletKey(broken, () => KEY)).toBe(KEY)
   })
 })
