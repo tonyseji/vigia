@@ -16,8 +16,52 @@
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
 | Kave Home | ❌ | — | DataDome. Precio manual. |
-| Maisons du Monde | ❌ | — | Checkpoint de Vercel. Precio manual. |
+| Maisons du Monde | ❌ | — | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. Precio manual. Ver «Maisons du Monde: qué se probó». |
 | Cualquier tienda con JSON-LD u Open Graph | ✅ | Genérico | Es el caso mayoritario. |
+
+---
+
+## Maisons du Monde: qué se probó (2026-10-01, sesión 21)
+
+Desde una IP residencial (la de casa, no la de Supabase), con `curl`:
+
+| Intento | Resultado |
+|---|---|
+| Ficha de producto, cabeceras de Chrome completas + cookie de la home | 403, página de DataDome (`captcha-delivery.com`) |
+| Misma ficha con User-Agent de Googlebot, Pinterest, Facebook, WhatsApp, iPhone | 403 en todos |
+| Páginas de categoría | 403 |
+| API interna (`bff-www.maisonsdumonde.com/api/graphql`, la que usa su web) | 403, también detrás de DataDome |
+| Clave pública de Algolia en el JavaScript | No hay; la búsqueda pasa por su API interna |
+| Home | 200, y sus tarjetas llevan precio, pero solo salen los artículos que ellos destacan |
+
+Desde la IP de Supabase (Edge Function o `pg_net`) será igual o peor: DataDome
+castiga más las IP de centro de datos.
+
+En un navegador de verdad la ficha sí carga, y trae el precio en JSON-LD
+(`offers.price`, `availability`). **El extractor actual lo leería sin
+cambios**: el problema es solo conseguir el HTML, no interpretarlo.
+`isBotPage` ya reconoce la página de DataDome.
+
+Alternativas que quedan, pendientes de decisión (backlog B21):
+
+1. **Leer desde el navegador del usuario.** Un atajo de iOS («Ejecutar
+   JavaScript en página web» desde compartir en Safari) o un bookmarklet en
+   escritorio coge el JSON-LD de la página ya abierta y lo manda a Vigía.
+   0 €, sin depender de nadie, y no es esquivar nada: es la página que el
+   usuario está viendo. Da precio al añadir y cada vez que se vuelve a abrir
+   la ficha; **no** da refresco automático diario.
+2. **Servicio de scraping con plan gratuito** (ScrapingAnt, ScraperAPI,
+   Scrapfly…). Ellos ponen navegador e IP residencial. Da refresco
+   automático. Contras: dependencia externa y clave en Secrets, el modo
+   anti-bot gasta muchos créditos por petición (los planes gratuitos dan para
+   pocas lecturas al mes de tiendas protegidas), ninguno garantiza pasar
+   DataDome, y es exactamente la «carrera» que este documento decía no querer.
+   Si se prueba, solo para dominios marcados (un `sr_fetch_mode` nuevo), nunca
+   para todos.
+3. **Dejarlo como está** (precio manual).
+
+Descartado sin más pruebas: navegador headless propio en GitHub Actions u
+otro servidor gratuito (IP de centro de datos, DataDome lo detecta).
 
 ---
 

@@ -1762,3 +1762,33 @@ Decidido con Tony: se mantiene «Confirm email». Hasta hoy los correos han
 llegado (las 3 cuentas confirmaron en menos de 20 s), pero el SMTP de pruebas
 de Supabase no garantiza la entrega y tiene un límite bajo por hora. Si falla
 de verdad, el paso es B7 (SMTP propio, p. ej. Resend gratuito).
+
+
+## 2026-10-01 (Sesión 21) — Investigación: Maisons du Monde no deja leer el precio
+
+### Contexto
+
+Tony: con Maisons du Monde no se obtiene el precio; buscar alternativas.
+
+### Cambios
+
+Solo investigación y documentación, sin código.
+
+- La tienda ya no usa el checkpoint de Vercel: ahora es **DataDome**
+  (`x-datadome: protected`). Corregido en `docs/TIENDAS.md`.
+- Probado desde IP residencial: fichas y categorías dan 403 con cualquier
+  combinación de cabeceras y User-Agent (Chrome, iPhone, Googlebot…). Su API
+  interna (GraphQL en `bff-www.maisonsdumonde.com`) también está detrás de
+  DataDome. No hay clave pública de Algolia. Solo la home pasa.
+- En un navegador real la ficha trae el precio en JSON-LD (289 € la vitrina
+  Illa, en stock): el extractor actual valdría tal cual si llegara el HTML.
+- Alternativas y tabla de pruebas en `docs/TIENDAS.md`, sección «Maisons du
+  Monde: qué se probó». Backlog B21.
+
+### Estado final
+
+Pendiente de decisión (Cowork): leer desde el navegador del usuario (atajo de
+iOS / bookmarklet, 0 €, sin refresco automático) o servicio de scraping con
+plan gratuito (refresco automático, dependencia externa y pocos créditos para
+tiendas protegidas). Mientras tanto, precio manual como hasta ahora.
+
