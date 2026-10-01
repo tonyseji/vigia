@@ -1985,3 +1985,39 @@ Extensión funcionando en el Chrome de Tony. Pendiente: favorito en el
 iPhone (Safari) y en Android, y vigilar el captcha en los pases de los
 próximos días (B22).
 
+
+## 2026-10-01 (Sesión 25) — Compartir → Vigía en Android y atajo en iPhone
+
+### Contexto
+
+Tony: el favorito con código funciona en Chrome de Android escribiendo su
+nombre en la barra, pero es incómodo; quiere un botón. «No olvides el
+iPhone».
+
+### Cambios
+
+- `public/manifest.json`: `share_target` GET a `/compartir`.
+- `src/lib/shareTarget.js` (`readSharedUrl` y guardado pendiente hasta el
+  login, patrón de `shareLink.js`), 5 tests.
+- `App.jsx`: `captureShare` recoge `/compartir`, guarda la dirección y deja
+  la barra en `/`. El panel guarda solo (`addItem`; si la tienda bloquea,
+  `addManualItem` sin precio) y `SharedLinkBanner` enseña el resultado con
+  «Deshacer».
+- Ajustes: la sección pasa a «Guardar desde el navegador o el móvil», con
+  Compartir en Android, los pasos del atajo de iPhone y «Copiar dirección
+  para el atajo»; el favorito con código queda como «otra opción».
+- Decisión en `DECISIONES.md`.
+
+### Verificación
+
+- Tests (117) y build en verde.
+- Local: `/compartir?title=…&text=Mira esta mesita: https://….htm.` deja la
+  barra en `/`, guarda la dirección sin el punto final y no hay errores.
+- Sin probar: el menú Compartir en un Android real (hay que reinstalar la
+  app para que coja el manifiesto nuevo), el atajo en un iPhone y el
+  guardado con sesión.
+
+### Estado final
+
+Pendiente de Tony: reinstalar Vigía en Android y probar Compartir; crear el
+atajo en el iPhone.

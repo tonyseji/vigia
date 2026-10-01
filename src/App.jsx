@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useItems } from './hooks/useItems.js'
 import { useFolders } from './hooks/useFolders.js'
@@ -15,11 +15,13 @@ import ShareFolderModal from './components/ShareFolderModal.jsx'
 import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import BrowserImportBanner from './components/BrowserImportBanner.jsx'
+import SharedLinkBanner from './components/SharedLinkBanner.jsx'
 import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
 import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport, isTrustedImport } from './lib/browserImport.js'
+import { readSharedUrl, savePendingShare, loadPendingShare, clearPendingShare } from './lib/shareTarget.js'
 
 /** Si se abre la app con un enlace de invitación (?unirse=...), guarda el
  * token para usarlo en cuanto haya sesión y lo quita de la barra de
@@ -43,10 +45,22 @@ function captureImport() {
   }
 }
 
+/** Y para el menú Compartir de Android (/compartir?url=..., ver
+ * src/lib/shareTarget.js): la dirección espera a la sesión y la barra vuelve
+ * a la raíz. */
+function captureShare() {
+  const { pathname, search } = window.location
+  if (!pathname.startsWith('/compartir')) return
+  const url = readSharedUrl(pathname, search)
+  if (url) savePendingShare(url)
+  window.history.replaceState(null, '', '/')
+}
+
 export default function App() {
   const auth = useAuth()
   const [joining] = useState(() => {
     captureImport()
+    captureShare()
     return captureJoinToken()
   })
 
@@ -111,9 +125,24 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   // Lo que mandó el botón del navegador. Se lee una vez y se borra del
   // almacenamiento: recargar la pestaña no lo vuelve a ofrecer.
   const [browserImport, setBrowserImport] = useState(loadPendingImport)
+  // Lo mismo con lo compartido desde Android: se guarda una vez.
+  const [sharedUrl, setSharedUrl] = useState(loadPendingShare)
   useEffect(() => {
     clearPendingImport()
+    clearPendingShare()
   }, [])
+
+  /** Guarda lo compartido: con precio si la tienda deja leerlo; si bloquea,
+   * sin precio y en modo manual (la extensión de Chrome se lo pondrá). */
+  const saveShared = useCallback(
+    async (url) => {
+      const result = await addItem(url, selectedFolderId)
+      if (!result.blocked) return result
+      const manual = await addManualItem(url, null, selectedFolderId)
+      return manual.error ? manual : { item: manual.item, manual: true }
+    },
+    [addItem, addManualItem, selectedFolderId],
+  )
 
   // Enlace de invitación pendiente (abierto antes o durante el login): se
   // usa una sola vez al entrar. Se borra antes de la llamada para que el
@@ -272,6 +301,9 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
               ×
             </button>
           </div>
+        )}
+        {sharedUrl && (
+          <SharedLinkBanner url={sharedUrl} onSave={saveShared} onUndo={deleteItem} onClose={() => setSharedUrl(null)} />
         )}
         {browserImport && (
           <BrowserImportBanner

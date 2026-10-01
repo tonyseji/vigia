@@ -247,17 +247,20 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
 /** Botón «Guardar en Vigía» para la barra de marcadores (src/lib/browserImport.js).
  * El href `javascript:` se pone a mano: React 18 avisa si lo recibe por
  * props. Lleva la clave de este navegador, con la que Vigía guarda sin
- * preguntar. En escritorio se arrastra; en el iPhone no se puede, así que se
- * copia el código y se pega en un favorito de Safari. */
+ * preguntar. En escritorio se arrastra; en el móvil se copia el código y se
+ * pega en un favorito. La vía principal en el móvil es Compartir: Android
+ * (share_target, src/lib/shareTarget.js) y un atajo de iOS que abre la
+ * misma /compartir?url=. */
 function BookmarkletSection() {
   const linkRef = useRef(null)
   const [code, setCode] = useState('')
   const [hint, setHint] = useState(false)
-  const [copied, setCopied] = useState(null) // null | true | false
+  const [copied, setCopied] = useState(null) // null | 'base' | 'code' | false
   // En el iPhone, la app instalada en la pantalla de inicio no comparte datos
   // con Safari: un código copiado aquí llevaría una clave que Safari no
-  // conoce. `navigator.standalone` solo existe en iOS; en Android la app
-  // instalada sí comparte almacenamiento con Chrome y no hace falta avisar.
+  // conoce (el favorito funcionaría, pero pidiendo confirmar).
+  // `navigator.standalone` solo existe en iOS; en Android la app instalada
+  // sí comparte almacenamiento con Chrome y no hace falta avisar.
   const iosInstalledApp = window.navigator.standalone === true
 
   useEffect(() => {
@@ -266,20 +269,23 @@ function BookmarkletSection() {
     setCode(link)
   }, [])
 
-  async function copyCode() {
-    setCopied(await copyToClipboard(code))
+  async function copyText(text, which) {
+    setCopied((await copyToClipboard(text)) ? which : false)
   }
 
   return (
     <section className="flex flex-col gap-2">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Botón para el navegador</h4>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Guardar desde el navegador o el móvil</h4>
       <p className="text-sm text-ink-mut">
-        En la ficha de un producto, púlsalo y se guarda en Vigía; si ya lo tenías, apunta el precio de hoy. En
-        Chrome es más cómoda la extensión; esto sirve para Safari y otros navegadores.
+        Para guardar el producto que estás viendo sin copiar la dirección; si ya lo tenías, apunta el precio de
+        hoy.
       </p>
 
       <div className="hidden flex-col gap-2 sm:flex">
-        <p className="text-sm text-ink-mut">Escritorio: arrástralo a la barra de marcadores.</p>
+        <p className="text-sm text-ink-mut">
+          Escritorio: en Chrome, la extensión de Vigía (también actualiza sola Maisons du Monde y Kave Home). En
+          otros navegadores, arrastra este botón a la barra de marcadores y púlsalo en la ficha.
+        </p>
         <a
           ref={linkRef}
           onClick={(e) => {
@@ -293,38 +299,57 @@ function BookmarkletSection() {
         {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
       </div>
 
-      {iosInstalledApp ? (
-        <p className="text-sm text-warn">
-          iPhone: abre Vigía en Safari (no en la app instalada), entra y copia el código desde Ajustes. La app y
-          Safari no comparten datos y el botón no te reconocería.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2 text-sm text-ink-mut">
-          <p>En el móvil, una sola vez: copia el código con el botón de abajo y guárdalo como favorito.</p>
-          <ul className="list-disc pl-5">
-            <li>
-              iPhone (Safari; hazlo en Safari, no en la app instalada): Compartir → «Añadir a favoritos» con
-              cualquier página y llámalo «Guardar en Vigía». Luego Favoritos → Editar → ese favorito: borra la
-              dirección y pega el código. Para usarlo: barra de direcciones → Favoritos → «Guardar en Vigía».
-            </li>
-            <li>
-              Android (Chrome): ⋮ → estrella para añadir a favoritos cualquier página, y en el aviso «Editar»:
-              nombre «Guardar en Vigía» y en la dirección pega el código. Para usarlo: en la ficha, escribe
-              «Guardar en Vigía» en la barra de direcciones y toca el favorito que aparece (desde la lista de
-              favoritos no funciona).
-            </li>
-          </ul>
-          <button
-            type="button"
-            onClick={copyCode}
-            disabled={!code}
-            className="self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
-          >
-            {copied ? 'Copiado' : 'Copiar código'}
-          </button>
-          {copied === false && <p className="text-warn">No se pudo copiar. Inténtalo otra vez.</p>}
-        </div>
-      )}
+      <div className="flex flex-col gap-2 text-sm text-ink-mut">
+        <p className="font-medium text-ink">Desde el móvil, con un toque en Compartir:</p>
+        <ul className="flex list-disc flex-col gap-1.5 pl-5">
+          <li>
+            <b>Android:</b> con Vigía instalada (Chrome → ⋮ → «Instalar aplicación»), en la ficha de un producto:
+            Compartir → Vigía. Si Vigía no sale en Compartir, desinstálala y vuelve a instalarla.
+          </li>
+          <li>
+            <b>iPhone:</b> un atajo, una sola vez, en la app Atajos: «+» → añadir la acción «Codificar URL» (sobre
+            la entrada del atajo) y después «Abrir URL» con la dirección de abajo seguida del resultado de
+            «Codificar URL». En la ⓘ del atajo, activa «Mostrar en hoja de compartir» y llámalo «Guardar en Vigía».
+            El atajo abre Vigía en Safari: entra en Vigía desde Safari una vez para que te reconozca.
+          </li>
+        </ul>
+        <button
+          type="button"
+          onClick={() => copyText(`${window.location.origin}/compartir?url=`, 'base')}
+          className="self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          {copied === 'base' ? 'Copiada' : 'Copiar dirección para el atajo'}
+        </button>
+
+        <details>
+          <summary className="cursor-pointer">Otra opción: favorito con código (lee el precio al momento)</summary>
+          <div className="mt-2 flex flex-col gap-2">
+            {iosInstalledApp && (
+              <p className="text-warn">
+                Estás en la app instalada: copia el código desde Vigía abierto en Safari, o el favorito te pedirá
+                confirmar cada vez (la app y Safari no comparten datos).
+              </p>
+            )}
+            <p>
+              iPhone (Safari): Compartir → «Añadir a favoritos» con cualquier página, llámalo «Guardar en Vigía»;
+              luego Favoritos → Editar → ese favorito: borra la dirección y pega el código. Se usa desde Favoritos.
+            </p>
+            <p>
+              Android (Chrome): ⋮ → estrella en cualquier página → «Editar»: nombre «Guardar en Vigía» y pega el
+              código como dirección. Se usa escribiendo «Guardar» en la barra de direcciones y tocando el favorito.
+            </p>
+            <button
+              type="button"
+              onClick={() => copyText(code, 'code')}
+              disabled={!code}
+              className="self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+            >
+              {copied === 'code' ? 'Copiado' : 'Copiar código'}
+            </button>
+          </div>
+        </details>
+        {copied === false && <p className="text-warn">No se pudo copiar. Inténtalo otra vez.</p>}
+      </div>
     </section>
   )
 }

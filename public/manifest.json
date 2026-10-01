@@ -39,5 +39,14 @@
       "sizes": "180x180",
       "type": "image/png"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/compartir",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

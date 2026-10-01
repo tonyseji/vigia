@@ -116,7 +116,12 @@ navegador de verdad, así que:
   `record-price`, que lo apunta y avisa de bajadas con las mismas reglas que
   `refresh` (`refresh/notify.ts`).
 
-Lo que entra por cualquiera de los dos va al histórico con
+En el móvil, **Compartir → Vigía** (Android, `share_target` del manifiesto)
+o un atajo de iOS abren `/compartir?url=…` (`src/lib/shareTarget.js`): solo
+llega la dirección, y se guarda como si se hubiera pegado (`addItem`, y si
+la tienda bloquea, `addManualItem` sin precio).
+
+Lo que entra por el botón o la extensión va al histórico con
 `ph_source = 'browser'`. En la lista, un artículo manual cuyo último precio
 vino del navegador hace menos de dos días lleva «precio desde Chrome»; si no,
 «sin precio automático» (`manualPriceStatus`).

@@ -92,8 +92,9 @@ ahora usa DataDome; botón «+ Vigía» para la barra de marcadores lee el preci
 vista Lista/Fotos recordada y carpetas plegables en el listado general. Sesión 23: extensión de
 Chrome (`extension/`) con precio diario para tiendas que bloquean, vía Edge Function `record-price`;
 instalada y funcionando en el Chrome de Tony (vigilar captcha, B22). Sesión 24: revisión de todo lo anterior
-(Android, duplicados por URL, pase por id). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 y 24.
+(Android, duplicados por URL, pase por id). Sesión 25: Compartir → Vigía en Android
+(`share_target`) y atajo de iOS a `/compartir`; sin probar en móvil real. Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 y 25.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

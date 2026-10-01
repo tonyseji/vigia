@@ -985,3 +985,25 @@ extensión. `record-price` duplica el envío de avisos de `refresh` (unas 20
 líneas) para no tocar el pase del servidor; unificarlo si cambia uno.
 **Revisitar:** si el captcha aparece con frecuencia; si se quiere lo mismo en
 el iPhone (atajo de iOS, sin pase automático posible).
+
+### 2026-10-01 — Guardar desde el móvil con Compartir (Android) y un atajo (iPhone)
+**Contexto:** en Chrome de Android el favorito con código solo se ejecuta
+escribiendo su nombre en la barra de direcciones (desde la lista de
+favoritos no hace nada); Tony lo probó y le resulta incómodo. Pide «un
+botón».
+**Decisión:** `share_target` en `public/manifest.json` (GET a
+`/compartir?title&text&url`): con la app instalada, Vigía sale en el menú
+Compartir de Android. `src/lib/shareTarget.js` saca la primera dirección web
+de `url`, `text` o `title`; la app la guarda sola (con precio si la tienda
+deja leerla; si bloquea, sin precio y en modo manual, y la extensión de
+Chrome se lo pone en el pase) y enseña el resultado con «Deshacer». En el
+iPhone no existe `share_target` para apps web: un atajo de la app Atajos
+(«Codificar URL» + «Abrir URL» con `/compartir?url=`) en la hoja de
+compartir abre la misma ruta en Safari.
+**Por qué «Deshacer» y no confirmar:** Tony quiere un toque. La ruta es un
+GET que cualquiera puede fabricar, pero lo peor que hace un enlace así es
+añadir un artículo a la lista; se ve en el aviso y se quita con un toque.
+**Límites:** lo compartido no trae la página, solo la dirección: en tiendas
+que bloquean, el precio llega en el siguiente pase de la extensión (o al
+momento con el favorito con código, que sigue en Ajustes). El atajo del
+iPhone abre Safari, que necesita su propia sesión de Vigía.
