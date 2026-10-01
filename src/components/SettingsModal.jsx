@@ -254,10 +254,11 @@ function BookmarkletSection() {
   const [code, setCode] = useState('')
   const [hint, setHint] = useState(false)
   const [copied, setCopied] = useState(null) // null | true | false
-  // La app instalada en la pantalla de inicio no comparte datos con Safari:
-  // un código copiado aquí llevaría una clave que Safari no conoce.
-  const installedApp =
-    window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+  // En el iPhone, la app instalada en la pantalla de inicio no comparte datos
+  // con Safari: un código copiado aquí llevaría una clave que Safari no
+  // conoce. `navigator.standalone` solo existe en iOS; en Android la app
+  // instalada sí comparte almacenamiento con Chrome y no hace falta avisar.
+  const iosInstalledApp = window.navigator.standalone === true
 
   useEffect(() => {
     const link = buildBookmarklet(window.location.origin, getOrCreateBookmarkletKey())
@@ -292,20 +293,27 @@ function BookmarkletSection() {
         {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
       </div>
 
-      {installedApp ? (
+      {iosInstalledApp ? (
         <p className="text-sm text-warn">
           iPhone: abre Vigía en Safari (no en la app instalada), entra y copia el código desde Ajustes. La app y
           Safari no comparten datos y el botón no te reconocería.
         </p>
       ) : (
         <div className="flex flex-col gap-2 text-sm text-ink-mut">
-          <p>iPhone (Safari), una sola vez:</p>
-          <ol className="list-decimal pl-5">
-            <li>Copia el código con el botón de abajo.</li>
-            <li>Compartir → «Añadir a favoritos» con cualquier página; llámalo «Guardar en Vigía».</li>
-            <li>Favoritos → Editar → ese favorito: borra la dirección y pega el código.</li>
-          </ol>
-          <p>Para usarlo, en la ficha: barra de direcciones → Favoritos → «Guardar en Vigía».</p>
+          <p>En el móvil, una sola vez: copia el código con el botón de abajo y guárdalo como favorito.</p>
+          <ul className="list-disc pl-5">
+            <li>
+              iPhone (Safari; hazlo en Safari, no en la app instalada): Compartir → «Añadir a favoritos» con
+              cualquier página y llámalo «Guardar en Vigía». Luego Favoritos → Editar → ese favorito: borra la
+              dirección y pega el código. Para usarlo: barra de direcciones → Favoritos → «Guardar en Vigía».
+            </li>
+            <li>
+              Android (Chrome): ⋮ → estrella para añadir a favoritos cualquier página, y en el aviso «Editar»:
+              nombre «Guardar en Vigía» y en la dirección pega el código. Para usarlo: en la ficha, escribe
+              «Guardar en Vigía» en la barra de direcciones y toca el favorito que aparece (desde la lista de
+              favoritos no funciona).
+            </li>
+          </ul>
           <button
             type="button"
             onClick={copyCode}

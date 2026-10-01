@@ -148,6 +148,9 @@ export function useItems() {
    * lo crea. */
   const saveFromBrowser = useCallback(async (data, folderId = null) => {
     const url = cleanUrl(data.url)
+    // Se busca por la canónica y por la de la barra: el artículo pudo
+    // guardarse pegando cualquiera de las dos.
+    const candidates = [...new Set([url, data.altUrl && cleanUrl(data.altUrl)].filter(Boolean))]
     const now = new Date().toISOString()
     const { data: userData } = await supabase.auth.getUser()
     const userId = userData.user.id
@@ -155,7 +158,8 @@ export function useItems() {
       .from('items')
       .select('itm_id, itm_url, itm_title, itm_image_url, itm_price')
       .eq('itm_usr_id', userId)
-      .eq('itm_url', url)
+      .in('itm_url', candidates)
+      .limit(1)
       .maybeSingle()
     if (findError) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
     // Tienda bloqueada = el pase automático no puede leerla: queda en modo

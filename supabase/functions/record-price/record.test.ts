@@ -7,7 +7,13 @@ const ok = { url: 'https://tienda.test/p', title: 'Mesa', image: 'https://tienda
 
 describe('parsePricePayload', () => {
   it('acepta un payload correcto y redondea a céntimos', () => {
-    expect(parsePricePayload({ ...ok, price: 64.899999 })).toEqual({ ...ok, price: 64.9 })
+    expect(parsePricePayload({ ...ok, price: 64.899999 })).toEqual({ ...ok, price: 64.9, altUrl: null, itemId: null })
+  })
+
+  it('URL alternativa solo si es otra; id solo si es un uuid', () => {
+    const id = '0b9e2a40-1c2d-4e5f-8a9b-0c1d2e3f4a5b'
+    expect(parsePricePayload({ ...ok, altUrl: 'https://tienda.test/p?v=2', itemId: id })).toMatchObject({ altUrl: 'https://tienda.test/p?v=2', itemId: id })
+    expect(parsePricePayload({ ...ok, altUrl: ok.url, itemId: "x' or 1=1" })).toMatchObject({ altUrl: null, itemId: null })
   })
 
   it('rechaza sin URL http(s) o con precio raro', () => {
@@ -27,6 +33,8 @@ describe('parsePricePayload', () => {
       price: 120,
       currency: 'EUR',
       inStock: null,
+      altUrl: null,
+      itemId: null,
     })
   })
 })

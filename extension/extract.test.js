@@ -31,6 +31,7 @@ describe('extractProduct (extensión)', () => {
     expect(extractProduct()).toEqual({
       blocked: false,
       url: 'https://tienda.test/p/jill',
+      altUrl: 'https://tienda.test/p/1',
       title: 'Mesita Jill',
       image: 'https://t.test/a.jpg',
       price: 55.9,

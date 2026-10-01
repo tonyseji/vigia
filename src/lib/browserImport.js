@@ -99,7 +99,8 @@ const BOOKMARKLET_SOURCE = `
     p: price,
     c: (offer && offer.priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'EUR',
     s: /InStock|LimitedAvailability|PreOrder/i.test(availability) ? true : /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : null,
-    k: '__CLAVE__'
+    k: '__CLAVE__',
+    a: location.href
   };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))))
     .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
@@ -142,7 +143,9 @@ function httpUrl(value) {
 
 /** Los datos vienen de una URL que cualquiera puede escribir: se valida
  * todo y se descarta lo que no encaje. Sin URL o sin precio no hay nada
- * que importar. */
+ * que importar. `url` es la canónica de la página; `altUrl`, la de la barra
+ * de direcciones si es otra: el artículo pudo guardarse con cualquiera de
+ * las dos y hay que encontrarlo para no duplicarlo. */
 export function parseImport(payload) {
   if (!payload || typeof payload !== 'object') return null
   const url = httpUrl(payload.u)
@@ -157,6 +160,7 @@ export function parseImport(payload) {
     price: Math.round(price * 100) / 100,
     currency,
     inStock: typeof payload.s === 'boolean' ? payload.s : null,
+    altUrl: httpUrl(payload.a) !== url ? httpUrl(payload.a) : null,
     key: typeof payload.k === 'string' && KEY_RE.test(payload.k) ? payload.k : null,
   }
 }
@@ -202,7 +206,7 @@ export function loadPendingImport(storage = defaultStorage()) {
     const raw = storage?.getItem(STORAGE_KEY)
     if (!raw) return null
     const data = JSON.parse(raw)
-    return parseImport({ u: data.url, t: data.title, i: data.image, p: data.price, c: data.currency, s: data.inStock, k: data.key })
+    return parseImport({ u: data.url, t: data.title, i: data.image, p: data.price, c: data.currency, s: data.inStock, k: data.key, a: data.altUrl })
   } catch {
     return null
   }

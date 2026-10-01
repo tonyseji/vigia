@@ -50,8 +50,10 @@ export async function login(email, password) {
   return session.user
 }
 
+/** También olvida la configuración: al volver a entrar se descarga de nuevo
+ * (si algún día cambia la clave pública, basta con salir y entrar). */
 export async function logout() {
-  await chrome.storage.local.remove(['session', 'lastPass'])
+  await chrome.storage.local.remove(['session', 'lastPass', 'config'])
 }
 
 let refreshing = null

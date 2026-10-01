@@ -15,6 +15,12 @@ Solo funciona con el ordenador encendido y Chrome abierto. Si a la hora del
 pase estaba apagado, lo hace en cuanto se abre Chrome (mira cada hora si el
 último pase tiene más de 20 h).
 
+Solo para Chrome de escritorio y navegadores basados en él (Edge, Brave,
+Opera). **Chrome para Android no admite extensiones**, ni Safari: en el
+móvil se usa el botón «Guardar en Vigía» (Ajustes → «Copiar código»). El
+pase diario lo hace el Chrome del ordenador para toda la lista, sin
+importar desde dónde se guardó cada artículo.
+
 ## Instalar
 
 1. En Chrome, abrir `chrome://extensions`.

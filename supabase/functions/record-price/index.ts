@@ -2,7 +2,7 @@
 // Chrome (extension/), al guardar la pagina abierta o en su pase diario por
 // las tiendas que bloquean al servidor (docs/TIENDAS.md, backlog B21).
 //
-// Body: { url, title?, image?, price, currency?, inStock? }
+// Body: { url, altUrl?, itemId?, title?, image?, price, currency?, inStock? }
 // Si el articulo ya esta en la lista del usuario, actualiza su precio y avisa
 // de bajadas igual que el pase automatico (refresh/notify.ts). Si no, lo crea
 // sin carpeta (sale el primero de la lista, src/lib/itemGroups.js).
@@ -74,13 +74,22 @@ Deno.serve(async (req) => {
   // manual y solo la actualiza el navegador.
   const manual = Boolean(rule?.sr_blocked);
 
-  const { data: existing, error: findError } = await admin
+  // El pase de la extension manda el id del articulo que esta leyendo; al
+  // guardar una pagina se busca por la URL canonica y por la de la barra
+  // (el articulo pudo guardarse con cualquiera de las dos).
+  let lookup = admin
     .from("items")
     .select("itm_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
-    .eq("itm_usr_id", user.id)
-    .eq("itm_url", url)
-    .maybeSingle();
+    .eq("itm_usr_id", user.id);
+  if (data.itemId) lookup = lookup.eq("itm_id", data.itemId);
+  else {
+    const urls = [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null);
+    lookup = lookup.in("itm_url", [...new Set(urls)]);
+  }
+  const { data: existing, error: findError } = await lookup.limit(1).maybeSingle();
   if (findError) return json({ error: "No se pudo leer la lista" }, 500);
+  // Borrado mientras el pase lo leia: no se vuelve a crear.
+  if (data.itemId && !existing) return json({ error: "El articulo ya no esta en la lista" }, 404);
 
   let itemId: string;
   if (existing) {

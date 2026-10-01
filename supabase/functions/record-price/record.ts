@@ -4,12 +4,18 @@
 
 export interface PricePayload {
   url: string;
+  /** La de la barra de direcciones, si no es la canonica. */
+  altUrl: string | null;
+  /** El pase de la extension sabe que articulo esta leyendo: va por id. */
+  itemId: string | null;
   title: string | null;
   image: string | null;
   price: number;
   currency: string;
   inStock: boolean | null;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function httpUrl(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 2000) return null;
@@ -30,8 +36,11 @@ export function parsePricePayload(body: unknown): PricePayload | null {
   const price = typeof b.price === "number" ? b.price : NaN;
   if (!url || !Number.isFinite(price) || price < 0 || price >= 10_000_000) return null;
   const title = typeof b.title === "string" ? b.title.trim().slice(0, 300) : "";
+  const altUrl = httpUrl(b.altUrl);
   return {
     url,
+    altUrl: altUrl !== url ? altUrl : null,
+    itemId: typeof b.itemId === "string" && UUID_RE.test(b.itemId) ? b.itemId : null,
     title: title || null,
     image: httpUrl(b.image),
     price: Math.round(price * 100) / 100,

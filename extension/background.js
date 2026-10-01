@@ -30,8 +30,10 @@ async function runPassIfDue() {
   await runPass()
 }
 
-function waitForLoad(tabId) {
-  return new Promise((resolve, reject) => {
+/** Navega la pestaña y espera a que cargue. El listener se pone antes de
+ * navegar: una página en caché puede terminar antes de que se registre. */
+function navigate(tabId, url) {
+  const loaded = new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(listener)
       reject(new Error('La página tardó demasiado en cargar'))
@@ -45,6 +47,7 @@ function waitForLoad(tabId) {
     }
     chrome.tabs.onUpdated.addListener(listener)
   })
+  return chrome.tabs.update(tabId, { url }).then(() => loaded)
 }
 
 async function readTab(tabId) {
@@ -71,13 +74,18 @@ function runPass() {
           if (i > 0) await sleep(4000 + Math.random() * 4000) // sin prisa: menos pinta de robot
           const name = item.itm_title && item.itm_title !== item.itm_url ? item.itm_title : item.itm_url
           try {
-            await chrome.tabs.update(tabId, { url: item.itm_url })
-            await waitForLoad(tabId)
+            await navigate(tabId, item.itm_url)
             await sleep(1500)
-            const read = await readTab(tabId)
+            let read = await readTab(tabId)
+            // DataDome a veces enseña su pantalla un momento y deja pasar
+            // solo: se le da una segunda oportunidad antes de darlo por perdido.
+            if (read?.blocked) {
+              await sleep(6000)
+              read = await readTab(tabId)
+            }
             if (read?.blocked) throw new Error('la tienda pidió verificación (captcha)')
             if (read?.price == null) throw new Error('no se encontró el precio')
-            await recordPrice({ ...read, url: item.itm_url })
+            await recordPrice({ ...read, url: item.itm_url, itemId: item.itm_id })
             summary.updated++
           } catch (err) {
             summary.failed.push({ name, reason: err instanceof Error ? err.message : String(err) })

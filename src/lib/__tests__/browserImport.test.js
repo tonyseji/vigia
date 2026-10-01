@@ -64,6 +64,7 @@ describe('botón del navegador', () => {
       price: 289,
       currency: 'EUR',
       inStock: true,
+      altUrl: 'https://tienda.test/p/1',
       key: KEY,
     })
   })
@@ -76,6 +77,7 @@ describe('botón del navegador', () => {
     expect(data.price).toBe(1299.5)
     expect(data.inStock).toBe(false)
     expect(data.url).toBe('https://tienda.test/p/1')
+    expect(data.altUrl).toBeNull() // sin canónica, la de la barra es la misma
   })
 
   it('sin JSON-LD usa las metas de Open Graph', () => {
@@ -141,6 +143,7 @@ describe('parseImport', () => {
       price: 120,
       currency: 'EUR',
       inStock: null,
+      altUrl: null,
       key: null,
     })
     expect(parseImport({ ...ok, t: 'x'.repeat(500) }).title).toHaveLength(300)
@@ -188,7 +191,7 @@ const broken = {
 }
 
 describe('importación pendiente', () => {
-  const data = { url: 'https://tienda.test/p', title: 'Mesa', image: null, price: 120, currency: 'EUR', inStock: null, key: KEY }
+  const data = { url: 'https://tienda.test/p', title: 'Mesa', image: null, price: 120, currency: 'EUR', inStock: null, altUrl: 'https://tienda.test/p?v=2', key: KEY }
 
   it('se guarda, se recupera validada y se borra', () => {
     const storage = memoryStorage()

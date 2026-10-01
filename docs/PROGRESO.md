@@ -1933,3 +1933,44 @@ Pendiente de Tony: instalar la extensión (`extension/README.md`), entrar,
 probar el icono en una ficha y «Actualizar ahora» en la ventana; crear el
 favorito en Safari del iPhone. B22 para vigilar el captcha en uso real.
 No probado en Safari real.
+
+
+## 2026-10-01 (Sesión 24) — Revisión de todo lo de hoy
+
+### Contexto
+
+Tony no puede probar el iPhone ahora y pide revisar que no haya nada roto.
+Revisado el diff completo desde `397e027` (web, extensión, `record-price`).
+
+### Encontrado y corregido
+
+- **Android:** Ajustes trataba la app instalada en Android como la del
+  iPhone (avisaba de ir a Safari y escondía «Copiar código»). Ahora el aviso
+  es solo para iOS (`navigator.standalone`); en Android la app instalada
+  comparte almacenamiento con Chrome. Pasos para Android añadidos.
+- **Duplicados por URL:** el marcador y la extensión buscaban el artículo
+  por la URL canónica; si se había guardado pegando otra (con parámetros,
+  por ejemplo), se creaba otro. Ahora mandan también la de la barra
+  (`altUrl`) y se busca por las dos, en la web y en `record-price`.
+- **Pase por id:** la extensión manda `itemId` en el pase diario y
+  `record-price` busca por id; si el artículo se borró mientras tanto,
+  responde 404 en vez de volver a crearlo.
+- **Pase de la extensión:** el listener de «página cargada» se pone antes de
+  navegar (una página en caché podía terminar antes) y si sale la pantalla
+  de DataDome se espera 6 s y se vuelve a mirar una vez.
+- Cerrar sesión en la extensión olvida también la configuración descargada.
+
+### Verificación
+
+- Tests (112) y build en verde. `record-price` v2 desplegada (401 sin token).
+- Marcador nuevo, en una línea, ejecutado sobre la ficha real con
+  `?utm_source=prueba`: Vigía local recibe la canónica y la alternativa,
+  limpia la barra y no hay errores de consola.
+- BD: 0 duplicados de URL en las listas; 4 precios con `ph_source = 'browser'`
+  en el último día.
+- Sin probar: Safari del iPhone, Chrome de Android, la extensión cargada.
+
+### Estado final
+
+Pendiente de Tony lo mismo que en la sesión 23, más el favorito en Android.
+

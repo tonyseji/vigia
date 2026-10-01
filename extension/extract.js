@@ -60,6 +60,7 @@ export function extractProduct() {
   return {
     blocked: false,
     url: (canonical && canonical.href) || location.href,
+    altUrl: location.href,
     title: (product && product.name) || meta('og:title') || document.title,
     image: image || meta('og:image') || null,
     price,
