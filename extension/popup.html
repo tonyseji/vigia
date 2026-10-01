@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vigía</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon.png" alt="" width="22" height="22" />
+      <h1>Vigía</h1>
+    </header>
+
+    <form id="login" hidden>
+      <p class="mut">Entra con tu cuenta de Vigía (email y contraseña). Solo hace falta una vez.</p>
+      <input id="email" type="email" placeholder="Email" autocomplete="username" required />
+      <input id="password" type="password" placeholder="Contraseña" autocomplete="current-password" required />
+      <button type="submit" class="primary">Entrar</button>
+      <p id="login-error" class="bad" hidden></p>
+    </form>
+
+    <main id="app" hidden>
+      <section id="save" class="card">
+        <p id="save-status" class="mut">Leyendo la página…</p>
+      </section>
+
+      <section class="pass">
+        <h2>Precio automático desde este Chrome</h2>
+        <p id="pass-status" class="mut"></p>
+        <ul id="pass-failed"></ul>
+        <button id="run-pass" type="button">Actualizar ahora</button>
+      </section>
+
+      <footer>
+        <a id="open-app" href="#">Abrir Vigía</a>
+        <span id="user" class="mut"></span>
+        <button id="logout" type="button" class="link">Salir</button>
+      </footer>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

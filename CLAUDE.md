@@ -89,8 +89,10 @@ avisos revisados: 0 dispositivos suscritos (B17, pendiente de Tony); arreglados
 cuentas sin ajustes, modos 6h/12h, rebote de precio y texto del aviso. Sesión 20: «Crear cuenta» con un email ya
 registrado lleva a recuperar contraseña (Supabase no manda correo ahí, B20). Sesión 21: Maisons du Monde
 ahora usa DataDome; botón «+ Vigía» para la barra de marcadores lee el precio desde el navegador y guarda directo (B21). Sesión 22: «Sin carpeta» primero,
-vista Lista/Fotos recordada y carpetas plegables en el listado general. Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 y 22.
+vista Lista/Fotos recordada y carpetas plegables en el listado general. Sesión 23: extensión de
+Chrome (`extension/`) con precio diario para tiendas que bloquean, vía Edge Function `record-price`;
+pendiente de instalar y probar por Tony (B22). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22 y 23.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
@@ -106,7 +108,7 @@ rastro.
 | Base de datos | Supabase (PostgreSQL) — proyecto `muebles` (`ovmnzlbcmuppqctkyngi`), schema `vigia` |
 | Auth | Supabase Auth — email + contraseña (enlace mágico como alternativa) |
 | Lectura de precios | Edge Function `scrape` (Deno/TypeScript) |
-| Refresco | Botón manual + un pase diario configurable (`pg_cron`) |
+| Refresco | Botón manual + un pase diario configurable (`pg_cron`); tiendas que bloquean, desde la extensión de Chrome |
 | Deploy | Vercel (plan Hobby) |
 
 Coste objetivo: 0 €. No se añade nada que obligue a salir del plan gratuito.
@@ -129,6 +131,7 @@ vigia/
 │   └── diseno-referencia.html ← prototipo aprobado, abrible en el navegador
 │   ├── ROADMAP.md           ← fases y pendientes
 │   └── TIENDAS.md           ← qué tiendas funcionan y cuáles bloquean
+├── extension/             ← extensión de Chrome (guardar página + pase diario)
 ├── src/
 │   ├── components/          ← UI (ItemRow, AddForm, Sparkline…)
 │   ├── hooks/               ← estado React que consume lib/
@@ -140,7 +143,7 @@ vigia/
 │   └── main.jsx
 └── supabase/
     ├── migrations/          ← SQL versionado, numerado
-    └── functions/scrape/    ← lectura de precios
+    └── functions/           ← scrape, refresh, record-price (precio desde el navegador)
 ```
 
 ---

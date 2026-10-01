@@ -1876,3 +1876,47 @@ la vista elegida (Lista o Fotos).
 
 Pendiente de Tony: comprobarlo en producción.
 
+
+## 2026-10-01 (Sesión 23) — Extensión de Chrome: precio automático en tiendas que bloquean
+
+### Contexto
+
+Con el botón ya guardando directo, Tony pregunta si lo mismo puede hacerse
+automático. Un marcador no puede ejecutarse solo; una extensión sí. Prueba
+previa en el navegador integrado: los 4 artículos manuales (3 de Maisons du
+Monde y 1 de Kave Home), abiertos sin interacción, cargan con precio y sin
+captcha. Tony da el visto bueno.
+
+### Cambios
+
+- Edge Function **`record-price`** (desplegada, `--no-verify-jwt`): valida el
+  token, actualiza o crea el artículo del usuario, histórico con
+  `ph_source = 'browser'` y aviso de bajada con `refresh/notify.ts` y
+  `refresh/push.ts`. Lógica pura en `record.ts` con 7 tests.
+- **`vite.config.js`** publica `/extension-config.json` (URL y clave pública
+  de Supabase desde las variables de Vercel) para no escribirlas en el repo.
+- **`extension/`**: manifest v3, `background.js` (pase diario con
+  `chrome.alarms` en ventana minimizada, guardar pestaña, sesión),
+  `api.js` (login propio con email y contraseña, renovación serializada),
+  `extract.js` (misma lógica que el marcador, 3 tests), popup con el logo,
+  `README.md` con la instalación.
+- **Web:** la etiqueta de los artículos manuales distingue «precio desde
+  Chrome» (último precio del navegador hace menos de 48 h) de «sin precio
+  automático» (`manualPriceStatus`, 3 tests). `useItems` pide `ph_source`.
+- Docs: DECISIONES, ARQUITECTURA, TIENDAS, ROADMAP (B21 cerrado, B22 nuevo).
+
+### Verificación
+
+- Tests (109) y build en verde. `node --check` de los JS de la extensión.
+- `record-price` responde 401 sin token y 204 al preflight.
+- `extract.js` ejecutado sobre la ficha real de Maisons du Monde (55,90 €,
+  en stock) y comprobado que no confunde Kave Home con un captcha.
+- **No verificado:** la extensión cargada en Chrome (el navegador integrado
+  no carga extensiones), el login, el pase real ni `record-price` con un
+  token de verdad. Es la prueba de Tony.
+
+### Estado final
+
+Pendiente de Tony: instalar la extensión (`extension/README.md`), entrar,
+probar el icono en una ficha y «Actualizar ahora» en la ventana. B22 para
+vigilar el captcha en uso real.

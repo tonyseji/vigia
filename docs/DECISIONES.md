@@ -958,3 +958,30 @@ barra: «👁️ Guardar en Vigía» (Chrome no admite icono propio en un marcad
 **Revisitar:** la extensión, si hace falta refresco automático para tiendas
 bloqueadas (abrir sus fichas en segundo plano con Chrome abierto; sin
 probar si DataDome lo deja pasar); un atajo de iOS para el iPhone.
+
+### 2026-10-01 — Extensión de Chrome para el precio automático de tiendas que bloquean
+**Contexto:** el botón «Guardar en Vigía» lee el precio porque corre en el
+navegador del usuario, pero necesita un clic. Tony pregunta si se puede hacer
+automático. Probado ese día en el navegador integrado: abrir sin interacción
+los 4 artículos de Maisons du Monde y Kave Home, uno tras otro, carga todos
+con su JSON-LD, sin captcha.
+**Decisión:** extensión de Chrome sin publicar (modo desarrollador,
+`extension/`). Pase diario con `chrome.alarms` (alarma horaria, pasa si el
+último tiene más de 20 h) en una ventana minimizada, 4–8 s entre artículos.
+Escribe a través de una Edge Function nueva, `record-price`, que reutiliza
+`refresh/notify.ts` y `refresh/push.ts` para avisar de bajadas. Sesión
+propia de la extensión (email + contraseña), no la de la web: dos sitios
+renovando el mismo refresh token harían que Supabase cerrara la sesión. La
+URL y la clave pública de Supabase no van en el repositorio: `vite.config.js`
+publica `/extension-config.json` en cada build y la extensión lo descarga.
+El icono también guarda la página abierta (sustituye al marcador en Chrome).
+**Descartado:** reutilizar la sesión de la web (rotación del refresh token);
+servicio de scraping externo (coste y sin garantía); navegador headless en un
+servidor (IP de centro de datos, DataDome lo detecta); publicar en la Chrome
+Web Store (5 $ y revisión para una herramienta personal).
+**Límites:** solo con el ordenador encendido y Chrome abierto; si DataDome
+empieza a pedir captcha, ese artículo se salta y se ve en la ventana de la
+extensión. `record-price` duplica el envío de avisos de `refresh` (unas 20
+líneas) para no tocar el pase del servidor; unificarlo si cambia uno.
+**Revisitar:** si el captcha aparece con frecuencia; si se quiere lo mismo en
+el iPhone (atajo de iOS, sin pase automático posible).

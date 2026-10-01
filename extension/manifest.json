@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Vigía",
+  "short_name": "Vigía",
+  "version": "1.0.0",
+  "description": "Guarda en Vigía el producto que estás viendo y actualiza cada día el precio de las tiendas que no dejan leerlo desde el servidor.",
+  "icons": { "16": "icons/icon.png", "32": "icons/icon.png", "48": "icons/icon.png", "128": "icons/icon.png" },
+  "action": {
+    "default_title": "Guardar en Vigía",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon.png", "32": "icons/icon.png" }
+  },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["storage", "alarms", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://vigia-list.vercel.app/*",
+    "https://ovmnzlbcmuppqctkyngi.supabase.co/*",
+    "https://www.maisonsdumonde.com/*",
+    "https://kavehome.com/*"
+  ]
+}

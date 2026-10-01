@@ -27,7 +27,7 @@ export function useItems() {
   const reload = useCallback(async () => {
     const { data, error } = await supabase
       .from('items')
-      .select('*, price_history(ph_price, ph_checked_at)')
+      .select('*, price_history(ph_price, ph_checked_at, ph_source)')
       .order('itm_created_at', { ascending: false })
     if (!error) {
       setItems(

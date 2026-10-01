@@ -18,7 +18,23 @@ export const BOOKMARK_TITLE = '👁️ Guardar en Vigía'
 
 /** Explicación de la etiqueta «sin precio automático» (ItemRow, ItemTile). */
 export const MANUAL_HINT =
-  'Esta tienda no deja leer el precio desde Vigía: no se actualiza solo. Para apuntar el de hoy, pulsa «Guardar en Vigía» en su ficha o edítalo a mano.'
+  'Esta tienda no deja leer el precio desde el servidor de Vigía. Con la extensión de Chrome instalada se actualiza sola una vez al día; si no, pulsa «Guardar en Vigía» en su ficha o edítalo a mano.'
+
+export const BROWSER_HINT =
+  'Esta tienda no deja leer el precio desde el servidor: lo lee tu Chrome (extensión o botón «Guardar en Vigía»). Si pasan más de dos días sin hacerlo, la etiqueta vuelve a «sin precio automático».'
+
+const BROWSER_FRESH_MS = 48 * 3600_000
+
+/** Qué etiqueta lleva un artículo de una tienda que bloquea al servidor:
+ * 'browser' si su último precio vino del navegador hace menos de dos días
+ * (la extensión lo mantiene al día), 'manual' si no. null si la tienda no
+ * bloquea. `price_history` llega ordenado de más antiguo a más reciente. */
+export function manualPriceStatus(item, now = Date.now()) {
+  if (!item.itm_is_manual) return null
+  const last = item.price_history?.at(-1)
+  if (last?.ph_source === 'browser' && now - new Date(last.ph_checked_at).getTime() < BROWSER_FRESH_MS) return 'browser'
+  return 'manual'
+}
 
 const HASH_KEY = 'importar'
 const STORAGE_KEY = 'vigia.pendingImport'

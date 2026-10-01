@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { MANUAL_HINT } from '../lib/browserImport.js'
+import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
@@ -45,6 +45,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
   const history = item.price_history.map((h) => h.ph_price).filter((p) => p != null)
   const reference = history.length > 1 ? history[0] : null
   const pct = item.itm_price != null && reference != null ? priceChangePct(item.itm_price, reference) : null
+  const manualStatus = manualPriceStatus(item)
   const state = item.itm_price == null ? 'n' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
   const stripeColor = state === 'd' ? 'var(--color-ok)' : state === 'u' ? 'var(--color-bad)' : state === 'n' ? 'var(--color-warn)' : 'transparent'
 
@@ -82,10 +83,16 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
         </a>
         <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] text-ink-mut">
           <span className="truncate">{domainOf(item.itm_url)}</span>
-          {item.itm_is_manual && (
+          {manualStatus && (
             <>
               <span>·</span>
-              <span className="text-warn" title={MANUAL_HINT}>sin precio automático</span>
+              {manualStatus === 'browser' ? (
+                <span title={BROWSER_HINT}>precio desde Chrome</span>
+              ) : (
+                <span className="text-warn" title={MANUAL_HINT}>
+                  sin precio automático
+                </span>
+              )}
             </>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   clearPendingImport,
   getOrCreateBookmarkletKey,
   isTrustedImport,
+  manualPriceStatus,
 } from '../browserImport.js'
 
 const ORIGIN = 'https://vigia-list.vercel.app'
@@ -214,3 +215,24 @@ describe('clave del botón', () => {
     expect(getOrCreateBookmarkletKey(broken, () => KEY)).toBe(KEY)
   })
 })
+
+describe('manualPriceStatus', () => {
+  const now = Date.parse('2026-10-03T10:00:00Z')
+  const ph = (source, at) => ({ ph_price: 10, ph_source: source, ph_checked_at: at })
+
+  it('null en tiendas que el servidor sí lee', () => {
+    expect(manualPriceStatus({ itm_is_manual: false, price_history: [] }, now)).toBeNull()
+  })
+
+  it("'browser' si el último precio vino del navegador hace menos de dos días", () => {
+    const item = { itm_is_manual: true, price_history: [ph('manual', '2026-09-20T10:00:00Z'), ph('browser', '2026-10-02T09:00:00Z')] }
+    expect(manualPriceStatus(item, now)).toBe('browser')
+  })
+
+  it("'manual' si es viejo, tecleado o no hay histórico", () => {
+    expect(manualPriceStatus({ itm_is_manual: true, price_history: [ph('browser', '2026-09-30T09:00:00Z')] }, now)).toBe('manual')
+    expect(manualPriceStatus({ itm_is_manual: true, price_history: [ph('manual', '2026-10-03T09:00:00Z')] }, now)).toBe('manual')
+    expect(manualPriceStatus({ itm_is_manual: true, price_history: [] }, now)).toBe('manual')
+  })
+})
+

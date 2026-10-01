@@ -103,6 +103,24 @@ silencioso ni en un artículo a medias:
 El resultado es que un artículo de una tienda bloqueada pierde la comodidad,
 pero no pierde el histórico ni desaparece de la lista.
 
+**Desde el 2026-10-01, el navegador del usuario lee lo que el servidor no
+puede** (backlog B21, `docs/DECISIONES.md`). La tienda deja pasar a un
+navegador de verdad, así que:
+
+- **Botón «Guardar en Vigía»** (barra de marcadores, `src/lib/browserImport.js`):
+  lee la página abierta y abre Vigía con los datos en `#importar=`; con la
+  clave del navegador se guarda sin confirmar (`useItems.saveFromBrowser`).
+- **Extensión de Chrome** (`extension/`): el icono guarda la página abierta y
+  un pase diario abre en una ventana minimizada los artículos con
+  `itm_is_manual = true`, lee el precio y lo manda a la Edge Function
+  `record-price`, que lo apunta y avisa de bajadas con las mismas reglas que
+  `refresh` (`refresh/notify.ts`).
+
+Lo que entra por cualquiera de los dos va al histórico con
+`ph_source = 'browser'`. En la lista, un artículo manual cuyo último precio
+vino del navegador hace menos de dos días lleva «precio desde Chrome»; si no,
+«sin precio automático» (`manualPriceStatus`).
+
 ---
 
 ## Esquema propuesto

@@ -15,8 +15,8 @@
 | Sklum | ✅ | JSON-LD | |
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
-| Kave Home | ❌ | — | DataDome. Precio manual. |
-| Maisons du Monde | ⚠️ | Botón «Guardar en Vigía» desde el navegador | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el botón de la barra de marcadores sí (JSON-LD de la página abierta). Sin refresco automático: sus artículos llevan la etiqueta «sin precio automático». Ver «Maisons du Monde: qué se probó». |
+| Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |
+| Maisons du Monde | ⚠️ | Extensión de Chrome (pase diario) o botón «Guardar en Vigía» | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el navegador sí (JSON-LD de la página abierta). Con la extensión, precio diario mientras Chrome esté abierto (`extension/README.md`). Ver «Maisons du Monde: qué se probó». |
 | Cualquier tienda con JSON-LD u Open Graph | ✅ | Genérico | Es el caso mayoritario. |
 
 ---
