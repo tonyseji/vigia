@@ -1970,7 +1970,18 @@ Revisado el diff completo desde `397e027` (web, extensión, `record-price`).
   en el último día.
 - Sin probar: Safari del iPhone, Chrome de Android, la extensión cargada.
 
+### Prueba de Tony
+
+Extensión instalada en su Chrome y probada el mismo día: «Actualizar ahora»
+actualizó sus 3 mesitas de Maisons du Monde (21:14–21:15 UTC, en BD con
+`ph_source = 'browser'`) y el icono guardó una cómoda de IKEA. La mesa de
+Kave Home no entra: es de otra cuenta, y la extensión solo toca los
+artículos de la cuenta con la que se entra (correcto). En la sesión 23 se
+contó mal («4 artículos»): eran 3 de Tony y 1 de otra cuenta.
+
 ### Estado final
 
-Pendiente de Tony lo mismo que en la sesión 23, más el favorito en Android.
+Extensión funcionando en el Chrome de Tony. Pendiente: favorito en el
+iPhone (Safari) y en Android, y vigilar el captcha en los pases de los
+próximos días (B22).
 

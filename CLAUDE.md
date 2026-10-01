@@ -91,7 +91,7 @@ registrado lleva a recuperar contraseña (Supabase no manda correo ahí, B20). S
 ahora usa DataDome; botón «+ Vigía» para la barra de marcadores lee el precio desde el navegador y guarda directo (B21). Sesión 22: «Sin carpeta» primero,
 vista Lista/Fotos recordada y carpetas plegables en el listado general. Sesión 23: extensión de
 Chrome (`extension/`) con precio diario para tiendas que bloquean, vía Edge Function `record-price`;
-pendiente de instalar y probar por Tony (B22). Sesión 24: revisión de todo lo anterior
+instalada y funcionando en el Chrome de Tony (vigilar captcha, B22). Sesión 24: revisión de todo lo anterior
 (Android, duplicados por URL, pase por id). Detalle en `docs/PROGRESO.md`,
 sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 y 24.
 
