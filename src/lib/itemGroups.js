@@ -1,5 +1,6 @@
-/** Agrupación por carpeta de la vista general (ItemList) y la vista elegida
- * (Lista / Fotos), que se recuerda en este navegador. */
+/** Agrupación por carpeta de la vista general (ItemList), y lo que se
+ * recuerda en este navegador: la vista elegida (Lista / Fotos) y qué grupos
+ * están plegados. */
 
 export const NO_FOLDER = '__none__'
 
@@ -55,5 +56,25 @@ export function saveView(view, storage = defaultStorage()) {
     storage?.setItem(VIEW_KEY, view)
   } catch {
     // Sin almacenamiento (modo privado): la vista vuelve a Lista al recargar.
+  }
+}
+
+const COLLAPSED_KEY = 'vigia.collapsedGroups'
+
+/** Claves de los grupos plegados (ids de carpeta o NO_FOLDER). */
+export function loadCollapsed(storage = defaultStorage()) {
+  try {
+    const list = JSON.parse(storage?.getItem(COLLAPSED_KEY) ?? '[]')
+    return new Set(Array.isArray(list) ? list.filter((k) => typeof k === 'string') : [])
+  } catch {
+    return new Set()
+  }
+}
+
+export function saveCollapsed(collapsed, storage = defaultStorage()) {
+  try {
+    storage?.setItem(COLLAPSED_KEY, JSON.stringify([...collapsed]))
+  } catch {
+    // Sin almacenamiento: los grupos vuelven a salir abiertos al recargar.
   }
 }

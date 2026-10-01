@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { NO_FOLDER, folderGroupName, groupByFolder, loadView, saveView } from '../itemGroups.js'
+import { NO_FOLDER, folderGroupName, groupByFolder, loadView, saveView, loadCollapsed, saveCollapsed } from '../itemGroups.js'
 
 const foldersById = {
   m: { fld_id: 'm', fld_name: 'Muebles', fld_parent_id: null },
@@ -64,3 +64,23 @@ describe('vista recordada', () => {
     expect(() => saveView('photos', broken)).not.toThrow()
   })
 })
+
+describe('grupos plegados', () => {
+  it('se guardan y se recuperan', () => {
+    const storage = memoryStorage()
+    expect(loadCollapsed(storage)).toEqual(new Set())
+    saveCollapsed(new Set(['m', NO_FOLDER]), storage)
+    expect(loadCollapsed(storage)).toEqual(new Set(['m', NO_FOLDER]))
+  })
+
+  it('ignora basura y no rompe sin almacenamiento', () => {
+    const storage = memoryStorage()
+    storage.setItem('vigia.collapsedGroups', '{no es json')
+    expect(loadCollapsed(storage)).toEqual(new Set())
+    storage.setItem('vigia.collapsedGroups', JSON.stringify(['a', 3, null]))
+    expect(loadCollapsed(storage)).toEqual(new Set(['a']))
+    expect(loadCollapsed(broken)).toEqual(new Set())
+    expect(() => saveCollapsed(new Set(['a']), broken)).not.toThrow()
+  })
+})
+

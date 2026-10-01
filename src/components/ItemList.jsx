@@ -1,8 +1,15 @@
 import { useMemo, useState } from 'react'
 import { priceChangePct } from '../lib/format.js'
 import { folderToText, copyToClipboard } from '../lib/clipboard.js'
-import { groupByFolder as groupItemsByFolder, folderGroupName, loadView, saveView } from '../lib/itemGroups.js'
-import { IconCopiar, IconCheck } from './icons/index.jsx'
+import {
+  groupByFolder as groupItemsByFolder,
+  folderGroupName,
+  loadView,
+  saveView,
+  loadCollapsed,
+  saveCollapsed,
+} from '../lib/itemGroups.js'
+import { IconCopiar, IconCheck, IconChevronRight } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
 import ItemTile from './ItemTile.jsx'
 
@@ -61,6 +68,21 @@ export default function ItemList({
   function setView(next) {
     setViewState(next)
     saveView(next)
+  }
+
+  // Grupos plegados, como las carpetas del sidebar; se recuerdan. Buscando
+  // se abren todos: plegados esconderían lo que coincide.
+  const [collapsed, setCollapsed] = useState(loadCollapsed)
+  const searching = query.trim() !== ''
+
+  function toggleGroup(key) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      saveCollapsed(next)
+      return next
+    })
   }
 
   const foldersById = useMemo(() => Object.fromEntries(folders.map((f) => [f.fld_id, f])), [folders])
@@ -187,17 +209,30 @@ export default function ItemList({
         groups.map(([key, groupItems]) => {
           const name = folderGroupName(key, foldersById)
           const total = groupItems.reduce((sum, i) => sum + (i.itm_price ?? 0), 0)
+          const open = searching || !collapsed.has(key)
           return (
             <section key={key} className="flex flex-col gap-2">
-              <h2 className="flex items-baseline gap-2 text-xs font-semibold uppercase tracking-wide text-ink-mut">
-                <span>{name}</span>
-                <b className="font-mono font-normal normal-case tracking-normal">
-                  {groupItems.length} · {total.toLocaleString('es-ES', { minimumFractionDigits: 0 })} €
-                </b>
+              <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-mut">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(key)}
+                  disabled={searching}
+                  aria-expanded={open}
+                  title={open ? 'Contraer' : 'Expandir'}
+                  className="flex min-w-0 items-baseline gap-2 rounded text-left uppercase outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:hover:text-ink-mut"
+                >
+                  <IconChevronRight
+                    className={`h-3.5 w-3.5 flex-none self-center transition-transform ${open ? 'rotate-90' : ''}`}
+                  />
+                  <span className="truncate">{name}</span>
+                  <b className="flex-none font-mono font-normal normal-case tracking-normal">
+                    {groupItems.length} · {total.toLocaleString('es-ES', { minimumFractionDigits: 0 })} €
+                  </b>
+                </button>
                 <span className="h-px flex-1 bg-line" />
                 <GroupCopyButton name={name} items={groupItems} />
               </h2>
-              {itemsView(groupItems)}
+              {open && itemsView(groupItems)}
             </section>
           )
         })

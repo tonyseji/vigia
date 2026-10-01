@@ -1860,10 +1860,16 @@ la vista elegida (Lista o Fotos).
 - La vista Lista/Fotos se guarda en `localStorage` (`vigia.itemView`), por
   navegador. Orden y filtros no se recuerdan (no se pidió).
 - `ItemList` usa las dos cosas. 4 tests nuevos (`itemGroups.test.js`).
+- Después, Tony pide plegar las carpetas en el listado general como en el
+  sidebar: la cabecera de cada grupo es un botón con flecha (misma
+  `IconChevronRight` que el sidebar); plegado deja nombre, número y total.
+  Los grupos plegados se recuerdan (`vigia.collapsedGroups`). Mientras se
+  busca, todos se abren y el botón se desactiva, para no esconder
+  coincidencias. 2 tests más.
 
 ### Verificación
 
-- Tests (94) y build en verde.
+- Tests (96) y build en verde.
 - No visto en pantalla con sesión (haría falta la contraseña de Tony).
 
 ### Estado final
