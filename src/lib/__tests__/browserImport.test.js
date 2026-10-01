@@ -99,6 +99,21 @@ describe('botón del navegador', () => {
     expect(readImport(new URL(runBookmarklet(page, "x'+alert(1)+'").opened[0]).hash).key).toBeNull()
   })
 
+  it('el enlace de una línea, tal cual queda en el marcador, funciona', () => {
+    const code = decodeURIComponent(buildBookmarklet(ORIGIN, KEY).slice('javascript:'.length))
+    const opened = []
+    const run = new Function('document', 'location', 'window', 'alert', code)
+    run(fakePage({ jsonLd: [MDM] }).document, { href: 'https://tienda.test/p/1' }, { open: (url) => opened.push(url) }, () => {})
+    expect(readImport(new URL(opened[0]).hash)).toMatchObject({ price: 289, key: KEY })
+  })
+
+  it('si el navegador bloquea la pestaña nueva, abre Vigía en la misma', () => {
+    const location = { href: 'https://tienda.test/p/1' }
+    const run = new Function('document', 'location', 'window', 'alert', bookmarkletSource(ORIGIN, KEY))
+    run(fakePage({ jsonLd: [MDM] }).document, location, { open: () => null }, () => {})
+    expect(location.href.startsWith(`${ORIGIN}/#importar=`)).toBe(true)
+  })
+
   it('el enlace es un javascript: de una sola línea', () => {
     const link = buildBookmarklet(ORIGIN, KEY)
     expect(link.startsWith('javascript:')).toBe(true)

@@ -1915,8 +1915,21 @@ captcha. Tony da el visto bueno.
   no carga extensiones), el login, el pase real ni `record-price` con un
   token de verdad. Es la prueba de Tony.
 
+Después, para usar el marcador en Safari del iPhone (Tony: le basta con
+eso fuera de Chrome):
+
+- Ajustes muestra la sección también en móvil, con «Copiar código» y los
+  pasos para pegarlo en un favorito de Safari. Desde la app instalada avisa
+  de que hay que hacerlo en Safari (no comparten almacenamiento ni sesión).
+- Si el navegador bloquea la pestaña nueva, el marcador abre Vigía en la
+  misma.
+- Encontrado y evitado: un comentario `//` dentro del código del marcador
+  habría anulado todo el resto, porque va en una sola línea. Test nuevo que
+  ejecuta el enlace tal cual queda en el marcador (111 tests).
+
 ### Estado final
 
 Pendiente de Tony: instalar la extensión (`extension/README.md`), entrar,
-probar el icono en una ficha y «Actualizar ahora» en la ventana. B22 para
-vigilar el captcha en uso real.
+probar el icono en una ficha y «Actualizar ahora» en la ventana; crear el
+favorito en Safari del iPhone. B22 para vigilar el captcha en uso real.
+No probado en Safari real.

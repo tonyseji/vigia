@@ -43,7 +43,10 @@ const KEY_RE = /^[0-9a-f]{32}$/
 
 // Corre en la página de la tienda, no en Vigía: autocontenido, sin nada del
 // bundle. Mismo orden que el extractor del servidor (JSON-LD, luego metas).
-// `__ORIGEN__` y `__CLAVE__` se sustituyen al construir el enlace.
+// `__ORIGEN__` y `__CLAVE__` se sustituyen al construir el enlace. Sin
+// comentarios `//` dentro: el marcador va en una sola línea y comentarían
+// todo lo que sigue. Si Safari (iPhone) bloquea la pestaña nueva, abre Vigía
+// en la misma.
 const BOOKMARKLET_SOURCE = `
 (function () {
   function findProduct(node) {
@@ -100,7 +103,8 @@ const BOOKMARKLET_SOURCE = `
   };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))))
     .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
-  window.open('__ORIGEN__/#${HASH_KEY}=' + encoded, '_blank');
+  var target = '__ORIGEN__/#${HASH_KEY}=' + encoded;
+  if (!window.open(target, '_blank')) location.href = target;
 })();
 `
 

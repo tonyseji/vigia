@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import PasswordFields from './PasswordFields.jsx'
 import { buildBookmarklet, getOrCreateBookmarkletKey, BOOKMARK_TITLE } from '../lib/browserImport.js'
+import { copyToClipboard } from '../lib/clipboard.js'
 
 const REFRESH_LABELS = {
   off: 'Apagado',
@@ -246,34 +247,76 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
 /** Botón «Guardar en Vigía» para la barra de marcadores (src/lib/browserImport.js).
  * El href `javascript:` se pone a mano: React 18 avisa si lo recibe por
  * props. Lleva la clave de este navegador, con la que Vigía guarda sin
- * preguntar. Pulsarlo aquí no hace nada; hay que arrastrarlo. */
+ * preguntar. En escritorio se arrastra; en el iPhone no se puede, así que se
+ * copia el código y se pega en un favorito de Safari. */
 function BookmarkletSection() {
   const linkRef = useRef(null)
+  const [code, setCode] = useState('')
   const [hint, setHint] = useState(false)
+  const [copied, setCopied] = useState(null) // null | true | false
+  // La app instalada en la pantalla de inicio no comparte datos con Safari:
+  // un código copiado aquí llevaría una clave que Safari no conoce.
+  const installedApp =
+    window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
 
   useEffect(() => {
-    linkRef.current?.setAttribute('href', buildBookmarklet(window.location.origin, getOrCreateBookmarkletKey()))
+    const link = buildBookmarklet(window.location.origin, getOrCreateBookmarkletKey())
+    linkRef.current?.setAttribute('href', link)
+    setCode(link)
   }, [])
 
+  async function copyCode() {
+    setCopied(await copyToClipboard(code))
+  }
+
   return (
-    <section className="hidden flex-col gap-2 sm:flex">
+    <section className="flex flex-col gap-2">
       <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Botón para el navegador</h4>
       <p className="text-sm text-ink-mut">
-        Arrástralo a la barra de marcadores. En la ficha de un producto, púlsalo y se guarda en Vigía; si ya lo
-        tenías, apunta el precio de hoy. Sirve sobre todo para tiendas que no dejan leer el precio, como Maisons
-        du Monde. Si lo arrastraste antes de hoy, cámbialo por este: el viejo pide confirmar cada vez.
+        En la ficha de un producto, púlsalo y se guarda en Vigía; si ya lo tenías, apunta el precio de hoy. En
+        Chrome es más cómoda la extensión; esto sirve para Safari y otros navegadores.
       </p>
-      <a
-        ref={linkRef}
-        onClick={(e) => {
-          e.preventDefault()
-          setHint(true)
-        }}
-        className="self-start cursor-grab rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent"
-      >
-        {BOOKMARK_TITLE}
-      </a>
-      {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
+
+      <div className="hidden flex-col gap-2 sm:flex">
+        <p className="text-sm text-ink-mut">Escritorio: arrástralo a la barra de marcadores.</p>
+        <a
+          ref={linkRef}
+          onClick={(e) => {
+            e.preventDefault()
+            setHint(true)
+          }}
+          className="self-start cursor-grab rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          {BOOKMARK_TITLE}
+        </a>
+        {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
+      </div>
+
+      {installedApp ? (
+        <p className="text-sm text-warn">
+          iPhone: abre Vigía en Safari (no en la app instalada), entra y copia el código desde Ajustes. La app y
+          Safari no comparten datos y el botón no te reconocería.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2 text-sm text-ink-mut">
+          <p>iPhone (Safari), una sola vez:</p>
+          <ol className="list-decimal pl-5">
+            <li>Copia el código con el botón de abajo.</li>
+            <li>Compartir → «Añadir a favoritos» con cualquier página; llámalo «Guardar en Vigía».</li>
+            <li>Favoritos → Editar → ese favorito: borra la dirección y pega el código.</li>
+          </ol>
+          <p>Para usarlo, en la ficha: barra de direcciones → Favoritos → «Guardar en Vigía».</p>
+          <button
+            type="button"
+            onClick={copyCode}
+            disabled={!code}
+            className="self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+          >
+            {copied ? 'Copiado' : 'Copiar código'}
+          </button>
+          {copied === false && <p className="text-warn">No se pudo copiar. Inténtalo otra vez.</p>}
+        </div>
+      )}
     </section>
   )
 }
