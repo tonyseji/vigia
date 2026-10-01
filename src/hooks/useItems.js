@@ -142,6 +142,69 @@ export function useItems() {
     return { item }
   }, [reload])
 
+  /** Guarda lo que manda el botón del navegador (src/lib/browserImport.js).
+   * Si el artículo ya está en la lista, solo apunta el precio nuevo (y
+   * rellena título e imagen si se guardó a mano y no los tenía). Si no,
+   * lo crea; en una tienda bloqueada queda en modo manual, porque el pase
+   * automático no puede leerla. */
+  const saveFromBrowser = useCallback(async (data, folderId = null) => {
+    const url = cleanUrl(data.url)
+    const now = new Date().toISOString()
+    const { data: userData } = await supabase.auth.getUser()
+    const userId = userData.user.id
+    const { data: existing, error: findError } = await supabase
+      .from('items')
+      .select('itm_id, itm_url, itm_title, itm_image_url, itm_price')
+      .eq('itm_usr_id', userId)
+      .eq('itm_url', url)
+      .maybeSingle()
+    if (findError) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
+
+    let itemId = existing?.itm_id
+    if (existing) {
+      const { error } = await supabase
+        .from('items')
+        .update({
+          itm_price: data.price,
+          itm_in_stock: data.inStock,
+          itm_last_checked_at: now,
+          itm_last_error: null,
+          ...(existing.itm_title === existing.itm_url ? { itm_title: data.title } : {}),
+          ...(!existing.itm_image_url && data.image ? { itm_image_url: data.image } : {}),
+        })
+        .eq('itm_id', itemId)
+      if (error) return { error: 'No se pudo guardar el precio.' }
+    } else {
+      const { data: item, error } = await supabase
+        .from('items')
+        .insert({
+          itm_usr_id: userId,
+          itm_fld_id: folderId,
+          itm_url: url,
+          itm_title: data.title,
+          itm_image_url: data.image,
+          itm_price: data.price,
+          itm_currency: data.currency,
+          itm_in_stock: data.inStock,
+          itm_is_manual: await checkBlocked(url),
+          itm_last_checked_at: now,
+        })
+        .select('itm_id')
+        .single()
+      if (error) return { error: 'No se pudo guardar el artículo.' }
+      itemId = item.itm_id
+    }
+
+    await supabase.from('price_history').insert({
+      ph_itm_id: itemId,
+      ph_price: data.price,
+      ph_in_stock: data.inStock,
+      ph_source: 'browser',
+    })
+    await reload()
+    return { updated: Boolean(existing), previousPrice: existing?.itm_price ?? null }
+  }, [checkBlocked, reload])
+
   /** Refresca todos los artículos del usuario. La lógica vive en la Edge
    * Function `refresh` (server-side), que es la misma que usa el pase
    * automático de pg_cron — ver docs/DECISIONES.md 2026-09-06. */
@@ -183,5 +246,5 @@ export function useItems() {
     return {}
   }, [reload])
 
-  return { items, loading, loadError, refreshing, addItem, addManualItem, updateItem, deleteItem, refreshAll, reload }
+  return { items, loading, loadError, refreshing, addItem, addManualItem, saveFromBrowser, updateItem, deleteItem, refreshAll, reload }
 }

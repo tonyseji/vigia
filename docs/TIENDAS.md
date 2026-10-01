@@ -16,7 +16,7 @@
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
 | Kave Home | ❌ | — | DataDome. Precio manual. |
-| Maisons du Monde | ❌ | — | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. Precio manual. Ver «Maisons du Monde: qué se probó». |
+| Maisons du Monde | ⚠️ | Botón «+ Vigía» desde el navegador | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el botón de la barra de marcadores sí (JSON-LD de la página abierta). Sin refresco automático. Ver «Maisons du Monde: qué se probó». |
 | Cualquier tienda con JSON-LD u Open Graph | ✅ | Genérico | Es el caso mayoritario. |
 
 ---
@@ -42,7 +42,8 @@ En un navegador de verdad la ficha sí carga, y trae el precio en JSON-LD
 cambios**: el problema es solo conseguir el HTML, no interpretarlo.
 `isBotPage` ya reconoce la página de DataDome.
 
-Alternativas que quedan, pendientes de decisión (backlog B21):
+**Elegida la 1** el mismo día (botón para la barra de marcadores, ver
+`docs/DECISIONES.md` 2026-10-01). Alternativas que se valoraron:
 
 1. **Leer desde el navegador del usuario.** Un atajo de iOS («Ejecutar
    JavaScript en página web» desde compartir en Safari) o un bookmarklet en

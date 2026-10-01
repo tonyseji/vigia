@@ -14,10 +14,12 @@ import FolderSidebar from './components/FolderSidebar.jsx'
 import ShareFolderModal from './components/ShareFolderModal.jsx'
 import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
+import BrowserImportBanner from './components/BrowserImportBanner.jsx'
 import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
+import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport } from './lib/browserImport.js'
 
 /** Si se abre la app con un enlace de invitación (?unirse=...), guarda el
  * token para usarlo en cuanto haya sesión y lo quita de la barra de
@@ -31,9 +33,22 @@ function captureJoinToken() {
   return loadPendingJoin() != null
 }
 
+/** Lo mismo para el botón del navegador (#importar=...): se guarda hasta
+ * que haya sesión y se quita de la barra de direcciones. */
+function captureImport() {
+  const data = readImport(window.location.hash)
+  if (data) {
+    savePendingImport(data)
+    window.history.replaceState(null, '', removeImportHash(window.location.href))
+  }
+}
+
 export default function App() {
   const auth = useAuth()
-  const [joining] = useState(captureJoinToken)
+  const [joining] = useState(() => {
+    captureImport()
+    return captureJoinToken()
+  })
 
   if (auth.loading) return null
 
@@ -69,6 +84,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     refreshing,
     addItem,
     addManualItem,
+    saveFromBrowser,
     updateItem,
     deleteItem,
     refreshAll,
@@ -92,6 +108,12 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   const [sharingFolder, setSharingFolder] = useState(null)
   const [joinResult, setJoinResult] = useState(null) // { ok, text }
   const { acceptShareLink, acceptShare } = folderShares
+  // Lo que mandó el botón del navegador. Se lee una vez y se borra del
+  // almacenamiento: recargar la pestaña no lo vuelve a ofrecer.
+  const [browserImport, setBrowserImport] = useState(loadPendingImport)
+  useEffect(() => {
+    clearPendingImport()
+  }, [])
 
   // Enlace de invitación pendiente (abierto antes o durante el login): se
   // usa una sola vez al entrar. Se borra antes de la llamada para que el
@@ -250,6 +272,13 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
               ×
             </button>
           </div>
+        )}
+        {browserImport && (
+          <BrowserImportBanner
+            data={browserImport}
+            onSave={(data) => saveFromBrowser(data, selectedFolderId)}
+            onClose={() => setBrowserImport(null)}
+          />
         )}
         <PendingInvitesBanner
           invites={folderShares.pendingForMe}

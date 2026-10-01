@@ -142,7 +142,7 @@ Una fila por lectura. Es el corazón del proyecto: no se borra ni se compacta.
 | `ph_itm_id` | uuid | FK a `items`, `ON DELETE CASCADE`. |
 | `ph_price` | numeric | |
 | `ph_in_stock` | boolean | Nullable. |
-| `ph_source` | text | `auto` · `manual`. Distingue lo leído de lo tecleado. |
+| `ph_source` | text | `auto` · `manual` · `browser`. Distingue lo leído por el servidor, lo tecleado y lo leído desde el navegador del usuario (botón «+ Vigía», migración 020). |
 | `ph_checked_at` | timestamptz | Índice por `(ph_itm_id, ph_checked_at)`. |
 
 ### `folders`

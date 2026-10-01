@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import PasswordFields from './PasswordFields.jsx'
+import { buildBookmarklet } from '../lib/browserImport.js'
 
 const REFRESH_LABELS = {
   off: 'Apagado',
@@ -195,6 +196,8 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
           )}
         </section>
 
+        <BookmarkletSection />
+
         <section className="flex flex-col gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Contraseña</h4>
           <p className="text-sm text-ink-mut">
@@ -237,5 +240,39 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
         </div>
       </form>
     </div>
+  )
+}
+
+/** Botón «Guardar en Vigía» para la barra de marcadores (src/lib/browserImport.js).
+ * El href `javascript:` se pone a mano: React 18 avisa si lo recibe por
+ * props. Pulsarlo aquí no hace nada; hay que arrastrarlo. */
+function BookmarkletSection() {
+  const linkRef = useRef(null)
+  const [hint, setHint] = useState(false)
+
+  useEffect(() => {
+    linkRef.current?.setAttribute('href', buildBookmarklet(window.location.origin))
+  }, [])
+
+  return (
+    <section className="hidden flex-col gap-2 sm:flex">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Botón para el navegador</h4>
+      <p className="text-sm text-ink-mut">
+        Para tiendas que no dejan leer el precio, como Maisons du Monde. Arrastra el botón a la barra de
+        marcadores; luego, en la ficha de un producto, púlsalo y Vigía se abrirá con el artículo listo para
+        guardar. Si ya lo tienes en la lista, apunta el precio de hoy.
+      </p>
+      <a
+        ref={linkRef}
+        onClick={(e) => {
+          e.preventDefault()
+          setHint(true)
+        }}
+        className="self-start cursor-grab rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        + Vigía
+      </a>
+      {hint && <p className="text-sm text-warn">Arrástralo a la barra de marcadores; aquí no hace nada.</p>}
+    </section>
   )
 }

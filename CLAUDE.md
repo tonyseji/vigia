@@ -88,7 +88,7 @@ fallos de lectura de BD se avisan en vez de verse como lista vacía (B16). Sesi�
 avisos revisados: 0 dispositivos suscritos (B17, pendiente de Tony); arreglados
 cuentas sin ajustes, modos 6h/12h, rebote de precio y texto del aviso. Sesión 20: «Crear cuenta» con un email ya
 registrado lleva a recuperar contraseña (Supabase no manda correo ahí, B20). Sesión 21: Maisons du Monde
-ahora usa DataDome; alternativas investigadas, decisión pendiente (B21). Detalle en `docs/PROGRESO.md`,
+ahora usa DataDome; botón «+ Vigía» para la barra de marcadores lee el precio desde el navegador (B21). Detalle en `docs/PROGRESO.md`,
 sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20 y 21.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados

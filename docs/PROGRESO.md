@@ -1785,10 +1785,36 @@ Solo investigación y documentación, sin código.
 - Alternativas y tabla de pruebas en `docs/TIENDAS.md`, sección «Maisons du
   Monde: qué se probó». Backlog B21.
 
+Tony elige leer desde el navegador; se monta el botón en la misma sesión:
+
+- `src/lib/browserImport.js`: código del bookmarklet (JSON-LD → metas Open
+  Graph, igual que el extractor del servidor), lectura y validación de
+  `#importar=` y guardado pendiente hasta el login (patrón de `shareLink.js`).
+  11 tests (`browserImport.test.js`), que ejecutan el bookmarklet contra una
+  página falsa.
+- `useItems.saveFromBrowser`: si el artículo ya está, apunta el precio (y
+  rellena título/imagen si se guardó a mano sin ellos); si no, lo crea.
+- `BrowserImportBanner`: aviso con imagen, título y precio; nada se guarda
+  sin pulsar «Guardar».
+- Ajustes → «Botón para el navegador» (solo escritorio): el enlace para
+  arrastrar a la barra de marcadores.
+- Migración `020_precio_desde_navegador.sql`: `ph_source = 'browser'`.
+  Aplicada.
+- Decisión en `DECISIONES.md`. Extensión de Chrome valorada y aplazada.
+
+### Verificación
+
+- Tests (86) y build en verde.
+- El código del botón ejecutado sobre la ficha real de Maisons du Monde (en
+  el navegador integrado) genera la URL con 289 €, EUR, en stock, título e
+  imagen.
+- Vigía en local sin sesión: recoge el `#importar=`, lo quita de la barra y
+  lo guarda para después del login.
+- **No verificado:** el guardado con sesión iniciada (habría que entrar con
+  la contraseña de Tony) ni el arrastre real a la barra de marcadores.
+
 ### Estado final
 
-Pendiente de decisión (Cowork): leer desde el navegador del usuario (atajo de
-iOS / bookmarklet, 0 €, sin refresco automático) o servicio de scraping con
-plan gratuito (refresco automático, dependencia externa y pocos créditos para
-tiendas protegidas). Mientras tanto, precio manual como hasta ahora.
+Pendiente de Tony: arrastrar el botón desde Ajustes en su Chrome y probarlo
+en una ficha de Maisons du Monde.
 

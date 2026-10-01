@@ -930,3 +930,22 @@ mágico se queda como alternativa en la misma pantalla. Mínimo 8 caracteres.
 cambiar plantillas de correo y seguía dependiendo de recibir un correo en
 cada entrada. Google — Tony lo deja para más adelante.
 **Revisitar:** botón de Google como en Bilans, si Tony lo pide.
+
+### 2026-10-01 — Botón «+ Vigía» en la barra de marcadores para tiendas que bloquean
+**Contexto:** Maisons du Monde pasó a DataDome; desde el servidor no hay
+forma de bajar la ficha (pruebas en `docs/TIENDAS.md`). En el navegador del
+usuario sí carga, con el precio en JSON-LD.
+**Decisión (Tony):** un bookmarklet (`src/lib/browserImport.js`) que lee
+título, imagen y precio de la página abierta y abre Vigía con ellos en
+`#importar=` (el hash no llega a ningún servidor). Vigía muestra un aviso y
+**no guarda nada hasta pulsar «Guardar»**: los datos llegan en una URL que
+cualquiera puede fabricar. Si el artículo ya está, apunta el precio; si no,
+lo crea (en tienda bloqueada, con `itm_is_manual = true`). El histórico lo
+marca con `ph_source = 'browser'` (migración 020). Se instala desde Ajustes
+(solo escritorio).
+**Descartado por ahora:** extensión de Chrome que envíe sin abrir Vigía —
+exige login propio, instalación en modo desarrollador o la Chrome Web Store,
+y mantenimiento. Servicio de scraping con plan gratuito — dependencia
+externa, pocos créditos para tiendas con anti-bot y sin garantía de pasar.
+**Revisitar:** la extensión, si el segundo clic (confirmar) molesta en el uso
+real; un atajo de iOS para hacer lo mismo desde el iPhone.
