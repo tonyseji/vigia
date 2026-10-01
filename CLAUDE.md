@@ -93,8 +93,9 @@ vista Lista/Fotos recordada y carpetas plegables en el listado general. Sesión 
 Chrome (`extension/`) con precio diario para tiendas que bloquean, vía Edge Function `record-price`;
 instalada y funcionando en el Chrome de Tony (vigilar captcha, B22). Sesión 24: revisión de todo lo anterior
 (Android, duplicados por URL, pase por id). Sesión 25: Compartir → Vigía en Android
-(`share_target`, probado por Tony) y atajo de iOS a `/compartir` (pendiente de probar). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 y 25.
+(`share_target`, probado por Tony) y atajo de iOS a `/compartir` (pendiente de probar). Sesión 26: fotos de
+artículo del mismo tamaño (fondo blanco que se funde con la foto) y filas/tarjetas con precio alineado. Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 y 26.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

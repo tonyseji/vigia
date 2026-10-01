@@ -9,6 +9,9 @@
   --color-ink: #14161d;
   --color-ink-mut: #5f6577;
   --color-line: #dcdfe7;
+  /* Fondo de las fotos de artículo: claro también en modo oscuro, porque casi
+     todas las tiendas publican la foto sobre blanco y así se funde con la caja. */
+  --color-photo: #ffffff;
   --color-accent: #33407a;
   --color-accent-soft: #e6e9f5;
   --color-ok: #0e6f45;
@@ -36,6 +39,7 @@
     --color-ink: #eceef4;
     --color-ink-mut: #969db3;
     --color-line: #272c39;
+    --color-photo: #e4e6eb;
     --color-accent: #8f9be0;
     --color-accent-soft: #1e2340;
     --color-ok: #4fc98a;

@@ -2021,3 +2021,35 @@ iPhone».
 
 Probado por Tony en Android el mismo día: Compartir → Vigía funciona.
 Pendiente: crear y probar el atajo en el iPhone.
+
+
+## 2026-10-02 (Sesión 26) — Fotos y textos alineados en la lista
+
+### Contexto
+
+Tony: le molesta ver las imágenes de distintos tamaños; quiere un tamaño
+estándar y que todo (también los textos) quede alineado.
+
+### Cambios
+
+- `tailwind.css`: token `--color-photo` (blanco; gris claro en oscuro).
+- `ItemRow.jsx`: miniatura sobre `bg-photo` con `mix-blend-multiply`; hueco
+  del minigráfico reservado siempre; precio (132 px) y carpeta (92 px) de
+  ancho fijo; tachado y variación en una sola línea.
+- `ItemTile.jsx`: foto cuadrada, absoluta dentro de la caja (una foto vertical
+  ya no estira la tarjeta), mismo fondo; nombre con dos líneas reservadas y
+  bloque de precio de alto fijo.
+- Decisión en `DECISIONES.md`; `DISENO.md` actualizado.
+
+### Verificación
+
+- Página de prueba temporal (borrada) con 13 artículos reales de la BD, en
+  oscuro y claro, escritorio y móvil (375 px). Medido por JS: todas las filas
+  90 px, miniaturas 68×68 y precio acabando en la misma x; en Fotos, todas las
+  fotos 163×163 y el precio a 237 px del borde superior en todas las tarjetas.
+- Tests (117) y build en verde.
+
+### Estado final
+
+Hecho. Queda que el mueble se ve más o menos grande dentro de la caja según
+el margen blanco que deja cada tienda en su foto (ver la decisión).

@@ -71,12 +71,16 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         </label>
       )}
 
-      <div className="order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line bg-surface-2">
+      <div
+        className={`order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'}`}
+      >
         {item.itm_image_url ? (
+          // multiply: el fondo blanco de la foto de la tienda se funde con la
+          // caja, así todas las miniaturas se ven del mismo tamaño.
           <img
             src={item.itm_image_url}
             alt=""
-            className="h-full w-full object-contain"
+            className="h-full w-full object-contain mix-blend-multiply"
           />
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-7 w-7 text-ink-mut opacity-85" />
@@ -111,13 +115,13 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         </div>
       </div>
 
-      {history.length > 1 && (
-        <div className="order-4 hidden flex-none items-center sm:flex">
-          <Sparkline values={history} direction={pct ?? 0} />
-        </div>
-      )}
+      {/* El hueco del minigráfico se reserva aunque no haya histórico: si no,
+          el precio cambia de columna de una fila a otra. */}
+      <div className="order-4 hidden w-[74px] flex-none items-center sm:flex">
+        {history.length > 1 && <Sparkline values={history} direction={pct ?? 0} />}
+      </div>
 
-      <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 sm:flex-none">
+      <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 sm:w-[132px] sm:flex-none">
         {item.itm_price == null ? (
           <button
             type="button"
@@ -129,19 +133,23 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
         ) : (
           <>
             <span className="font-mono text-[17px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
+            {/* Variación y precio anterior en una sola línea: con el tachado
+                debajo, las filas con bajada quedaban más altas que el resto. */}
             {pct != null && (
-              <span
-                className="rounded-md px-1.5 py-0.5 font-mono text-[11.5px] tabular-nums"
-                style={{
-                  background: pct < 0 ? 'var(--color-ok-soft)' : 'var(--color-bad-soft)',
-                  color: pct < 0 ? 'var(--color-ok)' : 'var(--color-bad)',
-                }}
-              >
-                {formatPct(pct)}
-              </span>
-            )}
-            {pct < 0 && reference != null && (
-              <span className="font-mono text-[11px] text-ink-mut line-through">{formatPrice(reference)}</span>
+              <div className="flex items-center gap-1.5">
+                {pct < 0 && reference != null && (
+                  <span className="font-mono text-[11px] text-ink-mut line-through">{formatPrice(reference)}</span>
+                )}
+                <span
+                  className="rounded-md px-1.5 py-0.5 font-mono text-[11.5px] tabular-nums"
+                  style={{
+                    background: pct < 0 ? 'var(--color-ok-soft)' : 'var(--color-bad-soft)',
+                    color: pct < 0 ? 'var(--color-ok)' : 'var(--color-bad)',
+                  }}
+                >
+                  {formatPct(pct)}
+                </span>
+              </div>
             )}
           </>
         )}
@@ -156,7 +164,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
             setPickerOpen((v) => !v)
           }}
           title={currentFolder ? currentFolder.fld_name : 'Sin carpeta'}
-          className="flex max-w-[92px] items-center gap-1 rounded-md border border-line px-1.5 py-1.5 text-[11px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+          className="flex w-[92px] items-center gap-1 rounded-md border border-line px-1.5 py-1.5 text-[11px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
         >
           <IconEtiqueta className="h-3.5 w-3.5 flex-none" />
           <span className="truncate">{currentFolder ? currentFolder.fld_name : 'Sin carpeta'}</span>

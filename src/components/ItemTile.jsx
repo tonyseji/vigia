@@ -51,10 +51,13 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
 
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
-      <div className="relative aspect-4/3 grid place-items-center bg-surface-2">
-        <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: stripeColor }} />
+      <div className={`relative grid aspect-square place-items-center ${item.itm_image_url ? 'bg-photo' : 'bg-surface-2'}`}>
+        <div className="absolute inset-x-0 top-0 z-1 h-[3px]" style={{ background: stripeColor }} />
         {item.itm_image_url ? (
-          <img src={item.itm_image_url} alt="" className="h-full w-full object-contain" />
+          // Cuadrada (casi todas las tiendas publican la foto 1:1) y con
+          // multiply para que el fondo blanco de la foto se funda con la caja.
+          // Absoluta: una foto vertical no puede estirar el cuadrado.
+          <img src={item.itm_image_url} alt="" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-9 w-9 text-ink-mut opacity-80" />
         )}
@@ -77,7 +80,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
           href={item.itm_url}
           target="_blank"
           rel="noreferrer"
-          className="line-clamp-2 text-[13px] font-medium text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+          className="line-clamp-2 min-h-[2lh] text-[13px] font-medium text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
         >
           {item.itm_title}
         </a>
@@ -99,9 +102,13 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
 
         <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
           {item.itm_price == null ? (
-            <span className="rounded-md bg-warn-soft px-1.5 py-0.5 text-[10.5px] text-warn">Sin precio</span>
+            <div className="min-h-[46px]">
+              <span className="rounded-md bg-warn-soft px-1.5 py-0.5 text-[10.5px] text-warn">Sin precio</span>
+            </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            // Alto fijo (precio + píldora) para que el precio quede a la misma
+            // altura en todas las tarjetas, tengan variación o no.
+            <div className="flex min-h-[46px] flex-col gap-1">
               <span className="font-mono text-[14.5px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
               {pct != null && (
                 <span

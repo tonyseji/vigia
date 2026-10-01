@@ -41,16 +41,20 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 | Elemento | Regla |
 |---|---|
 | Franja lateral | Verde si el precio ha bajado, rojo si ha subido, ámbar si no hay precio. Es lo que permite escanear la lista sin leer. |
-| Miniatura | 68×68, `object-contain` (la imagen completa, sin recortar) sobre fondo `surface-2`. Si no hay imagen, un icono según el tipo de producto sobre el mismo fondo. |
+| Miniatura | 68×68, `object-contain` (la imagen completa, sin recortar) sobre fondo `photo` (blanco; gris claro en modo oscuro) con `mix-blend-multiply`, para que el fondo blanco de la foto de la tienda se funda con la caja y todas se vean del mismo tamaño. Si no hay imagen, un icono según el tipo de producto sobre `surface-2`. |
 | Nombre | Máximo dos líneas, y es el enlace a la tienda. |
 | Segunda línea | Dominio de la tienda · nº de registros · en ámbar, «la tienda bloquea la lectura» cuando aplica. |
-| Minigráfico | Solo si hay dos o más registros. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |
-| Precio | Mono, `tabular-nums`, el número más grande de la fila. |
-| Variación | Píldora con el porcentaje y, debajo, el precio anterior tachado cuando ha bajado. |
+| Minigráfico | Solo si hay dos o más registros, pero el hueco (74 px) se reserva siempre para que el precio quede en la misma columna en todas las filas. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |
+| Precio | Mono, `tabular-nums`, el número más grande de la fila. Columna de ancho fijo (132 px), igual que el selector de carpeta (92 px): todas las filas miden lo mismo y alinean en columnas. |
+| Variación | Debajo del precio, en una sola línea: el precio anterior tachado (cuando ha bajado) y la píldora con el porcentaje. |
 | Sin precio | En vez del precio, la píldora ámbar «Sin precio · edítalo». |
 
 La vista **Fotos** es la misma información en rejilla, con la imagen grande y
 sin minigráfico. Es secundaria: se usa para comparar diseños, no precios.
+La foto es cuadrada (1:1, como publican casi todas las tiendas), con el mismo
+fondo `photo` y `multiply`; el nombre reserva siempre dos líneas y el bloque
+de precio tiene alto fijo, así el precio cae a la misma altura en todas las
+tarjetas.
 
 ---
 

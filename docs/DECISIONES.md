@@ -1007,3 +1007,30 @@ añadir un artículo a la lista; se ve en el aviso y se quita con un toque.
 que bloquean, el precio llega en el siguiente pase de la extensión (o al
 momento con el favorito con código, que sigue en Ajustes). El atajo del
 iPhone abre Safari, que necesita su propia sesión de Vigía.
+
+### 2026-10-02 — Fotos de artículo sobre fondo blanco que se funde, y filas de medidas fijas
+**Decisión:** la caja de la foto (fila y tarjeta) pasa de fondo `surface-2`
+(gris) a un token nuevo `--color-photo` (blanco; `#e4e6eb` en modo oscuro), con
+la imagen en `object-contain` + `mix-blend-multiply`. La tarjeta de la vista
+Fotos pasa de 4:3 a cuadrada. En la fila, el hueco del minigráfico se reserva
+siempre, la columna de precio y el selector de carpeta tienen ancho fijo, y el
+precio tachado va en la misma línea que la píldora de variación.
+**Por qué:** Tony: «me da bastante toc ver las imágenes de diferentes
+tamaños». Con imágenes reales de su lista se vio la causa: casi todas las
+tiendas (IKEA, Maisons du Monde, JYSK, PcComponentes) publican la foto sobre
+blanco, y sobre la caja gris cada foto se veía como un recuadro blanco de
+distinto alto. Con la caja blanca y `multiply`, el blanco de la foto
+desaparece en la caja y lo que se ve es una caja igual en todas las filas.
+Las filas, además, cambiaban de altura (el tachado añadía una tercera línea)
+y el precio cambiaba de columna según hubiera minigráfico o no, o según lo
+largo que fuera el nombre de la carpeta. Medido tras el cambio: todas las
+filas 90 px y el precio acaba en el mismo píxel; en Fotos, todas las fotos
+cuadradas y el precio a la misma altura en todas las tarjetas.
+**Descartado:** volver a `object-cover` (recorta las fotos de ambiente, que es
+justo lo que cerró B10); recortar el margen blanco de cada foto en el
+navegador con un `<canvas>` (las tiendas no dan CORS, el canvas queda
+bloqueado). Por eso el mueble en sí puede seguir viéndose más grande o más
+pequeño dentro de la caja según el margen que deje cada tienda en su foto.
+**Revisitar:** si molesta el tamaño del mueble dentro de la caja, valorar
+guardar una versión recortada de la imagen al añadir el artículo (en la Edge
+Function, sin el límite de CORS).
