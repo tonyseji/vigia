@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { priceChangePct } from '../lib/format.js'
 import { folderToText, copyToClipboard } from '../lib/clipboard.js'
+import { groupByFolder as groupItemsByFolder, folderGroupName, loadView, saveView } from '../lib/itemGroups.js'
 import { IconCopiar, IconCheck } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
 import ItemTile from './ItemTile.jsx'
@@ -55,7 +56,12 @@ export default function ItemList({
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
   const [onlyDrops, setOnlyDrops] = useState(false)
-  const [view, setView] = useState('list')
+  const [view, setViewState] = useState(loadView)
+
+  function setView(next) {
+    setViewState(next)
+    saveView(next)
+  }
 
   const foldersById = useMemo(() => Object.fromEntries(folders.map((f) => [f.fld_id, f])), [folders])
 
@@ -74,27 +80,8 @@ export default function ItemList({
 
   const sorted = useMemo(() => sortItems(filtered, sort), [filtered, sort])
 
-  /** Nombre de grupo con la jerarquía visible: "Muebles / Salón" si la
-   * carpeta es una subcarpeta, o solo "Muebles" si es de primer nivel. */
-  const groupName = useMemo(
-    () => (key) => {
-      if (key === '__none__') return 'Sin carpeta'
-      const folder = foldersById[key]
-      if (!folder) return 'Sin carpeta'
-      const parent = folder.fld_parent_id ? foldersById[folder.fld_parent_id] : null
-      return parent ? `${parent.fld_name} / ${folder.fld_name}` : folder.fld_name
-    },
-    [foldersById],
-  )
-
-  const groups = useMemo(() => {
-    const g = {}
-    for (const item of sorted) {
-      const key = item.itm_fld_id ?? '__none__'
-      ;(g[key] = g[key] || []).push(item)
-    }
-    return Object.entries(g).sort(([a], [b]) => groupName(a).localeCompare(groupName(b), 'es'))
-  }, [sorted, groupName])
+  // «Sin carpeta» primero, el resto por nombre (src/lib/itemGroups.js).
+  const groups = useMemo(() => groupItemsByFolder(sorted, foldersById), [sorted, foldersById])
 
   function row(item) {
     return (
@@ -198,7 +185,7 @@ export default function ItemList({
         <p className="mt-4 text-center text-ink-mut">Nada que coincida.</p>
       ) : groupByFolder ? (
         groups.map(([key, groupItems]) => {
-          const name = groupName(key)
+          const name = folderGroupName(key, foldersById)
           const total = groupItems.reduce((sum, i) => sum + (i.itm_price ?? 0), 0)
           return (
             <section key={key} className="flex flex-col gap-2">

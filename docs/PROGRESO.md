@@ -1842,3 +1842,31 @@ Botón probado por Tony en IKEA y en Maisons du Monde. Pendiente: que Tony
 cambie el marcador por el nuevo (el viejo no lleva clave y pide confirmar) y
 compruebe el guardado directo.
 
+
+## 2026-10-01 (Sesión 22) — «Sin carpeta» arriba y vista Lista/Fotos recordada
+
+### Contexto
+
+Tony confirma que el botón «Guardar en Vigía» ya guarda directo. Pide que en
+la vista general salgan primero los artículos sin carpeta y que se recuerde
+la vista elegida (Lista o Fotos).
+
+### Cambios
+
+- `src/lib/itemGroups.js`: `groupByFolder` pone «Sin carpeta» siempre
+  primero (antes se ordenaba por nombre y caía por la S); el resto, por
+  nombre. Un artículo de una carpeta que no está cargada se suma a «Sin
+  carpeta» en vez de abrir otro grupo con el mismo nombre.
+- La vista Lista/Fotos se guarda en `localStorage` (`vigia.itemView`), por
+  navegador. Orden y filtros no se recuerdan (no se pidió).
+- `ItemList` usa las dos cosas. 4 tests nuevos (`itemGroups.test.js`).
+
+### Verificación
+
+- Tests (94) y build en verde.
+- No visto en pantalla con sesión (haría falta la contraseña de Tony).
+
+### Estado final
+
+Pendiente de Tony: comprobarlo en producción.
+
