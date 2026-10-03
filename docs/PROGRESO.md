@@ -2125,4 +2125,5 @@ nombrar y guardar el conjunto.
 
 ### Estado final
 
-Hecho, pendiente de que Tony lo pruebe. Siguiente: B24.
+Hecho y probado por Tony en producción el 2026-10-03 («funciona
+correctamente»). Siguiente: B24.
