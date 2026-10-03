@@ -44,10 +44,9 @@ function sortItems(items, sort) {
  * carpeta concreta, se pinta como lista plana sin repetir el título del
  * grupo — el sidebar ya dice en qué carpeta estás.
  *
- * `comparing`/`selectedIds`/`onToggleSelected` vienen de useComparison
- * (App.jsx): pintan un checkbox por fila cuando el modo comparar está
- * activo, cruzando carpetas — comparar un sofá con un teclado es un caso de
- * uso real (docs/DECISIONES.md, "comparador puntual de conjuntos"). */
+ * `picking`/`basket`/`onToggleBasket` vienen de useBasket (App.jsx): con
+ * la cesta en modo elegir, cada fila y cada tarjeta lleva una casilla,
+ * cruzando carpetas (docs/superpowers/specs/2026-10-03-cesta-design.md). */
 export default function ItemList({
   items,
   folders,
@@ -56,9 +55,9 @@ export default function ItemList({
   onUpdate,
   onDelete,
   groupByFolder = true,
-  comparing = false,
-  selectedIds,
-  onToggleSelected,
+  picking = false,
+  basket,
+  onToggleBasket,
 }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
@@ -113,15 +112,26 @@ export default function ItemList({
         folders={folders}
         onUpdate={onUpdate}
         onDelete={onDelete}
-        comparing={comparing}
-        selected={selectedIds?.has(item.itm_id)}
-        onToggleSelected={onToggleSelected}
+        picking={picking}
+        inBasket={Boolean(basket?.[item.itm_id])}
+        onToggleBasket={onToggleBasket}
       />
     )
   }
 
   function tile(item) {
-    return <ItemTile key={item.itm_id} item={item} folders={folders} onUpdate={onUpdate} onDelete={onDelete} />
+    return (
+      <ItemTile
+        key={item.itm_id}
+        item={item}
+        folders={folders}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        picking={picking}
+        inBasket={Boolean(basket?.[item.itm_id])}
+        onToggleBasket={onToggleBasket}
+      />
+    )
   }
 
   function itemsView(list) {

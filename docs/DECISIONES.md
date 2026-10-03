@@ -1034,3 +1034,27 @@ pequeño dentro de la caja según el margen que deje cada tienda en su foto.
 **Revisitar:** si molesta el tamaño del mueble dentro de la caja, valorar
 guardar una versión recortada de la imagen al añadir el artículo (en la Edge
 Function, sin el límite de CORS).
+
+### 2026-10-03 — La cesta sustituye al comparador de conjuntos
+**Decisión:** el botón «Comparar» pasa a ser **Cesta**: se marcan artículos
+(en Lista o en Fotos, de cualquier carpeta) y una barra fija abajo de la
+pantalla enseña en vivo el total, las tiendas y cuánto ha cambiado desde que
+se guardaron. El detalle agrupa por tienda con subtotal, permite cantidad
+por artículo y da tres cifras: hoy, al guardarlos (primer precio registrado)
+y mínimo visto. La carpeta entera se mete desde su menú «⋮» (también las
+compartidas). La cesta se guarda en `localStorage` del dispositivo, no en la
+BD. Diseño en `docs/superpowers/specs/2026-10-03-cesta-design.md`.
+**Por qué:** Tony veía que «Comparar» no funcionaba. Tres causas: sin
+casillas en la vista Fotos, la barra quedaba al final de la lista (un
+`sticky` dentro de un `div` que solo la contenía a ella) y no había ningún
+total hasta poner nombre al conjunto y guardarlo. Lo que pidió es otra cosa:
+«seleccionas x objetos y ves lo que te costaría», aunque sean de tiendas
+distintas. Se guarda en el dispositivo y no en memoria porque, con
+cantidades, perderla al reabrir la app del iPhone (que recarga) la haría
+inútil; y no en la BD para no añadir tabla antes de probar la idea.
+**Descartado:** gastos de envío (no los conocemos; un total inventado engaña,
+el desglose por tienda sirve para sumarlos a mano). Arreglar solo el
+comparador anterior: el flujo de nombrar y guardar era el problema.
+**Revisitar:** fase 2, cestas guardadas con nombre en la BD («Salón opción A
+/ B»), lado a lado y compartidas entre dispositivos. Sustituye al «revisitar
+si se pide persistencia» de la decisión del 2026-09-07.

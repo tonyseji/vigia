@@ -4,7 +4,7 @@ import { useItems } from './hooks/useItems.js'
 import { useFolders } from './hooks/useFolders.js'
 import { useFolderShares } from './hooks/useFolderShares.js'
 import { useSettings } from './hooks/useSettings.js'
-import { useComparison } from './hooks/useComparison.js'
+import { useBasket } from './hooks/useBasket.js'
 import Login from './components/Login.jsx'
 import PasswordFields from './components/PasswordFields.jsx'
 import AddItemForm from './components/AddItemForm.jsx'
@@ -16,9 +16,10 @@ import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import BrowserImportBanner from './components/BrowserImportBanner.jsx'
 import SharedLinkBanner from './components/SharedLinkBanner.jsx'
-import { CompareBar, ComparisonSets } from './components/ComparisonPanel.jsx'
-import { IconEngranaje, IconMenu, IconActualizar, IconComparar } from './components/icons/index.jsx'
+import { BasketBar, BasketSheet } from './components/Basket.jsx'
+import { IconEngranaje, IconMenu, IconActualizar, IconCesta } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
+import { basketLines, basketSummary } from './lib/basket.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
 import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport, isTrustedImport } from './lib/browserImport.js'
 import { readSharedUrl, savePendingShare, loadPendingShare, clearPendingShare } from './lib/shareTarget.js'
@@ -115,7 +116,12 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   } = useFolders()
   const folderShares = useFolderShares()
   const { settings, loadError: settingsLoadError, reload: reloadSettings, save: saveSettings } = useSettings()
-  const comparison = useComparison()
+  const itemsById = useMemo(() => Object.fromEntries(items.map((i) => [i.itm_id, i])), [items])
+  const cesta = useBasket(itemsById, !loading && !itemsLoadError)
+  const [showBasket, setShowBasket] = useState(false)
+  const basketLinesList = useMemo(() => basketLines(cesta.basket, itemsById), [cesta.basket, itemsById])
+  const basketTotals = useMemo(() => basketSummary(basketLinesList), [basketLinesList])
+  const showBasketBar = cesta.picking || basketTotals.units > 0
   const [showSettings, setShowSettings] = useState(false)
   const [showSidebarMobile, setShowSidebarMobile] = useState(false)
   const [selectedFolderId, setSelectedFolderId] = useState(null)
@@ -189,8 +195,6 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     setRetrying(false)
   }
 
-  const itemsById = useMemo(() => Object.fromEntries(items.map((i) => [i.itm_id, i])), [items])
-
   const countByFolder = useMemo(() => {
     const counts = {}
     for (const item of items) {
@@ -208,8 +212,17 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     return items.filter((item) => ids.has(item.itm_fld_id))
   }, [items, selectedFolderId, foldersTree])
 
+  /** «Añadir a la cesta» del menú de carpeta: la carpeta y, si es de primer
+   * nivel, sus subcarpetas (lo mismo que se ve al seleccionarla). */
+  function addFolderToBasket(folder) {
+    const ids = new Set([folder.fld_id, ...(folder.children ?? []).map((c) => c.fld_id)])
+    cesta.addMany(items.filter((item) => ids.has(item.itm_fld_id)).map((item) => item.itm_id))
+    setShowSidebarMobile(false)
+  }
+
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10">
+    // Con la barra de la cesta, hueco abajo para que no tape el último artículo.
+    <main className={`mx-auto max-w-5xl px-5 pt-10 ${showBasketBar ? 'pb-32' : 'pb-10'}`}>
       <InstallBanner />
 
       <header className="flex items-center justify-between gap-3">
@@ -238,14 +251,19 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
           </button>
           <button
             type="button"
-            aria-pressed={comparison.active}
-            onClick={() => (comparison.active ? comparison.stop() : comparison.start())}
-            aria-label="Comparar"
-            title="Comparar"
-            className="rounded-lg border border-line p-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-ink sm:px-3 sm:py-1.5"
+            aria-pressed={cesta.picking}
+            onClick={() => cesta.setPicking(!cesta.picking)}
+            aria-label={`Cesta (${basketTotals.units})`}
+            title="Cesta: marca artículos y mira cuánto costaría todo"
+            className="flex items-center gap-1.5 rounded-lg border border-line p-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-ink sm:px-3 sm:py-1.5"
           >
-            <IconComparar className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">Comparar</span>
+            <IconCesta className="h-4 w-4" />
+            <span className="hidden sm:inline">Cesta</span>
+            {basketTotals.units > 0 && (
+              <span className="rounded-full bg-accent px-1.5 font-mono text-[11px] leading-[18px] text-surface">
+                {basketTotals.units}
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -324,12 +342,6 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
         <AddItemForm onAdd={addItem} onAddManual={addManualItem} folderId={selectedFolderId} />
       </div>
 
-      {comparison.active && comparison.sets.length > 0 && (
-        <div className="mt-6">
-          <ComparisonSets sets={comparison.sets} itemsById={itemsById} onRemove={comparison.removeSet} />
-        </div>
-      )}
-
       <div className="mt-6 flex items-start gap-6">
         <div className="hidden md:block">
           <FolderSidebar
@@ -343,6 +355,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             deleteFolder={deleteFolder}
             folderShares={folderShares}
             onShare={setSharingFolder}
+            onAddToBasket={addFolderToBasket}
           />
         </div>
 
@@ -355,21 +368,35 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             onUpdate={updateItem}
             onDelete={deleteItem}
             groupByFolder={selectedFolderId == null}
-            comparing={comparison.active}
-            selectedIds={comparison.selectedIds}
-            onToggleSelected={comparison.toggleSelected}
+            picking={cesta.picking}
+            basket={cesta.basket}
+            onToggleBasket={cesta.toggle}
           />
         </div>
       </div>
 
-      {comparison.active && (
-        <div className="mt-4">
-          <CompareBar
-            selectedCount={comparison.selectedIds.size}
-            onSave={comparison.saveSet}
-            onCancel={comparison.stop}
-          />
-        </div>
+      {showBasketBar && (
+        <BasketBar
+          summary={basketTotals}
+          picking={cesta.picking}
+          onTogglePicking={() => cesta.setPicking(!cesta.picking)}
+          onOpen={() => setShowBasket(true)}
+        />
+      )}
+
+      {showBasket && (
+        <BasketSheet
+          lines={basketLinesList}
+          summary={basketTotals}
+          onSetQty={cesta.setQty}
+          onStep={cesta.step}
+          onClear={cesta.clear}
+          onAddMore={() => {
+            setShowBasket(false)
+            cesta.setPicking(true)
+          }}
+          onClose={() => setShowBasket(false)}
+        />
       )}
 
       {showSidebarMobile && (
@@ -403,6 +430,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
               deleteFolder={deleteFolder}
               folderShares={folderShares}
               onShare={setSharingFolder}
+              onAddToBasket={addFolderToBasket}
             />
             <div className="mt-auto flex flex-col gap-2 border-t border-line pt-3">
               <span className="truncate text-xs text-ink-mut">{email}</span>

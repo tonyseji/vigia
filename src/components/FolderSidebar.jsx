@@ -18,6 +18,7 @@ export default function FolderSidebar({
   deleteFolder,
   folderShares,
   onShare,
+  onAddToBasket,
 }) {
   const [expanded, setExpanded] = useState(() => new Set(foldersTree.map((f) => f.fld_id)))
   const [creatingSubOf, setCreatingSubOf] = useState(null)
@@ -109,28 +110,34 @@ export default function FolderSidebar({
             onRenamingNameChange={setRenamingName}
             onRenameSubmit={() => submitRename(folder.fld_id)}
             menu={
-              folder.isOwner && (
-                <FolderMenu
-                  onRename={() => {
+              // Las compartidas solo llevan «Añadir a la cesta»: el resto
+              // de acciones son del dueño.
+              <FolderMenu
+                onAddToBasket={() => {
+                  onAddToBasket(folder)
+                  setOpenMenuId(null)
+                }}
+                {...(folder.isOwner && {
+                  onRename: () => {
                     setRenamingId(folder.fld_id)
                     setRenamingName(folder.fld_name)
                     setOpenMenuId(null)
-                  }}
-                  onNewSubfolder={() => {
+                  },
+                  onNewSubfolder: () => {
                     setCreatingSubOf(folder.fld_id)
                     setExpanded((prev) => new Set(prev).add(folder.fld_id))
                     setOpenMenuId(null)
-                  }}
-                  onShare={() => {
+                  },
+                  onShare: () => {
                     onShare(folder)
                     setOpenMenuId(null)
-                  }}
-                  onDelete={() => {
+                  },
+                  onDelete: () => {
                     handleDelete(folder)
                     setOpenMenuId(null)
-                  }}
-                />
-              )
+                  },
+                })}
+              />
             }
           />
 
@@ -152,19 +159,23 @@ export default function FolderSidebar({
                   onRenamingNameChange={setRenamingName}
                   onRenameSubmit={() => submitRename(child.fld_id)}
                   menu={
-                    child.isOwner && (
-                      <FolderMenu
-                        onRename={() => {
+                    <FolderMenu
+                      onAddToBasket={() => {
+                        onAddToBasket(child)
+                        setOpenMenuId(null)
+                      }}
+                      {...(child.isOwner && {
+                        onRename: () => {
                           setRenamingId(child.fld_id)
                           setRenamingName(child.fld_name)
                           setOpenMenuId(null)
-                        }}
-                        onDelete={() => {
+                        },
+                        onDelete: () => {
                           handleDelete(child)
                           setOpenMenuId(null)
-                        }}
-                      />
-                    )
+                        },
+                      })}
+                    />
                   }
                 />
               ))}
@@ -304,12 +315,17 @@ function FolderRow({
   )
 }
 
-function FolderMenu({ onRename, onNewSubfolder, onShare, onDelete }) {
+function FolderMenu({ onAddToBasket, onRename, onNewSubfolder, onShare, onDelete }) {
   return (
     <div className="absolute right-0 top-7 z-10 flex w-44 flex-col gap-0.5 rounded-lg border border-line bg-surface p-1 shadow-lg">
-      <button type="button" onClick={onRename} className="rounded-md px-2 py-1.5 text-left text-sm text-ink outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent">
-        Renombrar
+      <button type="button" onClick={onAddToBasket} className="rounded-md px-2 py-1.5 text-left text-sm text-ink outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent">
+        Añadir a la cesta
       </button>
+      {onRename && (
+        <button type="button" onClick={onRename} className="rounded-md px-2 py-1.5 text-left text-sm text-ink outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent">
+          Renombrar
+        </button>
+      )}
       {onNewSubfolder && (
         <button type="button" onClick={onNewSubfolder} className="rounded-md px-2 py-1.5 text-left text-sm text-ink outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent">
           Nueva subcarpeta
@@ -320,9 +336,11 @@ function FolderMenu({ onRename, onNewSubfolder, onShare, onDelete }) {
           Compartir
         </button>
       )}
-      <button type="button" onClick={onDelete} className="rounded-md px-2 py-1.5 text-left text-sm text-bad outline-none hover:bg-bad-soft focus-visible:outline-2 focus-visible:outline-accent">
-        Borrar
-      </button>
+      {onDelete && (
+        <button type="button" onClick={onDelete} className="rounded-md px-2 py-1.5 text-left text-sm text-bad outline-none hover:bg-bad-soft focus-visible:outline-2 focus-visible:outline-accent">
+          Borrar
+        </button>
+      )}
     </div>
   )
 }

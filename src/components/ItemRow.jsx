@@ -18,7 +18,7 @@ function domainOf(url) {
  * miniatura, nombre + tienda, minigráfico si hay histórico, precio y
  * variación, o la píldora ámbar de "sin precio" cuando corresponde.
  * El botón de editar (✎) abre EditItemModal, que también permite borrar. */
-export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, selected, onToggleSelected }) {
+export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket }) {
   const [editing, setEditing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
@@ -55,17 +55,17 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, comparing, 
 
   return (
     <article
-      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 sm:flex-nowrap ${selected ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 sm:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
-      {comparing && (
+      {picking && (
         <label className="order-0 flex flex-none cursor-pointer items-center self-center pl-0.5">
           <input
             type="checkbox"
-            checked={selected}
-            onChange={() => onToggleSelected(item.itm_id)}
-            aria-label={`Seleccionar ${item.itm_title} para comparar`}
+            checked={inBasket}
+            onChange={() => onToggleBasket(item.itm_id)}
+            aria-label={`Meter ${item.itm_title} en la cesta`}
             className="h-4 w-4 cursor-pointer accent-accent"
           />
         </label>

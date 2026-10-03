@@ -180,10 +180,12 @@ export function IconActualizar(props) {
   )
 }
 
-export function IconComparar(props) {
+export function IconCesta(props) {
   return (
     <svg {...common} {...props}>
-      <path d="M7 8h13M7 16h13M3 8h.01M3 16h.01" />
+      <path d="M3 10h18l-2 9a2 2 0 0 1-2 1.6H7A2 2 0 0 1 5 19Z" />
+      <path d="m8 10 3-6M16 10l-3-6" />
+      <path d="M9.5 14v3M14.5 14v3" />
     </svg>
   )
 }

@@ -18,7 +18,7 @@ function domainOf(url) {
  * minigráfico ni copiar para Claude, pero sí carpeta y editar — sin ellos
  * un artículo añadido en esta vista no se podía organizar (feedback de
  * Tony tras ver la vista Fotos en producción, sesión 15). */
-export default function ItemTile({ item, folders, onUpdate, onDelete }) {
+export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket }) {
   const [editing, setEditing] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -50,7 +50,9 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
   const stripeColor = state === 'd' ? 'var(--color-ok)' : state === 'u' ? 'var(--color-bad)' : state === 'n' ? 'var(--color-warn)' : 'transparent'
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
+    <article
+      className={`flex flex-col overflow-hidden rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+    >
       <div className={`relative grid aspect-square place-items-center ${item.itm_image_url ? 'bg-photo' : 'bg-surface-2'}`}>
         <div className="absolute inset-x-0 top-0 z-1 h-[3px]" style={{ background: stripeColor }} />
         {item.itm_image_url ? (
@@ -60,6 +62,17 @@ export default function ItemTile({ item, folders, onUpdate, onDelete }) {
           <img src={item.itm_image_url} alt="" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-9 w-9 text-ink-mut opacity-80" />
+        )}
+        {picking && (
+          <label className="absolute left-1.5 top-1.5 z-1 grid cursor-pointer place-items-center rounded-md border border-line bg-surface/90 p-1.5">
+            <input
+              type="checkbox"
+              checked={inBasket}
+              onChange={() => onToggleBasket(item.itm_id)}
+              aria-label={`Meter ${item.itm_title} en la cesta`}
+              className="h-4 w-4 cursor-pointer accent-accent"
+            />
+          </label>
         )}
         <button
           type="button"

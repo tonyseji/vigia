@@ -2080,3 +2080,49 @@ hasta recargar.
 ### Estado final
 
 Hecho, pendiente de confirmar con uso real.
+
+## 2026-10-03 (Sesión 28) — Cesta en vez de Comparar
+
+### Contexto
+
+Tony: el botón Comparar no parecía funcionar, y propone otra cosa: marcar
+varios artículos y ver cuánto costaría comprarlos todos, aunque sean de
+tiendas distintas, como una cesta. Más adelante, guardar conjuntos.
+
+Causas de que Comparar «no funcionara»: sin casillas en la vista Fotos; la
+barra quedaba al final de la lista (`sticky` sin efecto); ningún total hasta
+nombrar y guardar el conjunto.
+
+### Cambios
+
+- `src/lib/basket.js` (nuevo) + 13 tests: líneas, totales (hoy, al
+  guardarlos, mínimo visto, sin precio, tiendas), agrupar por tienda,
+  cantidades, limpiar borrados y `localStorage` (`vigia.cesta`).
+- `src/hooks/useBasket.js` (nuevo): estado, modo elegir, guardado. Solo saca
+  artículos borrados con la lista cargada sin errores.
+- `src/components/Basket.jsx` (nuevo): `BasketBar` (fija abajo, encima del
+  contenido, zona segura del iPhone) y `BasketSheet` (hoja en móvil, panel en
+  escritorio; por tienda, cantidad − N +, quitar, vaciar, añadir más).
+- `ItemRow`/`ItemTile`: casilla en modo elegir (antes solo en Lista).
+- `FolderSidebar`: «Añadir a la cesta» en el menú «⋮», también en carpetas
+  compartidas (el resto de acciones siguen siendo solo del dueño).
+- `App.jsx`: botón Cesta con contador; hueco abajo con la barra visible.
+- Borrados `useComparison.js` y `ComparisonPanel.jsx`; `IconComparar` →
+  `IconCesta`.
+- Spec, decisión en `DECISIONES.md` y B24 (cestas guardadas) en `ROADMAP.md`.
+
+### Verificación
+
+- Página de prueba temporal (borrada) con artículos reales de la BD, más uno
+  sin precio y una bajada simulada. Escritorio 1280×800 y móvil 375×812:
+  barra fija al fondo con scroll; totales comprobados a mano (711,84 € /
+  −24 €; con cantidades 931,74 / 955,74 / mínimo 925,74); dos toques
+  seguidos en «+» suman dos; la cesta sobrevive a recargar; casillas en
+  Fotos. Sin errores de consola en carga limpia.
+- No probado con sesión real (no se teclean contraseñas): falta el menú de
+  carpeta en la app de verdad.
+- Tests (130) y build en verde.
+
+### Estado final
+
+Hecho, pendiente de que Tony lo pruebe. Siguiente: B24.
