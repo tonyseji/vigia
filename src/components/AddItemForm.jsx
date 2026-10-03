@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import { findUrlInText } from '../lib/shareTarget.js'
+
+// «Pegar» solo en el móvil (sm:hidden) y si el navegador deja leer el
+// portapapeles: en el iPhone es la vía sin configurar nada (Compartir →
+// Copiar en la tienda, y aquí un toque). Safari enseña su propia burbuja
+// «Pegar» antes de dar el texto.
+const canPaste = typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function'
 
 /** Barra de añadir URL, con los tres estados de docs/DISENO.md: añadiendo,
  * error en palabras llanas sin perder la URL, y el aviso de tienda
@@ -11,10 +18,13 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!url.trim()) return
+    if (url.trim()) await add(url.trim())
+  }
+
+  async function add(value) {
     setStatus('adding')
     setErrorMsg('')
-    const result = await onAdd(url.trim(), folderId)
+    const result = await onAdd(value, folderId)
     if (result.blocked) {
       setStatus('blocked')
       return
@@ -26,6 +36,25 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
     }
     setUrl('')
     setStatus('idle')
+  }
+
+  /** Lee la dirección copiada y la guarda sin más toques. */
+  async function handlePaste() {
+    let text = ''
+    try {
+      text = await navigator.clipboard.readText()
+    } catch {
+      // Permiso denegado o burbuja cerrada sin pegar.
+      return
+    }
+    const pasted = findUrlInText(text)
+    if (!pasted) {
+      setStatus('error')
+      setErrorMsg('No hay ninguna dirección copiada. En la tienda: Compartir → Copiar, y vuelve a tocar «Pegar».')
+      return
+    }
+    setUrl(pasted)
+    await add(pasted)
   }
 
   async function handleManualSave() {
@@ -91,6 +120,16 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           onChange={(e) => setUrl(e.target.value)}
           className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 outline-none focus-visible:outline-2 focus-visible:outline-accent"
         />
+        {canPaste && !url && (
+          <button
+            type="button"
+            onClick={handlePaste}
+            disabled={status === 'adding'}
+            className="flex-none rounded-lg border border-accent bg-accent-soft px-3 py-2 font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60 sm:hidden"
+          >
+            Pegar
+          </button>
+        )}
         <button
           type="submit"
           disabled={status === 'adding'}

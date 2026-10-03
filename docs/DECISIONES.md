@@ -1058,3 +1058,37 @@ comparador anterior: el flujo de nombrar y guardar era el problema.
 **Revisitar:** fase 2, cestas guardadas con nombre en la BD («Salón opción A
 / B»), lado a lado y compartidas entre dispositivos. Sustituye al «revisitar
 si se pide persistencia» de la decisión del 2026-09-07.
+
+### 2026-10-04 — iPhone: atajo que guarda desde el servidor, y botón «Pegar»
+**Contexto:** el atajo de la sesión 25 no le funcionaba bien a Tony. Tenía
+dos pegas: montarlo a mano (acciones que cambian de nombre según la versión
+de iOS) y que cada uso abría Safari, que no comparte sesión con la app
+instalada y además te sacaba de ella. Tony pidió algo «como Compartir en
+Android, sencillo».
+**Límite de iOS:** una app web no puede salir en la hoja de compartir del
+iPhone, y ningún atajo puede abrir la app de la pantalla de inicio. Sin
+configurar nada solo se llega con una app nativa (99 €/año de Apple, rompe
+el 0 €). Descartado también recibir enlaces por correo: necesita un dominio
+de pago y no ahorra pasos.
+**Decisión (Tony: «haz las dos»):**
+1. **Atajo que guarda solo.** Llama a una Edge Function nueva, `save-link`,
+   con `{ url, key }`. Guarda como Compartir en Android (con precio, o sin
+   precio y manual si la tienda bloquea; avisa si ya estaba) y devuelve una
+   frase que el atajo enseña como notificación. No abre nada.
+2. **Botón «Pegar»** en el formulario de añadir, solo en el móvil: en la
+   tienda, Compartir → Copiar, y en Vigía un toque. Para quien no quiera
+   configurar nada.
+**La clave:** sustituye a la sesión, que el atajo no tiene. 32 bytes
+aleatorios creados en el navegador; en la BD solo va su SHA-256
+(`us_shortcut_key_hash`, único). Crear otra anula la anterior, y en Ajustes
+se puede desactivar. No hay función `SECURITY DEFINER`: el usuario escribe
+su propio hash con la política `_own` de `user_settings`, y poner uno
+inventado solo afecta a su cuenta.
+**Para que sea un toque:** «Añadir atajo» en Ajustes crea la clave, la
+copia (dentro del toque, que es cuando Safari deja copiar) y abre el atajo
+publicado en iCloud. Atajos pide la clave al añadirlo y se pega. Ese enlace
+de iCloud solo lo puede crear Tony desde su iPhone: hasta que exista,
+Ajustes enseña los cuatro pasos para montarlo a mano.
+**Revisitar:** si el atajo publicado por iCloud da problemas con la
+pregunta de importación, o si algún día hay presupuesto para una app
+nativa.

@@ -15,6 +15,7 @@
 | Base de datos | Supabase | Schema `vigia`: `items`, `price_history`, `folders`, `user_settings`, `store_rules`. RLS por `user_id`. |
 | Auth | Supabase | Email + contraseña (principal) y enlace mágico por email (alternativa). Ver DECISIONES 2026-09-29. |
 | Función `scrape` | Supabase Edge Functions | Recibe una URL, devuelve título, imagen y precio. |
+| Función `save-link` | Supabase Edge Functions | Guarda lo que manda el atajo de iOS, con su clave en vez de sesión. |
 | Refresco automático | `pg_cron` (Supabase) | **Un solo pase al día.** Lo puede apagar o acelerar el usuario desde ajustes. |
 | Refresco manual | Botón en la app | Siempre disponible, no depende del cron. Es el camino principal. |
 | Reglas por tienda | Tabla `store_rules` | Cómo leer el precio en cada dominio, editable sin redesplegar. |
@@ -117,9 +118,18 @@ navegador de verdad, así que:
   `refresh` (`refresh/notify.ts`).
 
 En el móvil, **Compartir → Vigía** (Android, `share_target` del manifiesto)
-o un atajo de iOS abren `/compartir?url=…` (`src/lib/shareTarget.js`): solo
-llega la dirección, y se guarda como si se hubiera pegado (`addItem`, y si
-la tienda bloquea, `addManualItem` sin precio).
+abre `/compartir?url=…` (`src/lib/shareTarget.js`): solo llega la dirección,
+y se guarda como si se hubiera pegado (`addItem`, y si la tienda bloquea,
+`addManualItem` sin precio).
+
+En el iPhone una app web no puede salir en Compartir. El atajo «Guardar en
+Vigía» (app Atajos) manda `{ url, key }` a la Edge Function **`save-link`**,
+que hace lo mismo en el servidor: busca al usuario por el hash de la clave
+(`us_shortcut_key_hash`), mira duplicados con `urlKey` entre lo visible
+(propios y carpetas compartidas), lee la ficha con `scrape/extract.ts` y
+guarda «Sin carpeta». Contesta texto plano, que el atajo enseña como
+notificación. No abre nada: el artículo aparece al volver a la app. Sin
+atajo, el botón «Pegar» del formulario (solo móvil) lee el portapapeles.
 
 Lo que entra por el botón o la extensión va al histórico con
 `ph_source = 'browser'`. En la lista, un artículo manual cuyo último precio
@@ -235,6 +245,7 @@ el pase automático ni recibe avisos.
 | `us_refresh_mode` | text | `off` · `daily` · `12h` · `6h`. Default `daily`. |
 | `us_refresh_hour` | int | Hora local del pase diario. Default 4. |
 | `us_last_refresh_at` | timestamptz | Lo escribe el pase automático; es lo que le permite decidir si toca. |
+| `us_shortcut_key_hash` | text | SHA-256 de la clave del atajo de iOS (migración 021). Único. `null`: sin atajo. La clave en claro no se guarda en ningún sitio. |
 
 ### `store_rules`
 

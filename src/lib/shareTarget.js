@@ -4,7 +4,7 @@
  * rellena esos campos a su manera: Chrome suele mandar la dirección en `url`,
  * otras la meten en `text` junto a una frase («Mira esto: https://…»). Se
  * coge la primera dirección web que aparezca. iOS no admite share_target en
- * apps web: allí se usa el botón «Guardar en Vigía». */
+ * apps web: allí está el atajo «Guardar en Vigía» (src/lib/shortcutKey.js). */
 
 export const SHARE_PATH = '/compartir'
 const STORAGE_KEY = 'vigia.pendingShare'
@@ -20,21 +20,24 @@ function httpUrl(value) {
   }
 }
 
+/** La dirección que lleva un texto: la URL tal cual, o la primera que
+ * aparezca en una frase. También para el botón «Pegar» (AddItemForm). */
+export function findUrlInText(value) {
+  if (!value) return null
+  const direct = httpUrl(value)
+  if (direct) return direct
+  const found = URL_IN_TEXT.exec(value)
+  // Quita la puntuación que suele pegarse al final de una frase.
+  return found ? httpUrl(found[0].replace(/[.,;:!?)\]]+$/, '')) : null
+}
+
 /** La dirección compartida, o null si no es /compartir o no trae ninguna. */
 export function readSharedUrl(pathname, search) {
   if (pathname.replace(/\/+$/, '') !== SHARE_PATH) return null
   const params = new URLSearchParams(search)
   for (const field of ['url', 'text', 'title']) {
-    const value = params.get(field)
-    if (!value) continue
-    const direct = httpUrl(value)
-    if (direct) return direct
-    const found = URL_IN_TEXT.exec(value)
-    if (found) {
-      // Quita la puntuación que suele pegarse al final de una frase.
-      const url = httpUrl(found[0].replace(/[.,;:!?)\]]+$/, ''))
-      if (url) return url
-    }
+    const url = findUrlInText(params.get(field))
+    if (url) return url
   }
   return null
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import PasswordFields from './PasswordFields.jsx'
+import IosShortcutSection from './IosShortcutSection.jsx'
 import { buildBookmarklet, getOrCreateBookmarkletKey, BOOKMARK_TITLE } from '../lib/browserImport.js'
 import { copyToClipboard } from '../lib/clipboard.js'
 
@@ -197,7 +198,7 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
           )}
         </section>
 
-        <BookmarkletSection />
+        <BookmarkletSection hasShortcutKey={settings.us_shortcut_key_hash != null} onSave={onSave} />
 
         <section className="flex flex-col gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Contraseña</h4>
@@ -249,13 +250,13 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
  * props. Lleva la clave de este navegador, con la que Vigía guarda sin
  * preguntar. En escritorio se arrastra; en el móvil se copia el código y se
  * pega en un favorito. La vía principal en el móvil es Compartir: Android
- * (share_target, src/lib/shareTarget.js) y un atajo de iOS que abre la
- * misma /compartir?url=. */
-function BookmarkletSection() {
+ * (share_target, src/lib/shareTarget.js) y el atajo de iOS
+ * (IosShortcutSection). */
+function BookmarkletSection({ hasShortcutKey, onSave }) {
   const linkRef = useRef(null)
   const [code, setCode] = useState('')
   const [hint, setHint] = useState(false)
-  const [copied, setCopied] = useState(null) // null | 'base' | 'code' | false
+  const [copied, setCopied] = useState(null) // null | 'code' | false
   // En el iPhone, la app instalada en la pantalla de inicio no comparte datos
   // con Safari: un código copiado aquí llevaría una clave que Safari no
   // conoce (el favorito funcionaría, pero pidiendo confirmar).
@@ -301,25 +302,11 @@ function BookmarkletSection() {
 
       <div className="flex flex-col gap-2 text-sm text-ink-mut">
         <p className="font-medium text-ink">Desde el móvil, con un toque en Compartir:</p>
-        <ul className="flex list-disc flex-col gap-1.5 pl-5">
-          <li>
-            <b>Android:</b> con Vigía instalada (Chrome → ⋮ → «Instalar aplicación»), en la ficha de un producto:
-            Compartir → Vigía. Si Vigía no sale en Compartir, desinstálala y vuelve a instalarla.
-          </li>
-          <li>
-            <b>iPhone:</b> un atajo, una sola vez, en la app Atajos: «+» → añadir la acción «Codificar URL» (sobre
-            la entrada del atajo) y después «Abrir URL» con la dirección de abajo seguida del resultado de
-            «Codificar URL». En la ⓘ del atajo, activa «Mostrar en hoja de compartir» y llámalo «Guardar en Vigía».
-            El atajo abre Vigía en Safari: entra en Vigía desde Safari una vez para que te reconozca.
-          </li>
-        </ul>
-        <button
-          type="button"
-          onClick={() => copyText(`${window.location.origin}/compartir?url=`, 'base')}
-          className="self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          {copied === 'base' ? 'Copiada' : 'Copiar dirección para el atajo'}
-        </button>
+        <p>
+          <b>Android:</b> con Vigía instalada (Chrome → ⋮ → «Instalar aplicación»), en la ficha de un producto:
+          Compartir → Vigía. Si Vigía no sale en Compartir, desinstálala y vuelve a instalarla.
+        </p>
+        <IosShortcutSection hasKey={hasShortcutKey} onSave={onSave} />
 
         <details>
           <summary className="cursor-pointer">Otra opción: favorito con código (lee el precio al momento)</summary>

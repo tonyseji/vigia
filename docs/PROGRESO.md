@@ -2170,3 +2170,63 @@ Hecho y subido a `main` el 2026-10-04 (la rama
 `claude/duplicate-accounts-url-ujoha1` no se fusionó: se aplicó como parche).
 Pendiente de que Tony pegue de nuevo la dirección del papel pintado para ver
 el aviso.
+
+## 2026-10-04 (Sesión 30) — Guardar desde el iPhone sin copiar y pegar
+
+### Contexto
+
+Tony: el atajo de compartir del iPhone le daba problemas («en Android va
+genial»). El de la sesión 25 había que montarlo a mano y abría Safari, que
+en iOS no comparte sesión con la app instalada (y en la sesión 29 llegó a
+`/compartir` sin dirección). iOS no deja que una app web salga en Compartir
+ni que un atajo abra la app de la pantalla de inicio; sin configurar nada,
+solo con una app nativa de pago. Tony eligió las dos vías de 0 €: un atajo
+que guarde solo y un botón «Pegar». Decisión en `DECISIONES.md`, 2026-10-04.
+
+### Cambios
+
+- Migración **021** (aplicada): `user_settings.us_shortcut_key_hash`, el
+  SHA-256 de la clave del atajo, con índice único parcial.
+- Edge Function **`save-link`** (desplegada, `--no-verify-jwt`): recibe
+  `{ url, key }` del atajo, busca al usuario por el hash, saca la dirección
+  aunque venga dentro de una frase, mira duplicados con `urlKey` entre los
+  suyos y las carpetas compartidas, lee la ficha con `scrape/extract.ts` (o
+  guarda sin precio en modo manual si la tienda bloquea) y contesta en
+  texto plano: «Guardado en Vigía: KALLAX… · 54,99 €» / «Ya lo tenías en
+  Vigía: …». Lógica pura en `save-link/link.ts`, con 9 tests (incluido que
+  el hash y `urlKey` coincidan con los de la web).
+- `src/lib/shortcutKey.js`: crea la clave (síncrona, para copiarla dentro
+  del toque), el hash, la dirección de la función y `SHORTCUT_ICLOUD_URL`
+  (vacío hasta que Tony publique el atajo).
+- `IosShortcutSection` en Ajustes, en lugar de los pasos viejos: botón
+  «Añadir atajo» (copia la clave y abre el atajo de iCloud, cuando exista),
+  la clave a la vista si no se pudo copiar, «Atajo activo · Desactivar», y
+  los cuatro pasos para montarlo a mano plegados (abiertos mientras no haya
+  enlace de iCloud).
+- `AddItemForm`: botón **«Pegar»** en el móvil. Lee el portapapeles, saca
+  la dirección (`findUrlInText`, extraída de `shareTarget.js`) y la guarda
+  sin más toques.
+
+### Verificación
+
+- Tests (147) y build en verde.
+- `save-link` contra producción con `curl`: sin clave y con clave falsa →
+  401 con texto claro; con una clave temporal en la cuenta de Tony, guarda
+  un KALLAX de IKEA con título y precio, y al repetirlo sin barra final
+  dice «Ya lo tenías». También detecta como duplicado la SKANSNÄS que ya
+  tenía, escrita distinta. Artículos de prueba y clave temporal borrados.
+- Componentes probados a 375 px en una página de prueba (no hay sesión sin
+  contraseña): «Copiar clave» guarda el hash y enseña la clave si el
+  portapapeles no deja copiar; «Pegar» con una frase guarda la dirección y,
+  sin dirección, avisa.
+
+### Estado final
+
+Hecho y en `main`. Pendiente de Tony (B23): montar el atajo en su iPhone con
+los pasos de Ajustes, comprobar los nombres de las acciones en iOS en
+español y, si funciona, compartirlo por iCloud. Antes de compartirlo, la
+clave tiene que ir como pregunta de importación (Atajos → el atajo → ⓘ →
+«Configurar» / «Preguntas de importación») y en el campo `key` hay que
+dejar un texto cualquiera en vez de su clave, para que no viaje en el
+enlace. Con el enlace en `SHORTCUT_ICLOUD_URL`, Ajustes enseña el botón
+«Añadir atajo».
