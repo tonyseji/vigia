@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { useReloadOnReturn } from './useReloadOnReturn.js'
 
 /** Carpetas del usuario y las que le han compartido, con jerarquía de dos
  * niveles (fld_parent_id). Crear/renombrar/borrar sigue siendo solo del
@@ -26,6 +27,7 @@ export function useFolders() {
   useEffect(() => {
     reload()
   }, [reload])
+  useReloadOnReturn(reload)
 
   /** Árbol de dos niveles: carpetas de primer nivel con sus subcarpetas
    * anidadas en `children`. Con la RLS combinada, `folders` también puede

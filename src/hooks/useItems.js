@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { useReloadOnReturn } from './useReloadOnReturn.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
@@ -46,6 +47,7 @@ export function useItems() {
   useEffect(() => {
     reload()
   }, [reload])
+  useReloadOnReturn(reload)
 
   /**
    * Añade un artículo. Antes de nada consulta store_rules por dominio; si

@@ -2053,3 +2053,30 @@ estándar y que todo (también los textos) quede alineado.
 
 Hecho. Queda que el mueble se ve más o menos grande dentro de la caja según
 el margen blanco que deja cada tienda en su foto (ver la decisión).
+
+## 2026-10-03 (Sesión 27) — La lista se recarga al volver a la app
+
+### Contexto
+
+Tony pegó una cómoda de Maisons du Monde y la app le dijo «Ese artículo ya
+está en tu lista», pero no la veía. Comprobado en BD: se había guardado
+minutos antes desde el navegador (`ph_source = 'browser'`, Sin carpeta). La
+app solo leía la lista al abrirse, así que lo guardado desde fuera no salía
+hasta recargar.
+
+### Cambios
+
+- `src/hooks/useReloadOnReturn.js` (nuevo): vuelve a leer en
+  `visibilitychange` cuando la página pasa a visible.
+- `useItems` y `useFolders` lo usan con su `reload` (no toca `loading`, así
+  que no hay parpadeo; un fallo de lectura conserva lo que había, B16).
+
+### Verificación
+
+- Tests (117) y build en verde.
+- No probado en el navegador: hace falta sesión iniciada y no se teclean
+  contraseñas reales. Pendiente de que Tony lo confirme en el móvil.
+
+### Estado final
+
+Hecho, pendiente de confirmar con uso real.
