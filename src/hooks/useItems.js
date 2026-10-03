@@ -1,19 +1,17 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
+import { cleanUrl, findSameItem } from '../lib/urlKey.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
 }
 
-function cleanUrl(raw) {
-  const u = new URL(raw)
-  u.hash = ''
-  const drop = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid', 'mc_eid', 'ref', 'tag', '_ga', 'srsltid']
-  for (const key of [...u.searchParams.keys()]) {
-    if (drop.some((d) => key.toLowerCase().startsWith(d))) u.searchParams.delete(key)
-  }
-  return u.toString()
+/** Con el título: la dirección pegada puede no parecerse a la guardada, y
+ * puede haberla guardado otra persona en una carpeta compartida. */
+function duplicateMessage(item) {
+  const title = item.itm_title && item.itm_title !== item.itm_url ? `: «${item.itm_title}»` : ''
+  return `Ese artículo ya está en tu lista${title}.`
 }
 
 /** Items del usuario con su histórico de precios, y las acciones para
@@ -64,8 +62,30 @@ export function useItems() {
     return Boolean(data?.sr_blocked)
   }, [])
 
+  /** El artículo que ya sea esta dirección, aunque no se escriba igual
+   * (src/lib/urlKey.js). Entre todo lo que el usuario ve: los suyos y los de
+   * carpetas compartidas con él (RLS, migración 016). El índice único es por
+   * usuario y no frena que el invitado guarde lo que ya tiene el dueño en la
+   * carpeta compartida (sesión 29). Si está en las dos, gana el propio. */
+  const findExisting = useCallback(async (urls) => {
+    const { data: userData } = await supabase.auth.getUser()
+    const userId = userData.user.id
+    const { data, error } = await supabase
+      .from('items')
+      .select('itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price')
+    if (error) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
+    const visible = data ?? []
+    const existing =
+      findSameItem(visible.filter((i) => i.itm_usr_id === userId), urls) ?? findSameItem(visible, urls)
+    return { userId, existing }
+  }, [])
+
   const addItem = useCallback(async (rawUrl, folderId = null) => {
     const url = cleanUrl(rawUrl)
+    // Antes de leer el precio: si ya está, no se gasta una lectura.
+    const found = await findExisting([url])
+    if (found.error) return { error: found.error }
+    if (found.existing) return { error: duplicateMessage(found.existing) }
     const blocked = await checkBlocked(url)
     if (blocked) return { blocked: true }
 
@@ -76,11 +96,10 @@ export function useItems() {
     if (fnData?.blocked) return { blocked: true }
     if (fnData?.error) return { error: fnData.error }
 
-    const { data: userData } = await supabase.auth.getUser()
     const { data: item, error: insertError } = await supabase
       .from('items')
       .insert({
-        itm_usr_id: userData.user.id,
+        itm_usr_id: found.userId,
         itm_fld_id: folderId,
         itm_url: url,
         itm_title: fnData?.title ?? url,
@@ -109,16 +128,18 @@ export function useItems() {
 
     await reload()
     return { item }
-  }, [checkBlocked, reload])
+  }, [checkBlocked, findExisting, reload])
 
   /** Guarda un artículo bloqueado en modo manual, con el precio que teclee el usuario. */
   const addManualItem = useCallback(async (rawUrl, price, folderId = null) => {
     const url = cleanUrl(rawUrl)
-    const { data: userData } = await supabase.auth.getUser()
+    const found = await findExisting([url])
+    if (found.error) return { error: found.error }
+    if (found.existing) return { error: duplicateMessage(found.existing) }
     const { data: item, error } = await supabase
       .from('items')
       .insert({
-        itm_usr_id: userData.user.id,
+        itm_usr_id: found.userId,
         itm_fld_id: folderId,
         itm_url: url,
         itm_title: url,
@@ -142,7 +163,7 @@ export function useItems() {
     }
     await reload()
     return { item }
-  }, [reload])
+  }, [findExisting, reload])
 
   /** Guarda lo que manda el botón del navegador (src/lib/browserImport.js).
    * Si el artículo ya está en la lista, solo apunta el precio nuevo (y
@@ -152,18 +173,10 @@ export function useItems() {
     const url = cleanUrl(data.url)
     // Se busca por la canónica y por la de la barra: el artículo pudo
     // guardarse pegando cualquiera de las dos.
-    const candidates = [...new Set([url, data.altUrl && cleanUrl(data.altUrl)].filter(Boolean))]
     const now = new Date().toISOString()
-    const { data: userData } = await supabase.auth.getUser()
-    const userId = userData.user.id
-    const { data: existing, error: findError } = await supabase
-      .from('items')
-      .select('itm_id, itm_url, itm_title, itm_image_url, itm_price')
-      .eq('itm_usr_id', userId)
-      .in('itm_url', candidates)
-      .limit(1)
-      .maybeSingle()
-    if (findError) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
+    const found = await findExisting([url, data.altUrl && cleanUrl(data.altUrl)].filter(Boolean))
+    if (found.error) return { error: found.error }
+    const { userId, existing } = found
     // Tienda bloqueada = el pase automático no puede leerla: queda en modo
     // manual (etiqueta «sin precio automático»), también si ya existía.
     const manual = await checkBlocked(url)
@@ -213,7 +226,7 @@ export function useItems() {
     await reload()
     if (historyError) return { error: 'Se guardó el precio, pero no quedó en el histórico. Vuelve a pulsar el botón.' }
     return { updated: Boolean(existing), previousPrice: existing?.itm_price ?? null, manual }
-  }, [checkBlocked, reload])
+  }, [checkBlocked, findExisting, reload])
 
   /** Refresca todos los artículos del usuario. La lógica vive en la Edge
    * Function `refresh` (server-side), que es la misma que usa el pase

@@ -2127,3 +2127,46 @@ nombrar y guardar el conjunto.
 
 Hecho y probado por Tony en producción el 2026-10-03 («funciona
 correctamente»). Siguiente: B24.
+
+## 2026-10-03 (Sesión 29) — Duplicados al pegar una dirección
+
+### Contexto
+
+Tony: pegó una dirección en el campo URL y se guardó un artículo que ya
+tenía. Logs de Supabase: a las 13:11 UTC un `POST /items` de
+papelespintadosdc.com, borrado a las 13:13. Lo hizo **la cuenta invitada a
+«Pisito»** desde un iPhone, no la de Tony: el original de Tony está en «Papel
+pared», subcarpeta de «Pisito», y el invitado lo ve. El índice único
+`(itm_usr_id, itm_url)` es por usuario y no frena eso; tampoco una dirección
+escrita distinto (barra final, `www.`, campaña).
+
+### Cambios
+
+- `src/lib/urlKey.js` (nuevo): `cleanUrl` sale de `useItems` sin cambios
+  (lo guardado sigue igual que en `record-price`); `urlKey` compara sin
+  esquema, `www.`, barra final, hash, mayúsculas ni parámetros de
+  seguimiento (más que `cleanUrl`: `_gl`, `gad_*`, `msclkid`, afiliados…)
+  y con el resto ordenados; `findSameItem`. 8 tests.
+- `useItems`: `findExisting` busca por clave entre todo lo visible (propios
+  y carpetas compartidas, RLS de la 016; gana el propio). `addItem` y
+  `addManualItem` lo miran antes de leer el precio (cubre el campo URL y
+  Compartir → Vigía) y avisan con el título del que ya está;
+  `saveFromBrowser` (botón «+ Vigía») apunta el precio en el que encuentre,
+  también si es de la carpeta compartida.
+- B25 en `ROADMAP.md`: la extensión (`record-price`) sigue con la búsqueda
+  exacta; no se redespliega una Edge Function desde una rama sin fusionar.
+
+### Verificación
+
+- Tests (138) y build en verde.
+- No probado en el navegador con sesión (no se teclean contraseñas).
+- Atajo de iPhone (B23) probado por Tony con la cuenta invitada: abre
+  Vigía pero no llega a guardar (ni `store_rules` ni `scrape` en los logs a
+  las 21:43 UTC), así que `/compartir` llegó sin dirección. Pendiente.
+
+### Estado final
+
+Hecho y subido a `main` el 2026-10-04 (la rama
+`claude/duplicate-accounts-url-ujoha1` no se fusionó: se aplicó como parche).
+Pendiente de que Tony pegue de nuevo la dirección del papel pintado para ver
+el aviso.

@@ -51,7 +51,7 @@ export function parsePricePayload(body: unknown): PricePayload | null {
 
 const TRACKING_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "mc_eid", "ref", "tag", "_ga", "srsltid"];
 
-/** Copia de cleanUrl (src/hooks/useItems.js): la misma URL tiene que dar el
+/** Copia de cleanUrl (src/lib/urlKey.js): la misma URL tiene que dar el
  * mismo itm_url venga de la web o de la extension, o se duplicaria. */
 export function cleanUrl(raw: string): string {
   const u = new URL(raw);

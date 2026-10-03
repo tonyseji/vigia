@@ -96,8 +96,9 @@ instalada y funcionando en el Chrome de Tony (vigilar captcha, B22). Sesión 24:
 (`share_target`, probado por Tony) y atajo de iOS a `/compartir` (pendiente de probar). Sesión 26: fotos de
 artículo del mismo tamaño (fondo blanco que se funde con la foto) y filas/tarjetas con precio alineado. Sesión 27: la lista se recarga sola al volver a la app (lo guardado
 desde el navegador no salía). Sesión 28: «Comparar» pasa a **Cesta** (marcas artículos y ves el total, por tienda,
-con cantidades; se guarda en el dispositivo; probada por Tony); cestas guardadas en BD pendientes (B24). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 y 28.
+con cantidades; se guarda en el dispositivo; probada por Tony); cestas guardadas en BD pendientes (B24). Sesión 29: pegar una dirección ya guardada aunque no sea idéntica (barra final,
+`www.`, parámetros de campaña) avisa en vez de duplicar; la extensión sigue con la búsqueda exacta (B25). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 y 29.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
