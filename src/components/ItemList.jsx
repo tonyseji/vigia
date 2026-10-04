@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { priceChangePct } from '../lib/format.js'
+import { useEffect, useMemo, useState } from 'react'
+import { formatPrice, priceChangePct } from '../lib/format.js'
+import { displayTitle, normalizeSearch } from '../lib/itemText.js'
 import { folderToText, copyToClipboard } from '../lib/clipboard.js'
 import {
   groupByFolder as groupItemsByFolder,
@@ -8,8 +9,9 @@ import {
   saveView,
   loadCollapsed,
   saveCollapsed,
+  groupKeyOf,
 } from '../lib/itemGroups.js'
-import { IconCopiar, IconCheck, IconChevronRight } from './icons/index.jsx'
+import { IconCopiar, IconCheck, IconChevronRight, IconCarpeta } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
 import ItemTile from './ItemTile.jsx'
 
@@ -42,7 +44,12 @@ function sortItems(items, sort) {
  * no hay una carpeta seleccionada en el sidebar (`groupByFolder`), agrupa
  * visualmente por carpeta (docs/DISENO.md); si ya viene filtrada a una
  * carpeta concreta, se pinta como lista plana sin repetir el título del
- * grupo — el sidebar ya dice en qué carpeta estás.
+ * grupo, pero con su nombre arriba y un «Todos» para volver: en el móvil
+ * el sidebar está escondido y no se veía en qué carpeta estabas.
+ *
+ * `justAdded` ({ id }) es el artículo recién guardado: se quita lo que lo
+ * esconda (búsqueda, «Solo bajadas», grupo plegado), se lleva a la vista y
+ * se ilumina un momento.
  *
  * `picking`/`basket`/`onToggleBasket` vienen de useBasket (App.jsx): con
  * la cesta en modo elegir, cada fila y cada tarjeta lleva una casilla,
@@ -58,6 +65,9 @@ export default function ItemList({
   picking = false,
   basket,
   onToggleBasket,
+  folderName = null,
+  onShowAll,
+  justAdded = null,
 }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
@@ -93,9 +103,9 @@ export default function ItemList({
         if (!(pct != null && pct < 0)) return false
       }
       if (!query.trim()) return true
-      const q = query.toLowerCase()
-      const folderName = foldersById[item.itm_fld_id]?.fld_name ?? ''
-      return `${item.itm_title} ${item.itm_url} ${folderName}`.toLowerCase().includes(q)
+      const q = normalizeSearch(query.trim())
+      const itemFolder = foldersById[item.itm_fld_id]?.fld_name ?? ''
+      return normalizeSearch(`${displayTitle(item)} ${item.itm_url} ${itemFolder}`).includes(q)
     })
   }, [items, query, onlyDrops, foldersById])
 
@@ -104,10 +114,36 @@ export default function ItemList({
   // «Sin carpeta» primero, el resto por nombre (src/lib/itemGroups.js).
   const groups = useMemo(() => groupItemsByFolder(sorted, foldersById), [sorted, foldersById])
 
+  const justAddedId = justAdded?.id ?? null
+  const justAddedItem = items.find((i) => i.itm_id === justAddedId)
+  const justAddedKey = justAddedItem ? groupKeyOf(justAddedItem, foldersById) : null
+
+  useEffect(() => {
+    if (!justAddedId) return
+    setQuery('')
+    setOnlyDrops(false)
+    if (justAddedKey) {
+      setCollapsed((prev) => {
+        if (!prev.has(justAddedKey)) return prev
+        const next = new Set(prev)
+        next.delete(justAddedKey)
+        saveCollapsed(next)
+        return next
+      })
+    }
+    // Tras pintar sin filtros: entonces la fila ya existe.
+    const frame = requestAnimationFrame(() => {
+      document.querySelector(`[data-item-id="${justAddedId}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(frame)
+    // Solo al llegar un guardado nuevo (justAdded cambia de objeto).
+  }, [justAdded])
+
   function row(item) {
     return (
       <ItemRow
         key={item.itm_id}
+        justAdded={item.itm_id === justAddedId}
         item={item}
         folders={folders}
         onUpdate={onUpdate}
@@ -123,6 +159,7 @@ export default function ItemList({
     return (
       <ItemTile
         key={item.itm_id}
+        justAdded={item.itm_id === justAddedId}
         item={item}
         folders={folders}
         onUpdate={onUpdate}
@@ -236,7 +273,7 @@ export default function ItemList({
                   />
                   <span className="truncate">{name}</span>
                   <b className="flex-none font-mono font-normal normal-case tracking-normal">
-                    {groupItems.length} · {total.toLocaleString('es-ES', { minimumFractionDigits: 0 })} €
+                    {groupItems.length} · {formatPrice(total)}
                   </b>
                 </button>
                 <span className="h-px flex-1 bg-line" />
@@ -248,14 +285,27 @@ export default function ItemList({
         })
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="flex items-baseline gap-2 text-xs font-semibold uppercase tracking-wide text-ink-mut">
-            <span>
-              {sorted.length} artículo{sorted.length === 1 ? '' : 's'}
-            </span>
-            <b className="font-mono font-normal normal-case tracking-normal">
-              {sorted.reduce((sum, i) => sum + (i.itm_price ?? 0), 0).toLocaleString('es-ES', { minimumFractionDigits: 0 })} €
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-mut">
+            {folderName && (
+              <span className="flex min-w-0 items-center gap-1.5 text-ink">
+                <IconCarpeta className="h-3.5 w-3.5 flex-none" />
+                <span className="truncate">{folderName}</span>
+              </span>
+            )}
+            <b className="flex-none font-mono font-normal normal-case tracking-normal">
+              {sorted.length} artículo{sorted.length === 1 ? '' : 's'} · {formatPrice(sorted.reduce((sum, i) => sum + (i.itm_price ?? 0), 0))}
             </b>
-          </p>
+            <span className="h-px flex-1 bg-line" />
+            {onShowAll && (
+              <button
+                type="button"
+                onClick={onShowAll}
+                className="flex-none rounded-full border border-line px-2.5 py-1 text-[11px] font-medium normal-case tracking-normal text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                Ver todos
+              </button>
+            )}
+          </div>
           {itemsView(sorted)}
         </div>
       )}

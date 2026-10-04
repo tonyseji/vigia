@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { IconCarpeta, IconChevronRight, IconMasOpciones, IconTodos } from './icons/index.jsx'
+import { ConfirmDialog } from './Dialog.jsx'
 
 /** Navegación por carpetas: árbol de dos niveles, clic en una carpeta filtra
  * la lista de artículos. Las acciones (renombrar, subcarpeta, compartir,
@@ -27,6 +28,7 @@ export default function FolderSidebar({
   const [renamingId, setRenamingId] = useState(null)
   const [renamingName, setRenamingName] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [deletingFolder, setDeletingFolder] = useState(null)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -72,7 +74,6 @@ export default function FolderSidebar({
   }
 
   async function handleDelete(folder) {
-    if (!confirm(`¿Borrar la carpeta «${folder.fld_name}»? Los artículos pasarán a "Sin carpeta".`)) return
     if (selectedId === folder.fld_id || folder.children?.some((c) => c.fld_id === selectedId)) onSelect(null)
     await deleteFolder(folder.fld_id)
   }
@@ -133,7 +134,7 @@ export default function FolderSidebar({
                     setOpenMenuId(null)
                   },
                   onDelete: () => {
-                    handleDelete(folder)
+                    setDeletingFolder(folder)
                     setOpenMenuId(null)
                   },
                 })}
@@ -171,7 +172,7 @@ export default function FolderSidebar({
                           setOpenMenuId(null)
                         },
                         onDelete: () => {
-                          handleDelete(child)
+                          setDeletingFolder(child)
                           setOpenMenuId(null)
                         },
                       })}
@@ -230,6 +231,16 @@ export default function FolderSidebar({
         >
           + Nueva carpeta
         </button>
+      )}
+
+      {deletingFolder && (
+        <ConfirmDialog
+          title={`¿Borrar la carpeta «${deletingFolder.fld_name}»?`}
+          text="Los artículos no se borran: pasan a «Sin carpeta»."
+          confirmLabel="Borrar carpeta"
+          onConfirm={() => handleDelete(deletingFolder)}
+          onClose={() => setDeletingFolder(null)}
+        />
       )}
     </nav>
   )

@@ -31,6 +31,19 @@ export function findUrlInText(value) {
   return found ? httpUrl(found[0].replace(/[.,;:!?)\]]+$/, '')) : null
 }
 
+// «www.ikea.com/…» o «ikea.com/es/…»: dominio con punto y algo detrás.
+const BARE_URL = /^(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}(?:[/?#]\S*)?$/i
+
+/** Lo escrito o pegado en el campo de añadir: una dirección, una frase que
+ * la lleva («Mira esto: https://…») o una dirección sin «https://». */
+export function readTypedUrl(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return null
+  const found = findUrlInText(text)
+  if (found) return found
+  return BARE_URL.test(text) ? httpUrl(`https://${text}`) : null
+}
+
 /** La dirección compartida, o null si no es /compartir o no trae ninguna. */
 export function readSharedUrl(pathname, search) {
   if (pathname.replace(/\/+$/, '') !== SHARE_PATH) return null

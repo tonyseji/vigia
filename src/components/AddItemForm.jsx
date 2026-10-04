@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { findUrlInText } from '../lib/shareTarget.js'
+import { useEffect, useState } from 'react'
+import { findUrlInText, readTypedUrl } from '../lib/shareTarget.js'
+import { formatPrice } from '../lib/format.js'
+import { displayTitle } from '../lib/itemText.js'
 
 // «Pegar» solo en el móvil (sm:hidden) y si el navegador deja leer el
 // portapapeles: en el iPhone es la vía sin configurar nada (Compartir →
@@ -15,15 +17,35 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
   const [status, setStatus] = useState('idle') // idle | adding | error | blocked
   const [errorMsg, setErrorMsg] = useState('')
   const [manualPrice, setManualPrice] = useState('')
+  // Lo último guardado, unos segundos: confirma qué ha entrado y avisa si
+  // no se encontró el precio (antes se guardaba en silencio).
+  const [saved, setSaved] = useState(null)
+
+  useEffect(() => {
+    if (!saved) return
+    const timer = setTimeout(() => setSaved(null), 7000)
+    return () => clearTimeout(timer)
+  }, [saved])
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (url.trim()) await add(url.trim())
+    if (!url.trim()) return
+    // Acepta lo que pega la gente: la dirección, una frase que la lleva o
+    // una dirección sin «https://» (el navegador rechazaba las dos últimas).
+    const typed = readTypedUrl(url)
+    if (!typed) {
+      setStatus('error')
+      setErrorMsg('Eso no parece una dirección web. Copia la dirección de la ficha del producto y pégala aquí.')
+      return
+    }
+    setUrl(typed)
+    await add(typed)
   }
 
   async function add(value) {
     setStatus('adding')
     setErrorMsg('')
+    setSaved(null)
     const result = await onAdd(value, folderId)
     if (result.blocked) {
       setStatus('blocked')
@@ -36,6 +58,7 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
     }
     setUrl('')
     setStatus('idle')
+    if (result.item) setSaved(result.item)
   }
 
   /** Lee la dirección copiada y la guarda sin más toques. */
@@ -68,6 +91,7 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
     setUrl('')
     setManualPrice('')
     setStatus('idle')
+    if (result.item) setSaved(result.item)
   }
 
   if (status === 'blocked') {
@@ -112,8 +136,12 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
       <div className="flex gap-2">
         <input
-          type="url"
+          type="text"
           inputMode="url"
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          aria-label="URL del producto"
           required
           placeholder="Pega aquí la URL de un producto"
           value={url}
@@ -145,6 +173,25 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
       {status === 'error' && (
         <p className="text-sm text-bad" role="alert">
           {errorMsg}
+        </p>
+      )}
+      {saved && status === 'idle' && (
+        <p className="text-sm text-ink-mut" role="status">
+          {saved.itm_price != null ? (
+            <>
+              <span className="text-ok">Guardado:</span> {displayTitle(saved)} ·{' '}
+              <span className="font-mono tabular-nums text-ink">{formatPrice(saved.itm_price)}</span>
+            </>
+          ) : saved.itm_is_manual ? (
+            <>
+              <span className="text-ok">Guardado:</span> {displayTitle(saved)}. Pon el precio con ✎ cuando lo mires.
+            </>
+          ) : (
+            <>
+              <span className="text-warn">Guardado sin precio:</span> {displayTitle(saved)}. No lo encontré en la
+              página; ponlo con ✎ cuando quieras.
+            </>
+          )}
         </p>
       )}
     </form>

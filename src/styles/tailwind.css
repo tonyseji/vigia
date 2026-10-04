@@ -57,3 +57,28 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Movimiento: corto y solo donde orienta. Los diálogos entran sin saltar y
+   el artículo recién guardado se ilumina un momento para que se vea dónde
+   ha caído. Nada si el sistema pide menos movimiento. */
+@keyframes vigia-fade-in {
+  from { opacity: 0; }
+}
+@keyframes vigia-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+}
+@keyframes vigia-just-added {
+  0%, 35% {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+  }
+}
+.dialog-backdrop { animation: vigia-fade-in var(--dur-fast) ease-out; }
+.dialog-panel { animation: vigia-dialog-in var(--dur-normal) cubic-bezier(0.2, 0.8, 0.2, 1); }
+.just-added { animation: vigia-just-added 2.4s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-backdrop,
+  .dialog-panel,
+  .just-added { animation: none; }
+}

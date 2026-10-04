@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readSharedUrl, savePendingShare, loadPendingShare, clearPendingShare } from '../shareTarget.js'
+import { readSharedUrl, readTypedUrl, savePendingShare, loadPendingShare, clearPendingShare } from '../shareTarget.js'
 
 const MDM = 'https://www.maisonsdumonde.com/ES/es/p/mesita-jill-M21044867.htm'
 
@@ -61,5 +61,23 @@ describe('dirección compartida pendiente', () => {
     expect(() => savePendingShare(MDM, broken)).not.toThrow()
     expect(loadPendingShare(broken)).toBeNull()
     expect(() => clearPendingShare(broken)).not.toThrow()
+  })
+})
+
+describe('readTypedUrl', () => {
+  it('acepta la dirección tal cual', () => {
+    expect(readTypedUrl(MDM)).toBe(MDM)
+  })
+  it('saca la dirección de una frase compartida', () => {
+    expect(readTypedUrl(`Mira esto: ${MDM}`)).toBe(MDM)
+  })
+  it('añade https:// a una dirección escrita sin él', () => {
+    expect(readTypedUrl('www.vinted.es/items/123-lampara')).toBe('https://www.vinted.es/items/123-lampara')
+    expect(readTypedUrl('  ikea.com/es/es/p/mesa-123/ ')).toBe('https://ikea.com/es/es/p/mesa-123/')
+  })
+  it('rechaza lo que no es una dirección', () => {
+    expect(readTypedUrl('mesa de comedor ikea')).toBe(null)
+    expect(readTypedUrl('')).toBe(null)
+    expect(readTypedUrl('hola.')).toBe(null)
   })
 })

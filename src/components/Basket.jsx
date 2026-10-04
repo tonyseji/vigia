@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { formatPrice } from '../lib/format.js'
 import { groupByStore } from '../lib/basket.js'
 import { IconCesta, ProductIcon } from './icons/index.jsx'
+import { ConfirmDialog } from './Dialog.jsx'
+import { displayTitle } from '../lib/itemText.js'
 
 function formatDiff(diff) {
   return `${diff > 0 ? '+' : ''}${formatPrice(diff)}`
@@ -84,11 +86,12 @@ export function BasketBar({ summary, picking, onTogglePicking, onOpen }) {
  * panel lateral en escritorio. */
 export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMore, onClose }) {
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e) => e.key === 'Escape' && !e.defaultPrevented && onClose()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  const [confirmingClear, setConfirmingClear] = useState(false)
   const groups = groupByStore(lines)
   const diff = changeOf(summary)
   const showMin = summary.totalMin < summary.total
@@ -164,7 +167,7 @@ export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMo
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
-              onClick={() => confirm('¿Vaciar la cesta?') && onClear()}
+              onClick={() => setConfirmingClear(true)}
               disabled={lines.length === 0}
               className="rounded-lg px-2 py-1.5 text-sm text-bad outline-none hover:bg-bad-soft focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-50"
             >
@@ -179,6 +182,15 @@ export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMo
             </button>
           </div>
         </div>
+        {confirmingClear && (
+          <ConfirmDialog
+            title="¿Vaciar la cesta?"
+            text="Se quitan todos los artículos de la cesta. Siguen en tu lista."
+            confirmLabel="Vaciar"
+            onConfirm={onClear}
+            onClose={() => setConfirmingClear(false)}
+          />
+        )}
       </div>
     </div>
   )
@@ -206,7 +218,7 @@ function BasketLine({ line, onSetQty, onStep }) {
           rel="noreferrer"
           className="line-clamp-2 text-[13px] font-medium leading-snug text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
         >
-          {item.itm_title}
+          {displayTitle(item)}
         </a>
         <div className="flex items-center gap-1.5">
           <button type="button" onClick={() => onStep(item.itm_id, -1)} disabled={qty <= 1} aria-label="Una menos" className={stepClass}>

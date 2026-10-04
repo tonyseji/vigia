@@ -18,10 +18,16 @@ export function folderGroupName(key, foldersById) {
  * estar ahí); el resto, por nombre. Un artículo de una carpeta que no está
  * cargada cae en «Sin carpeta» en vez de abrir un segundo grupo con el
  * mismo nombre. */
+/** El grupo de un artículo: su carpeta, o «Sin carpeta» si no tiene o ya
+ * no la ve (carpeta borrada o compartida que se dejó). */
+export function groupKeyOf(item, foldersById) {
+  return item.itm_fld_id && foldersById[item.itm_fld_id] ? item.itm_fld_id : NO_FOLDER
+}
+
 export function groupByFolder(items, foldersById) {
   const groups = {}
   for (const item of items) {
-    const key = item.itm_fld_id && foldersById[item.itm_fld_id] ? item.itm_fld_id : NO_FOLDER
+    const key = groupKeyOf(item, foldersById)
     ;(groups[key] = groups[key] || []).push(item)
   }
   return Object.entries(groups).sort(([a], [b]) => {

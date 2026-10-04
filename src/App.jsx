@@ -125,6 +125,9 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   const [showSettings, setShowSettings] = useState(false)
   const [showSidebarMobile, setShowSidebarMobile] = useState(false)
   const [selectedFolderId, setSelectedFolderId] = useState(null)
+  // Lo último guardado desde el campo de añadir: ItemList lo enseña y lo
+  // ilumina. Objeto nuevo en cada guardado, aunque sea el mismo id.
+  const [justAdded, setJustAdded] = useState(null)
   const [sharingFolder, setSharingFolder] = useState(null)
   const [joinResult, setJoinResult] = useState(null) // { ok, text }
   const { acceptShareLink, acceptShare } = folderShares
@@ -137,6 +140,21 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     clearPendingImport()
     clearPendingShare()
   }, [])
+
+  const markAdded = (result) => {
+    if (result?.item) setJustAdded({ id: result.item.itm_id })
+    return result
+  }
+  // Se olvida al acabar el destello (2,4 s en tailwind.css): si no, la fila
+  // volvería a iluminarse cada vez que se montase (Lista → Fotos, plegar).
+  useEffect(() => {
+    if (!justAdded) return
+    const timer = setTimeout(() => setJustAdded(null), 3000)
+    return () => clearTimeout(timer)
+  }, [justAdded])
+  const handleAdd = async (url, folderId) => markAdded(await addItem(url, folderId))
+  const handleAddManual = async (url, price, folderId) => markAdded(await addManualItem(url, price, folderId))
+  const selectedFolder = folders.find((f) => f.fld_id === selectedFolderId)
 
   /** Guarda lo compartido: con precio si la tienda deja leerlo; si bloquea,
    * sin precio y en modo manual (la extensión de Chrome se lo pondrá). */
@@ -339,7 +357,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
       </div>
 
       <div className="mt-6">
-        <AddItemForm onAdd={addItem} onAddManual={addManualItem} folderId={selectedFolderId} />
+        <AddItemForm onAdd={handleAdd} onAddManual={handleAddManual} folderId={selectedFolderId} />
       </div>
 
       <div className="mt-6 flex items-start gap-6">
@@ -368,6 +386,9 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             onUpdate={updateItem}
             onDelete={deleteItem}
             groupByFolder={selectedFolderId == null}
+            folderName={selectedFolder?.fld_name ?? null}
+            onShowAll={selectedFolderId != null ? () => setSelectedFolderId(null) : undefined}
+            justAdded={justAdded}
             picking={cesta.picking}
             basket={cesta.basket}
             onToggleBasket={cesta.toggle}

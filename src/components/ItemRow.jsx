@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.js'
 import { itemToText, copyToClipboard } from '../lib/clipboard.js'
+import { displayTitle } from '../lib/itemText.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
 import Sparkline from './Sparkline.jsx'
 import EditItemModal from './EditItemModal.jsx'
@@ -18,7 +19,7 @@ function domainOf(url) {
  * miniatura, nombre + tienda, minigráfico si hay histórico, precio y
  * variación, o la píldora ámbar de "sin precio" cuando corresponde.
  * El botón de editar (✎) abre EditItemModal, que también permite borrar. */
-export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket }) {
+export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, justAdded }) {
   const [editing, setEditing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
@@ -50,12 +51,14 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
   const reference = history.length > 1 ? history[0] : null
   const pct = item.itm_price != null && reference != null ? priceChangePct(item.itm_price, reference) : null
   const manualStatus = manualPriceStatus(item)
+  const title = displayTitle(item)
   const state = item.itm_price == null ? 'n' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
   const stripeColor = state === 'd' ? 'var(--color-ok)' : state === 'u' ? 'var(--color-bad)' : state === 'n' ? 'var(--color-warn)' : 'transparent'
 
   return (
     <article
-      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+      data-item-id={item.itm_id}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
@@ -65,7 +68,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
             type="checkbox"
             checked={inBasket}
             onChange={() => onToggleBasket(item.itm_id)}
-            aria-label={`Meter ${item.itm_title} en la cesta`}
+            aria-label={`Meter ${title} en la cesta`}
             className="h-4 w-4 cursor-pointer accent-accent"
           />
         </label>
@@ -87,30 +90,36 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         )}
       </div>
 
-      <div className="order-2 flex min-w-0 basis-full flex-col justify-center gap-0.5 lg:basis-0 lg:flex-1">
+      {/* Por debajo de lg: foto y nombre en la primera línea, precio y
+          acciones en la segunda. La base deja justo el hueco de la foto (y de
+          la casilla de la cesta), así el precio no se cuela arriba. */}
+      <div
+        className={`order-2 flex min-w-0 flex-1 flex-col justify-center gap-0.5 lg:basis-0 ${picking ? 'basis-[calc(100%-112px)]' : 'basis-[calc(100%-80px)]'}`}
+      >
         <a
           href={item.itm_url}
           target="_blank"
           rel="noreferrer"
           className="line-clamp-2 text-[14.5px] font-medium text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
         >
-          {item.itm_title}
+          {title}
         </a>
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-mut">
+          {/* Cada «· dato» va junto: si la línea se parte, el separador
+              arranca la siguiente en vez de quedarse colgando. */}
           <span className="font-medium">{domainOf(item.itm_url)}</span>
-          <span>·</span>
-          <span>{item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}</span>
-          {manualStatus && (
-            <>
-              <span>·</span>
-              {manualStatus === 'browser' ? (
-                <span title={BROWSER_HINT}>precio desde Chrome</span>
-              ) : (
-                <span className="text-warn" title={MANUAL_HINT}>
-                  sin precio automático
-                </span>
-              )}
-            </>
+          <span className="whitespace-nowrap">
+            · {item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}
+          </span>
+          {manualStatus === 'browser' && (
+            <span className="whitespace-nowrap" title={BROWSER_HINT}>
+              · precio desde Chrome
+            </span>
+          )}
+          {manualStatus && manualStatus !== 'browser' && (
+            <span className="whitespace-nowrap text-warn" title={MANUAL_HINT}>
+              <span className="text-ink-mut">·</span> sin precio automático
+            </span>
           )}
         </div>
       </div>

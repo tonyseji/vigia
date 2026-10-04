@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Dialog from './Dialog.jsx'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import PasswordFields from './PasswordFields.jsx'
 import IosShortcutSection from './IosShortcutSection.jsx'
@@ -48,200 +49,193 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
-      <form
-        onSubmit={handleSave}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-lg border border-line bg-surface p-4"
-      >
-        <h3 className="font-display text-lg font-bold">Ajustes</h3>
+    <Dialog title="Ajustes" onClose={onClose} as="form" onSubmit={handleSave} className="max-h-[85vh] max-w-md gap-4 overflow-y-auto">
 
-        <section className="flex flex-col gap-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Refresco automático</h4>
+      <section className="flex flex-col gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Refresco automático</h4>
+        <label className="flex flex-col gap-1 text-sm text-ink-mut">
+          Frecuencia
+          <select
+            value={form.us_refresh_mode}
+            onChange={(e) => set('us_refresh_mode', e.target.value)}
+            className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            {Object.entries(REFRESH_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {form.us_refresh_mode === 'daily' && (
           <label className="flex flex-col gap-1 text-sm text-ink-mut">
-            Frecuencia
-            <select
-              value={form.us_refresh_mode}
-              onChange={(e) => set('us_refresh_mode', e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              {Object.entries(REFRESH_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {form.us_refresh_mode === 'daily' && (
-            <label className="flex flex-col gap-1 text-sm text-ink-mut">
-              Hora del pase (0-23)
-              <input
-                type="number"
-                min={0}
-                max={23}
-                value={form.us_refresh_hour}
-                onChange={(e) => set('us_refresh_hour', e.target.value)}
-                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
-              />
-            </label>
-          )}
-          {settings.us_last_refresh_at && (
-            <p className="text-xs text-ink-mut">
-              Último pase automático: {new Date(settings.us_last_refresh_at).toLocaleString('es-ES')}
-            </p>
-          )}
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Avisos de precio</h4>
-          <label className="flex items-center gap-2 text-sm text-ink">
+            Hora del pase (0-23)
             <input
-              type="checkbox"
-              checked={form.us_notify_enabled}
-              onChange={(e) => set('us_notify_enabled', e.target.checked)}
+              type="number"
+              min={0}
+              max={23}
+              value={form.us_refresh_hour}
+              onChange={(e) => set('us_refresh_hour', e.target.value)}
+              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
             />
-            Avisar cuando baje un precio
           </label>
-
-          {form.us_notify_enabled && (
-            <>
-              <div className="flex flex-col gap-1.5 pl-1 text-sm text-ink-mut">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="notify_kind"
-                    checked={form.us_notify_kind === 'any'}
-                    onChange={() => set('us_notify_kind', 'any')}
-                  />
-                  Cualquier bajada
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="notify_kind"
-                    checked={form.us_notify_kind === 'pct'}
-                    onChange={() => set('us_notify_kind', 'pct')}
-                  />
-                  Bajadas de al menos
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.5"
-                    value={form.us_notify_pct}
-                    onChange={(e) => set('us_notify_pct', e.target.value)}
-                    disabled={form.us_notify_kind !== 'pct'}
-                    className="w-16 rounded-lg border border-line bg-surface px-2 py-1 text-ink outline-none disabled:opacity-50"
-                  />
-                  %
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="notify_kind"
-                    checked={form.us_notify_kind === 'eur'}
-                    onChange={() => set('us_notify_kind', 'eur')}
-                  />
-                  Bajadas de al menos
-                  <input
-                    type="number"
-                    min={0}
-                    step="1"
-                    value={form.us_notify_eur}
-                    onChange={(e) => set('us_notify_eur', e.target.value)}
-                    disabled={form.us_notify_kind !== 'eur'}
-                    className="w-16 rounded-lg border border-line bg-surface px-2 py-1 text-ink outline-none disabled:opacity-50"
-                  />
-                  €
-                </label>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-ink">
-                <input
-                  type="checkbox"
-                  checked={form.us_notify_min_hist}
-                  onChange={(e) => set('us_notify_min_hist', e.target.checked)}
-                />
-                Avisar siempre al tocar el mínimo histórico
-              </label>
-              <label className="flex items-center gap-2 text-sm text-ink">
-                <input
-                  type="checkbox"
-                  checked={form.us_notify_back_in_stock}
-                  onChange={(e) => set('us_notify_back_in_stock', e.target.checked)}
-                />
-                Avisar cuando vuelva a haber stock
-              </label>
-            </>
-          )}
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Notificaciones en este dispositivo</h4>
-          {!push.isSupported ? (
-            <p className="text-sm text-ink-mut">Este navegador no admite notificaciones push.</p>
-          ) : push.permissionDenied ? (
-            <p className="text-sm text-warn">Bloqueadas por el navegador. Actívalas desde su configuración.</p>
-          ) : (
-            <button
-              type="button"
-              onClick={push.isSubscribed ? push.disable : push.enable}
-              disabled={push.isLoading}
-              className="self-start rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
-            >
-              {push.isLoading ? 'Un momento…' : push.isSubscribed ? 'Desactivar en este dispositivo' : 'Activar en este dispositivo'}
-            </button>
-          )}
-          {push.error && (
-            <p className="text-sm text-bad" role="alert">
-              {push.error}
-            </p>
-          )}
-        </section>
-
-        <BookmarkletSection hasShortcutKey={settings.us_shortcut_key_hash != null} onSave={onSave} />
-
-        <section className="flex flex-col gap-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Contraseña</h4>
-          <p className="text-sm text-ink-mut">
-            Con contraseña entras sin esperar ningún correo, también desde la app instalada en el iPhone.
-          </p>
-          {showPassword ? (
-            <PasswordFields onSave={onChangePassword} />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowPassword(true)}
-              className="self-start rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              Poner o cambiar contraseña
-            </button>
-          )}
-        </section>
-
-        {error && (
-          <p className="text-sm text-bad" role="alert">
-            {error}
+        )}
+        {settings.us_last_refresh_at && (
+          <p className="text-xs text-ink-mut">
+            Último pase automático: {new Date(settings.us_last_refresh_at).toLocaleString('es-ES')}
           </p>
         )}
+      </section>
 
-        <div className="flex justify-end gap-2">
+      <section className="flex flex-col gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Avisos de precio</h4>
+        <label className="flex items-center gap-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={form.us_notify_enabled}
+            onChange={(e) => set('us_notify_enabled', e.target.checked)}
+          />
+          Avisar cuando baje un precio
+        </label>
+
+        {form.us_notify_enabled && (
+          <>
+            <div className="flex flex-col gap-1.5 pl-1 text-sm text-ink-mut">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="notify_kind"
+                  checked={form.us_notify_kind === 'any'}
+                  onChange={() => set('us_notify_kind', 'any')}
+                />
+                Cualquier bajada
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="notify_kind"
+                  checked={form.us_notify_kind === 'pct'}
+                  onChange={() => set('us_notify_kind', 'pct')}
+                />
+                Bajadas de al menos
+                <input
+                  type="number"
+                  min={0}
+                  step="0.5"
+                  value={form.us_notify_pct}
+                  onChange={(e) => set('us_notify_pct', e.target.value)}
+                  disabled={form.us_notify_kind !== 'pct'}
+                  className="w-16 rounded-lg border border-line bg-surface px-2 py-1 text-ink outline-none disabled:opacity-50"
+                />
+                %
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="notify_kind"
+                  checked={form.us_notify_kind === 'eur'}
+                  onChange={() => set('us_notify_kind', 'eur')}
+                />
+                Bajadas de al menos
+                <input
+                  type="number"
+                  min={0}
+                  step="1"
+                  value={form.us_notify_eur}
+                  onChange={(e) => set('us_notify_eur', e.target.value)}
+                  disabled={form.us_notify_kind !== 'eur'}
+                  className="w-16 rounded-lg border border-line bg-surface px-2 py-1 text-ink outline-none disabled:opacity-50"
+                />
+                €
+              </label>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={form.us_notify_min_hist}
+                onChange={(e) => set('us_notify_min_hist', e.target.checked)}
+              />
+              Avisar siempre al tocar el mínimo histórico
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={form.us_notify_back_in_stock}
+                onChange={(e) => set('us_notify_back_in_stock', e.target.checked)}
+              />
+              Avisar cuando vuelva a haber stock
+            </label>
+          </>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Notificaciones en este dispositivo</h4>
+        {!push.isSupported ? (
+          <p className="text-sm text-ink-mut">Este navegador no admite notificaciones push.</p>
+        ) : push.permissionDenied ? (
+          <p className="text-sm text-warn">Bloqueadas por el navegador. Actívalas desde su configuración.</p>
+        ) : (
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            onClick={push.isSubscribed ? push.disable : push.enable}
+            disabled={push.isLoading}
+            className="self-start rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
           >
-            Cerrar
+            {push.isLoading ? 'Un momento…' : push.isSubscribed ? 'Desactivar en este dispositivo' : 'Activar en este dispositivo'}
           </button>
+        )}
+        {push.error && (
+          <p className="text-sm text-bad" role="alert">
+            {push.error}
+          </p>
+        )}
+      </section>
+
+      <BookmarkletSection hasShortcutKey={settings.us_shortcut_key_hash != null} onSave={onSave} />
+
+      <section className="flex flex-col gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-mut">Contraseña</h4>
+        <p className="text-sm text-ink-mut">
+          Con contraseña entras sin esperar ningún correo, también desde la app instalada en el iPhone.
+        </p>
+        {showPassword ? (
+          <PasswordFields onSave={onChangePassword} />
+        ) : (
           <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+            type="button"
+            onClick={() => setShowPassword(true)}
+            className="self-start rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
           >
-            {saving ? 'Guardando…' : 'Guardar'}
+            Poner o cambiar contraseña
           </button>
-        </div>
-      </form>
-    </div>
+        )}
+      </section>
+
+      {error && (
+        <p className="text-sm text-bad" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          Cerrar
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+        >
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </Dialog>
   )
 }
 
