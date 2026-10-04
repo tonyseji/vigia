@@ -2297,5 +2297,6 @@ Fallos de interfaz encontrados y arreglados:
 - El error de «ya está en tu lista» seguía visible tras vaciar el campo:
   se quita al vaciarlo.
 
-Los artículos de prueba se borran al acabar.
+Los tres artículos (Shein, Vinted, Wallapop) se quedan en la cuenta de
+pruebas como datos base para las próximas pruebas.
 
