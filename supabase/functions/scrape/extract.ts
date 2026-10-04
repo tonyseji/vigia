@@ -76,6 +76,9 @@ const BLOCK_STATUSES = [401, 403, 429, 500, 502, 503];
 export function isBotPage(url: string, html: string): boolean {
   const head = html.slice(0, 20000);
   if (/Vercel Security Checkpoint|Just a moment\.\.\.|Please enable JS and disable any ad blocker|Access Denied|Pardon Our Interruption|captcha-delivery\.com|cf-browser-verification/i.test(head)) return true;
+  // Shein: responde 200 con su portada y la redirección al captcha metida en
+  // el estado de la página, lejos del principio (sesión 31).
+  if (/\/risk\/challenge\?captcha_type=/.test(html)) return true;
   if (/amazon\./i.test(new URL(url).hostname)) {
     // producto real => tiene productTitle; si no, es el interstitial "Amazon.es" / captcha / "Continuar comprando"
     if (!/id="productTitle"/.test(html)) return true;

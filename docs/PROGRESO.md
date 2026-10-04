@@ -2230,3 +2230,42 @@ clave tiene que ir como pregunta de importación (Atajos → el atajo → ⓘ �
 dejar un texto cualquiera en vez de su clave, para que no viaje en el
 enlace. Con el enlace en `SHORTCUT_ICLOUD_URL`, Ajustes enseña el botón
 «Añadir atajo».
+
+## 2026-10-04 (Sesión 31) — Vinted, Wallapop, Shein y AliExpress
+
+### Contexto
+
+Tony probó a guardar un enlace de AliExpress desde Android: se guardó sin
+precio y lo borró. Pregunta por Vinted, Shein, Wallapop «y todo eso».
+
+### Cambios
+
+- Probadas las cuatro pidiendo las páginas desde Supabase (`pg_net`, la IP
+  de Postgres): Vinted y Wallapop traen JSON-LD `Product` con precio (el
+  extractor genérico las lee); Shein redirige a su captcha
+  (`/risk/challenge?captcha_type=909`); AliExpress, sin precio.
+- Migración `022_tiendas_shein_aliexpress.sql`: Shein y AliExpress
+  bloqueadas en `store_rules` (hosts principal, España, móvil y enlaces de
+  compartir; la búsqueda es por host exacto). Al pegarlas, Vigía avisa y
+  ofrece guardarlas con precio a mano.
+- `isBotPage` reconoce el captcha de Shein en toda la página (va a ~130 KB
+  del principio, fuera de los 20 KB que se miraban). Test nuevo.
+- `docs/TIENDAS.md`: las cuatro tiendas.
+
+### Verificación
+
+- Tests (148) y build en verde.
+- 022 aplicada en Supabase: los nueve hosts salen con `sr_blocked = true`
+  en `vigia.store_rules`.
+- `scrape` (v8), `refresh` (v7) y `save-link` (v2) redesplegadas sin
+  verificación JWT; sin credenciales responden 401, así que arrancan.
+- No probado desde la Edge Function (necesita sesión): Vinted y Wallapop
+  podrían comportarse distinto con su IP, como Amazon.
+
+### Estado final
+
+Hecho y desplegado. Falta que Tony pruebe en producción: pegar una ficha de
+`es.shein.com` tiene que mostrar el aviso «Esta tienda no deja leer el
+precio…» con la opción de guardarla a mano, y una de Vinted o Wallapop
+tiene que guardarse con precio. Si Vinted o Wallapop fallan desde la Edge
+Function, se anota en `TIENDAS.md` en vez de bloquearlas.

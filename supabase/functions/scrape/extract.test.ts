@@ -86,6 +86,11 @@ describe('isBotPage', () => {
     const html = '<html><body>Just a moment... cf-browser-verification</body></html>'
     expect(isBotPage('https://tienda.example/producto', html)).toBe(true)
   })
+  it('detecta el captcha de Shein aunque venga lejos del principio', () => {
+    const html = '<html><head><title>Ropa de Mujer y Hombre | SHEIN</title></head><body>' + 'x'.repeat(130000) +
+      '"originalUrl":"/risk/challenge?captcha_type=909&redirection=https%3A%2F%2Fes.shein.com%2F"</body></html>'
+    expect(isBotPage('https://es.shein.com/vestido-p-123.html', html)).toBe(true)
+  })
   it('no marca como bot una pagina de producto normal', () => {
     const html = '<html><body><h1>Sofa Noa</h1><p>459 €</p></body></html>'
     expect(isBotPage('https://tienda.example/producto', html)).toBe(false)

@@ -99,8 +99,9 @@ desde el navegador no salía). Sesión 28: «Comparar» pasa a **Cesta** (marcas
 con cantidades; se guarda en el dispositivo; probada por Tony); cestas guardadas en BD pendientes (B24). Sesión 29: pegar una dirección ya guardada aunque no sea idéntica (barra final,
 `www.`, parámetros de campaña) avisa en vez de duplicar; la extensión sigue con la búsqueda exacta (B25). Sesión 30: el atajo del iPhone
 guarda desde el servidor (Edge Function `save-link`, clave personal, sin abrir Safari) y botón «Pegar» en móvil; falta que Tony lo monte y
-lo publique por iCloud (B23). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 y 30.
+lo publique por iCloud (B23). Sesión 31: Vinted y Wallapop se leen (JSON-LD); Shein (captcha) y AliExpress (sin precio)
+bloqueadas en `store_rules` (migración 022). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 y 31.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
