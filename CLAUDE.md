@@ -101,8 +101,10 @@ con cantidades; se guarda en el dispositivo; probada por Tony); cestas guardadas
 guarda desde el servidor (Edge Function `save-link`, clave personal, sin abrir Safari) y botón «Pegar» en móvil; falta que Tony lo monte y
 lo publique por iCloud (B23). Sesión 31: Vinted y Wallapop se leen (JSON-LD); Shein (captcha) y AliExpress (sin precio)
 bloqueadas en `store_rules` (migración 022). Probado con cuenta de pruebas propia; arreglada la fila
-de artículo entre 640 y 1000px (título oculto). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 y 31.
+de artículo entre 640 y 1000px (título oculto). Sesión 32: prueba completa como usuario; diálogo común
+(Escape, sin `confirm()`), fila móvil más densa, nombre legible para tiendas bloqueadas, campo de añadir más
+tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Detalle en `docs/PROGRESO.md`,
+sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 y 32.
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único

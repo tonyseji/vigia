@@ -46,8 +46,15 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 | Segunda línea | Dominio de la tienda · nº de registros · en ámbar, «la tienda bloquea la lectura» cuando aplica. |
 | Minigráfico | Solo si hay dos o más registros, pero el hueco (74 px) se reserva siempre para que el precio quede en la misma columna en todas las filas. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |
 | Precio | Mono, `tabular-nums`, el número más grande de la fila. Columna de ancho fijo (132 px), igual que el selector de carpeta (92 px): todas las filas miden lo mismo y alinean en columnas. |
-| Variación | Debajo del precio, en una sola línea: el precio anterior tachado (cuando ha bajado) y la píldora con el porcentaje. |
+| Variación | Debajo del precio, en una sola línea: el precio anterior tachado (cuando ha bajado) y la píldora con el porcentaje. Sin cambio (o uno que redondea a «0,0 %») no hay píldora. |
 | Sin precio | En vez del precio, la píldora ámbar «Sin precio · edítalo». |
+
+**Por debajo de `lg:` (1024 px)** la fila se parte en dos líneas: foto y
+nombre arriba, precio, carpeta y acciones abajo, sin minigráfico. Una sola
+línea solo cabe con la barra de carpetas al lado a partir de ese ancho.
+
+Si el artículo no tiene nombre todavía (tienda bloqueada), se enseña uno
+sacado de la dirección (`src/lib/itemText.js`); en la BD no se guarda.
 
 La vista **Fotos** es la misma información en rejilla, con la imagen grande y
 sin minigráfico. Es secundaria: se usa para comparar diseños, no precios.
@@ -91,6 +98,15 @@ La referencia se hizo antes de cerrar varias decisiones. Al implementarla:
 | Búsqueda sin resultados | «Nada que coincida», como en la referencia. |
 
 ---
+
+## Diálogos y movimiento
+
+- Todos los diálogos usan `Dialog.jsx`: fondo `black/60` con desenfoque leve,
+  Escape y clic fuera cierran, y entran con un desplazamiento corto
+  (`--dur-normal`). Nada de `confirm()` del navegador: `ConfirmDialog`, con el
+  foco en «Cancelar».
+- El artículo recién guardado se ilumina 2,4 s (borde y halo de `accent`).
+- Con `prefers-reduced-motion` no se anima nada.
 
 ## Detalles que no son negociables
 

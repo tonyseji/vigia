@@ -1098,3 +1098,37 @@ Ajustes enseña los cuatro pasos para montarlo a mano.
 **Revisitar:** si el atajo publicado por iCloud da problemas con la
 pregunta de importación, o si algún día hay presupuesto para una app
 nativa.
+
+### 2026-10-05 — Mejoras tras la prueba como usuario (decididas en Claude Code a petición de Tony)
+Tony pidió probar la app entera como un usuario y mejorar funciones y diseño
+sin pasar por Cowork. Se dejan escritas aquí para poder revisarlas.
+**Decisión:**
+1. **Fila de artículo por debajo de `lg:`**: foto a la izquierda del nombre
+   en la primera línea; precio y acciones en la segunda. Antes la foto iba
+   sola encima del título y en el móvil cabían dos artículos y medio por
+   pantalla; ahora tres y medio. Coherente con «densa» de `DISENO.md`.
+2. **Un solo diálogo** (`src/components/Dialog.jsx`) para editar, ajustes,
+   compartir y confirmar: Escape (solo el de arriba) y clic fuera cierran,
+   `role="dialog"` + `aria-modal`, fondo más oscuro con un leve desenfoque y
+   entrada corta. Las tres `confirm()` del navegador pasan a `ConfirmDialog`
+   con el foco en «Cancelar».
+3. **Nombre legible desde la dirección** (`src/lib/itemText.js`) para los
+   artículos que aún no tienen título (tiendas bloqueadas): «Vestido floral de
+   verano» en vez de la dirección entera. **Solo para mostrar**: en la BD
+   sigue `itm_title = itm_url`, que es la marca de «sin nombre» con la que la
+   extensión y el botón del navegador saben que pueden poner el real.
+4. **Campo de añadir** acepta una frase con la dirección dentro y una
+   dirección sin `https://` (`readTypedUrl`), y tras guardar dice qué ha
+   entrado y si no encontró el precio. El mensaje se queda hasta volver a
+   escribir: si se iba solo, la lista subía de golpe bajo el dedo.
+5. **El artículo recién guardado se enseña siempre**: se quitan búsqueda,
+   «Solo bajadas» y grupo plegado, se lleva a la vista y se ilumina 2,4 s
+   (nada si el sistema pide menos movimiento).
+6. **Carpeta abierta con nombre y «Ver todos»** encima de la lista: en el
+   móvil el sidebar está escondido y no se sabía dónde estabas.
+**Descartado:** guardar el nombre sacado de la dirección (rompería la marca
+de «sin nombre», ver 3); un aviso flotante («toast») para lo guardado (otra
+pieza nueva cuando la línea bajo el campo basta).
+**Revisitar:** si Cowork prefiere otro reparto de la fila móvil o quiere el
+minigráfico de vuelta en tablet (hoy solo desde `lg:`).
+

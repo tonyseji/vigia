@@ -2300,3 +2300,55 @@ Fallos de interfaz encontrados y arreglados:
 Los tres artículos (Shein, Vinted, Wallapop) se quedan en la cuenta de
 pruebas como datos base para las próximas pruebas.
 
+## 2026-10-05 (Sesión 32) — Prueba completa como usuario y mejoras
+
+### Contexto
+
+Tony pidió recorrer toda la app como un usuario del día a día, con la cuenta
+de pruebas (`prueba@prueba.com`), y mejorar funciones y diseño con las
+skills (`frontend-design`, `code-review`, TDD).
+
+### Probado (producción, 768 px, móvil 375 px, claro y oscuro)
+
+Añadir (Vinted, Wallapop, Shein bloqueada), duplicados, Actualizar, carpetas
+(crear, mover, renombrar, compartir, filtrar), editar artículo (precio con
+coma), búsqueda, orden, «Solo bajadas», Lista/Fotos, cesta (cantidades,
+Escape), Ajustes (guardado en BD), menú móvil, aviso de instalar («Ahora no»
+funciona), barra de la cesta sin tapar el último artículo.
+
+### Fallos encontrados y arreglados
+
+- Total de grupo «21,5 €» (y «1234 €» sin punto de miles): `formatPrice`.
+- Escape no cerraba editar/ajustes/compartir; no se anunciaban como diálogo.
+- `confirm()` nativo para borrar artículo, borrar carpeta y vaciar cesta.
+- Con una búsqueda puesta, lo recién añadido no se veía («Nada que coincida»).
+- La búsqueda «lampara» solo encontraba «Lámpara» porque estaba en la URL.
+- El campo rechazaba frases con dirección y direcciones sin `https://`.
+- Se guardaba sin precio en silencio (p. ej. una web que no es de producto).
+- Tarjeta Fotos: selector de carpeta salido del borde y «·» colgando.
+- En el móvil, dentro de una carpeta no se veía cuál; «Cancelar» del aviso
+  de tienda bloqueada se salía por la derecha.
+- (Encontrado al probar el arreglo) el mensaje «Guardado» se iba a los 7 s y
+  la lista saltaba: ahora se queda hasta volver a escribir.
+
+### Mejoras de diseño
+
+Fila móvil/tablet con la foto al lado del nombre (de 2,5 a 3,5 artículos
+por pantalla), diálogo común con fondo más oscuro y entrada suave, artículo
+nuevo iluminado y llevado a la vista, nombre legible para tiendas bloqueadas.
+Todo registrado en `DECISIONES.md` (2026-10-05) y `DISENO.md`.
+
+### Verificación
+
+- 163 tests (nuevos: `itemText`, `readTypedUrl`) y build en verde.
+- Revisión con la skill `code-review`: un hallazgo (el destello se repetía
+  al volver a montar la fila), arreglado.
+- Probado en producción con la cuenta de pruebas: frase con dirección,
+  dirección sin `https://`, Shein con nombre legible (en BD sigue la URL),
+  confirmar y Escape anidado, carpeta con «Ver todos», Fotos.
+- Artículos de prueba extra borrados; quedan los tres de base.
+
+### Estado final
+
+Hecho y desplegado. Para Cowork: revisar las decisiones del 2026-10-05.
+

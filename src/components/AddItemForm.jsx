@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { findUrlInText, readTypedUrl } from '../lib/shareTarget.js'
 import { formatPrice } from '../lib/format.js'
 import { displayTitle } from '../lib/itemText.js'
@@ -17,15 +17,10 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
   const [status, setStatus] = useState('idle') // idle | adding | error | blocked
   const [errorMsg, setErrorMsg] = useState('')
   const [manualPrice, setManualPrice] = useState('')
-  // Lo último guardado, unos segundos: confirma qué ha entrado y avisa si
-  // no se encontró el precio (antes se guardaba en silencio).
+  // Lo último guardado: confirma qué ha entrado y avisa si no se encontró
+  // el precio (antes se guardaba en silencio). Se queda hasta que se vuelve
+  // a escribir: si se fuera solo, la lista subiría de golpe bajo el dedo.
   const [saved, setSaved] = useState(null)
-
-  useEffect(() => {
-    if (!saved) return
-    const timer = setTimeout(() => setSaved(null), 7000)
-    return () => clearTimeout(timer)
-  }, [saved])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -101,14 +96,16 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           Esta tienda no deja leer el precio automáticamente. Puedes guardar el artículo igualmente e ir
           metiendo el precio a mano.
         </p>
-        <div className="flex gap-2">
+        {/* En el móvil, precio en una línea y botones en la siguiente: en
+            una sola «Cancelar» se salía por la derecha. */}
+        <div className="flex flex-wrap gap-2">
           <input
             type="text"
             inputMode="decimal"
             placeholder="Precio actual (opcional)"
             value={manualPrice}
             onChange={(e) => setManualPrice(e.target.value)}
-            className="w-40 rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            className="min-w-0 basis-full rounded-lg sm:w-40 sm:basis-auto border border-line bg-surface px-3 py-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
           />
           <button
             type="button"
@@ -147,6 +144,7 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           value={url}
           onChange={(e) => {
             setUrl(e.target.value)
+            setSaved(null)
             // Campo vaciado: el error era de la dirección que había, ya no aplica.
             if (!e.target.value && status === 'error') setStatus('idle')
           }}
