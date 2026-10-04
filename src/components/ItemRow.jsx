@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
-import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
+import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.js'
 import { itemToText, copyToClipboard } from '../lib/clipboard.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
 import Sparkline from './Sparkline.jsx'
@@ -55,7 +55,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
 
   return (
     <article
-      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 sm:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
@@ -87,7 +87,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         )}
       </div>
 
-      <div className="order-2 flex min-w-0 basis-full flex-col justify-center gap-0.5 sm:basis-0 sm:flex-1">
+      <div className="order-2 flex min-w-0 basis-full flex-col justify-center gap-0.5 lg:basis-0 lg:flex-1">
         <a
           href={item.itm_url}
           target="_blank"
@@ -99,7 +99,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-mut">
           <span className="font-medium">{domainOf(item.itm_url)}</span>
           <span>·</span>
-          <span>{item.price_history.length} registros</span>
+          <span>{item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}</span>
           {manualStatus && (
             <>
               <span>·</span>
@@ -117,11 +117,11 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
 
       {/* El hueco del minigráfico se reserva aunque no haya histórico: si no,
           el precio cambia de columna de una fila a otra. */}
-      <div className="order-4 hidden w-[74px] flex-none items-center sm:flex">
+      <div className="order-4 hidden w-[74px] flex-none items-center lg:flex">
         {history.length > 1 && <Sparkline values={history} direction={pct ?? 0} />}
       </div>
 
-      <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 sm:w-[132px] sm:flex-none">
+      <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 lg:w-[132px] lg:flex-none">
         {item.itm_price == null ? (
           <button
             type="button"
@@ -135,7 +135,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
             <span className="font-mono text-[17px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
             {/* Variación y precio anterior en una sola línea: con el tachado
                 debajo, las filas con bajada quedaban más altas que el resto. */}
-            {pct != null && (
+            {showPct(pct) && (
               <div className="flex items-center gap-1.5">
                 {pct < 0 && reference != null && (
                   <span className="font-mono text-[11px] text-ink-mut line-through">{formatPrice(reference)}</span>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPrice, priceChangePct, formatPct } from '../format.js'
+import { formatPrice, priceChangePct, formatPct, showPct } from '../format.js'
 
 // Intl separa el importe del simbolo con un espacio fino (U+202F o U+00A0)
 // segun la version de ICU. Se normaliza para que el test no dependa de eso.
@@ -40,5 +40,17 @@ describe('formatPct', () => {
   })
   it('devuelve guion sin dato', () => {
     expect(formatPct(null)).toBe('—')
+  })
+})
+
+describe('showPct', () => {
+  it('no enseña la píldora sin cambio ni con uno que redondea a 0,0 %', () => {
+    expect(showPct(0)).toBe(false)
+    expect(showPct(0.034)).toBe(false)
+    expect(showPct(null)).toBe(false)
+  })
+  it('la enseña con bajadas y subidas reales', () => {
+    expect(showPct(-12.3)).toBe(true)
+    expect(showPct(0.05)).toBe(true)
   })
 })

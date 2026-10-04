@@ -25,3 +25,9 @@ export function formatPct(pct) {
   const sign = pct > 0 ? '+' : ''
   return `${sign}${pct.toFixed(1).replace('.', ',')} %`
 }
+
+/** Si merece píldora de variación: sin cambio (o uno que redondea a
+ * "0,0 %") no se enseña, igual que la franja lateral queda sin color. */
+export function showPct(pct) {
+  return pct != null && !Number.isNaN(pct) && Math.abs(pct) >= 0.05
+}

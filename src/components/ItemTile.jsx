@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
-import { formatPrice, formatPct, priceChangePct } from '../lib/format.js'
+import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
 
@@ -123,7 +123,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
             // altura en todas las tarjetas, tengan variación o no.
             <div className="flex min-h-[46px] flex-col gap-1">
               <span className="font-mono text-[14.5px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
-              {pct != null && (
+              {showPct(pct) && (
                 <span
                   className="w-fit rounded-md px-1.5 py-0.5 font-mono text-[10.5px] tabular-nums"
                   style={{

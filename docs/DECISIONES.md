@@ -356,6 +356,12 @@ baste en pantallas muy estrechas. (b) Ocultar el selector de carpeta o los
 botones de acción en vez del gráfico — se descartó porque son acciones, no
 solo información, y esconderlas cambia lo que se puede hacer desde la lista,
 no solo cómo se ve.
+**Corrección 2026-10-05 (sesión 31):** el umbral pasa de `sm:` (640px) a
+`lg:` (1024px). La barra de carpetas aparece desde `md:` (768px) y se come
+unos 250px, así que entre 640 y ~1000px la línea única volvía a dejar el
+título a ancho 0 (visto probando con la cuenta de pruebas a 768px: título
+oculto y el minigráfico saliéndose por la derecha). Mismo criterio, umbral
+corregido.
 **Revisitar:** Si en algún momento el minigráfico se considera imprescindible
 también en móvil, valorar una versión más pequeña en la segunda línea en vez
 de ocultarlo del todo.

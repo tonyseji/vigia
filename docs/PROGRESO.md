@@ -2269,3 +2269,33 @@ Hecho y desplegado. Falta que Tony pruebe en producción: pegar una ficha de
 precio…» con la opción de guardarla a mano, y una de Vinted o Wallapop
 tiene que guardarse con precio. Si Vinted o Wallapop fallan desde la Edge
 Function, se anota en `TIENDAS.md` en vez de bloquearlas.
+
+### Prueba como usuario (mismo día)
+
+Con una cuenta de pruebas propia (`prueba@prueba.com`, creada por Tony y
+confirmada a mano en `auth.users` porque el correo es inventado), desde
+el campo URL de producción:
+
+- Shein (`es.shein.com`): aviso «Esta tienda no deja leer el precio…»;
+  guardado a mano con 12,99 € y «sin precio automático». ✅
+- Vinted: «Lámpara IKEA tomelilla en perfecto estado», 10 €, foto y stock,
+  leído desde la Edge Function. ✅
+- Wallapop: «Lámpara de pie Hektar gris», 29 €, foto y stock. ✅
+- Pegar otra vez el de Vinted sin `www.` y con `utm_source`: «Ese artículo
+  ya está en tu lista». ✅
+- «Actualizar»: los dos automáticos pasan a 2 registros. ✅
+
+Fallos de interfaz encontrados y arreglados:
+
+- Entre 640 y ~1000px de ancho (tablet, ventana estrecha) la fila ocultaba
+  el título y el minigráfico se salía por la derecha (scroll horizontal).
+  La línea única pasa de `sm:` a `lg:` (`DECISIONES.md`, corrección a la
+  entrada de 2026-09-09).
+- Píldora roja «0,0 %» cuando el precio no ha cambiado: ya no se enseña
+  (`showPct` en `format.js`, con test), en fila y en tarjeta.
+- «1 registros» → «1 registro».
+- El error de «ya está en tu lista» seguía visible tras vaciar el campo:
+  se quita al vaciarlo.
+
+Los artículos de prueba se borran al acabar.
+

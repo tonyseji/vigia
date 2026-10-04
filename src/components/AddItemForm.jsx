@@ -117,7 +117,11 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           required
           placeholder="Pega aquí la URL de un producto"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => {
+            setUrl(e.target.value)
+            // Campo vaciado: el error era de la dirección que había, ya no aplica.
+            if (!e.target.value && status === 'error') setStatus('idle')
+          }}
           className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 outline-none focus-visible:outline-2 focus-visible:outline-accent"
         />
         {canPaste && !url && (
