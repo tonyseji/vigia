@@ -1,10 +1,12 @@
 import { formatPrice } from './format.js'
-import { displayTitle } from './itemText.js'
+import { displayTitle, stockLabel } from './itemText.js'
 
 /** Texto de un artículo listo para pegar en una conversación con Claude
  * (docs/DECISIONES.md 2026-09-06, "Las ideas de búsqueda visual..."). */
 export function itemToText(item) {
-  const lines = [displayTitle(item), formatPrice(item.itm_price), item.itm_url]
+  const stock = item.itm_price != null ? stockLabel(item) : null
+  const price = stock ? `${formatPrice(item.itm_price)} · ${stock}` : formatPrice(item.itm_price)
+  const lines = [displayTitle(item), price, item.itm_url]
   if (item.itm_image_url) lines.push(item.itm_image_url)
   return lines.join('\n')
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { NO_FOLDER, folderGroupName, groupByFolder, loadView, saveView, loadCollapsed, saveCollapsed } from '../itemGroups.js'
+import { NO_FOLDER, folderGroupName, groupByFolder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal } from '../itemGroups.js'
 
 const foldersById = {
   m: { fld_id: 'm', fld_name: 'Muebles', fld_parent_id: null },
@@ -84,3 +84,18 @@ describe('grupos plegados', () => {
   })
 })
 
+describe('itemsTotal', () => {
+  it('suma lo que se puede comprar: sin precio y vendido o sin stock no cuentan', () => {
+    const items = [
+      { itm_price: 11.5, itm_in_stock: null },
+      { itm_price: 10, itm_in_stock: false },
+      { itm_price: 29, itm_in_stock: true },
+      { itm_price: null, itm_in_stock: true },
+    ]
+    expect(itemsTotal(items)).toBe(40.5)
+  })
+
+  it('redondea a céntimos', () => {
+    expect(itemsTotal([{ itm_price: 0.1 }, { itm_price: 0.2 }])).toBe(0.3)
+  })
+})

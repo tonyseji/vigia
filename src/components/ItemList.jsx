@@ -10,6 +10,7 @@ import {
   loadCollapsed,
   saveCollapsed,
   groupKeyOf,
+  itemsTotal,
 } from '../lib/itemGroups.js'
 import { IconCopiar, IconCheck, IconChevronRight, IconCarpeta } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
@@ -255,7 +256,7 @@ export default function ItemList({
       ) : groupByFolder ? (
         groups.map(([key, groupItems]) => {
           const name = folderGroupName(key, foldersById)
-          const total = groupItems.reduce((sum, i) => sum + (i.itm_price ?? 0), 0)
+          const total = itemsTotal(groupItems)
           const open = searching || !collapsed.has(key)
           return (
             <section key={key} className="flex flex-col gap-2">
@@ -293,7 +294,7 @@ export default function ItemList({
               </span>
             )}
             <b className="flex-none font-mono font-normal normal-case tracking-normal">
-              {sorted.length} artículo{sorted.length === 1 ? '' : 's'} · {formatPrice(sorted.reduce((sum, i) => sum + (i.itm_price ?? 0), 0))}
+              {sorted.length} artículo{sorted.length === 1 ? '' : 's'} · {formatPrice(itemsTotal(sorted))}
             </b>
             <span className="h-px flex-1 bg-line" />
             {onShowAll && (

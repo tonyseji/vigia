@@ -24,6 +24,13 @@ export function groupKeyOf(item, foldersById) {
   return item.itm_fld_id && foldersById[item.itm_fld_id] ? item.itm_fld_id : NO_FOLDER
 }
 
+/** Lo que costaría todo junto, como el total de la cesta (lib/basket.js):
+ * sin precio y vendido o sin stock (B27) no suman. */
+export function itemsTotal(items) {
+  const total = items.reduce((sum, i) => (i.itm_price == null || i.itm_in_stock === false ? sum : sum + i.itm_price), 0)
+  return Math.round(total * 100) / 100
+}
+
 export function groupByFolder(items, foldersById) {
   const groups = {}
   for (const item of items) {
