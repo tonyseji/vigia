@@ -2348,6 +2348,18 @@ Todo registrado en `DECISIONES.md` (2026-10-05) y `DISENO.md`.
   confirmar y Escape anidado, carpeta con «Ver todos», Fotos.
 - Artículos de prueba extra borrados; quedan los tres de base.
 
+### Ideas pendientes, hechas después
+
+- Ajustes enseña «Guardado ✓» un momento antes de cerrar (antes se cerraba
+  sin señal).
+- «Hora del pase»: desplegable 00:00–23:00 con «hora de España» (el pase
+  compara con Europe/Madrid, migración 007), en vez de un número suelto.
+- Accesibilidad del sidebar: las carpetas sin subcarpetas tenían un botón
+  invisible sin nombre (parada vacía con el teclado); Contraer/Expandir y
+  «Más opciones» llevan el nombre de la carpeta; cada carpeta se anuncia
+  «Lámparas, 1 artículo» y la activa con `aria-current`. La barra de la
+  cesta se anuncia «Ver cesta: 3 artículos · 2 tiendas, 49,00 €».
+
 ### Estado final
 
 Hecho y desplegado. Para Cowork: revisar las decisiones del 2026-10-05.

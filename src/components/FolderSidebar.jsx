@@ -306,6 +306,8 @@ function FolderRow({
         type="button"
         onClick={onClick}
         aria-current={active ? 'true' : undefined}
+        // Sin esto el lector lee el número pegado al nombre («Lámparas1»).
+        aria-label={`${label}${sharedBadge ? ', compartida' : ''}, ${count} ${count === 1 ? 'artículo' : 'artículos'}`}
         className={`flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent ${active ? 'font-medium text-ink' : 'text-ink'}`}
       >
         {icon ?? <IconCarpeta className="h-3.5 w-3.5 flex-none text-ink-mut" />}
