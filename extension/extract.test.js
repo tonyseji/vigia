@@ -40,6 +40,11 @@ describe('extractProduct (extensión)', () => {
     })
   })
 
+  it('BackOrder (Sklum, entrega más tarde) cuenta como en stock', () => {
+    page({ jsonLd: [{ '@type': 'Product', name: 'Mesita', offers: { price: 94.95, availability: 'https://schema.org/BackOrder' } }] })
+    expect(extractProduct().inStock).toBe(true)
+  })
+
   it('reconoce la página de DataDome', () => {
     page({ html: '<html><script src="https://ct.captcha-delivery.com/i.js"></script>' })
     expect(extractProduct()).toEqual({ blocked: true })

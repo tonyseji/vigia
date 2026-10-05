@@ -65,10 +65,11 @@ export function extractProduct() {
     image: image || meta('og:image') || null,
     price,
     currency: (offer && offer.priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'EUR',
-    inStock: /InStock|LimitedAvailability|PreOrder/i.test(availability)
-      ? true
-      : /OutOfStock|SoldOut|Discontinued/i.test(availability)
-        ? false
+    // Mismo criterio que scrape/extract.ts: BackOrder se puede pedir.
+    inStock: /OutOfStock|SoldOut|Discontinued/i.test(availability)
+      ? false
+      : /InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(availability)
+        ? true
         : null,
   }
 }

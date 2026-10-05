@@ -98,7 +98,7 @@ const BOOKMARKLET_SOURCE = `
     i: image || meta('og:image') || null,
     p: price,
     c: (offer && offer.priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'EUR',
-    s: /InStock|LimitedAvailability|PreOrder/i.test(availability) ? true : /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : null,
+    s: /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : /InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(availability) ? true : null,
     k: '__CLAVE__',
     a: location.href
   };

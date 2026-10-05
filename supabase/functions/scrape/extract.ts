@@ -228,6 +228,16 @@ function findProducts(node: any, acc: any[] = [], depth = 0): any[] {
   return acc;
 }
 
+/** schema.org/ItemAvailability. BackOrder (Sklum: «entrega estimada en
+ * noviembre») se puede pedir, así que cuenta como en stock. Sin stock solo
+ * cuando la tienda lo dice; lo que no se reconoce queda sin dato. */
+function availabilityInStock(a: unknown): boolean | undefined {
+  const s = String(a ?? "");
+  if (/OutOfStock|SoldOut|Discontinued/i.test(s)) return false;
+  if (/InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(s)) return true;
+  return undefined;
+}
+
 // deno-lint-ignore no-explicit-any
 function offerPrice(offers: any): { price?: number; currency?: string; inStock?: boolean } {
   if (!offers) return {};
@@ -241,7 +251,7 @@ function offerPrice(offers: any): { price?: number; currency?: string; inStock?:
       p = parsePrice(c);
       if (p) break;
     }
-    const inStock = o.availability ? /InStock|LimitedAvailability|PreOrder|OnlineOnly/i.test(String(o.availability)) : undefined;
+    const inStock = availabilityInStock(o.availability);
     const currency = o.priceCurrency || o.priceSpecification?.priceCurrency;
     if (p && (!best.price || p < best.price)) best = { price: p, currency, inStock };
     // AggregateOffer con offers anidadas

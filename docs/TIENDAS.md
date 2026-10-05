@@ -12,7 +12,7 @@
 | Tienda | Lectura | Cómo se lee | Notas |
 |---|---|---|---|
 | IKEA | ✅ | JSON-LD | Sin problemas conocidos. |
-| Sklum | ✅ | JSON-LD | |
+| Sklum | ✅ | JSON-LD | Lo que tarda en llegar lo publica como `BackOrder` («entrega estimada…»): cuenta como en stock (B28). |
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
 | Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |

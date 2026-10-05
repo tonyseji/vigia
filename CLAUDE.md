@@ -106,7 +106,8 @@ de artículo entre 640 y 1000px (título oculto). Sesión 32: prueba completa co
 tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Sesión 33: la extensión ya no
 duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin precio fue un fallo puntual (B19). Sesión 34: Vinted «fallaba» porque
 el artículo estaba vendido; el extractor lee el precio sin JSON-LD y lo marca sin stock (B26). Sesión 35: la lista,
-las fotos y la cesta enseñan «Vendido»/«Sin stock» y no lo suman (B27, decidido en Claude Code, para revisar en Cowork). Detalle en `docs/PROGRESO.md` (sesiones 17 a 35) y
+las fotos y la cesta enseñan «Vendido»/«Sin stock» y no lo suman (B27, decidido en Claude Code, para revisar en Cowork). Sesión 36: Sklum salía «Sin stock» por publicar `BackOrder` (se puede pedir);
+ahora cuenta como en stock, y sin stock solo si la tienda lo dice (B28). Detalle en `docs/PROGRESO.md` (sesiones 17 a 36) y
 `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados

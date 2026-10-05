@@ -80,6 +80,13 @@ describe('botón del navegador', () => {
     expect(data.altUrl).toBeNull() // sin canónica, la de la barra es la misma
   })
 
+  it('BackOrder (Sklum, entrega más tarde) cuenta como en stock', () => {
+    const page = fakePage({
+      jsonLd: [{ '@type': 'Product', name: 'Mesita', offers: { price: 94.95, availability: 'https://schema.org/BackOrder' } }],
+    })
+    expect(readImport(new URL(runBookmarklet(page).opened[0]).hash).inStock).toBe(true)
+  })
+
   it('sin JSON-LD usa las metas de Open Graph', () => {
     const page = fakePage({
       jsonLd: ['{no es json'],

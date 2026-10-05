@@ -1048,3 +1048,49 @@ Claude Code decide cuando Tony se lo pide y cierra él los `.md`).
 ### Estado final
 
 Hecho y desplegado. Para Cowork: revisar la decisión del 2026-10-06.
+
+## 2026-10-06 (Sesión 36) — Sklum salía «Sin stock» sin estarlo (B28)
+
+### Contexto
+
+Tony veía artículos en gris como sin stock que en la tienda se podían
+comprar. Revisado con sus datos reales: los 5 marcados eran de Sklum (4 en
+`tonyysj@`, 1 en `antonio.secojimenez@`).
+
+### Causa
+
+Sklum publica en su JSON-LD `availability: BackOrder` para lo que tarda en
+llegar («Entrega estimada entre el 03/11 y el 05/11»). En schema.org eso es
+«se puede pedir, se entrega más tarde». El extractor del servidor
+(`offerPrice` en `scrape/extract.ts`) solo daba por disponible
+`InStock|LimitedAvailability|PreOrder|OnlineOnly` y **todo lo demás lo
+guardaba como `false`**, así que BackOrder acababa en «Sin stock» (B27 lo
+pinta en gris y no lo suma).
+
+### Cambios
+
+- `availabilityInStock` en `scrape/extract.ts`: sin stock solo con
+  `OutOfStock|SoldOut|Discontinued`; en stock también `BackOrder`,
+  `PreSale` y `MadeToOrder`; lo que no se reconoce (p. ej. `InStoreOnly`)
+  queda sin dato en vez de «sin stock».
+- Mismo criterio en la extensión (`extension/extract.js`) y el botón de
+  marcadores (`src/lib/browserImport.js`), que ya eran de tres estados pero
+  dejaban BackOrder sin dato.
+- Redesplegadas las tres funciones que usan el extractor: `scrape` v10,
+  `refresh` v9 y `save-link` v4 (por el conector de Supabase; lo subido de
+  `scrape` comparado con el fichero local).
+
+### Verificación
+
+- TDD: 11 casos de disponibilidad en `extract.test.ts` (4 fallaban antes) y
+  uno de BackOrder en la extensión y en el marcador; 194 tests en verde.
+- Con el HTML real de la mesita Abrams de Sklum: 94,95 €, `inStock: true`.
+- En producción con las cuentas de Tony: los 5 artículos se marcaron como
+  pendientes y se lanzó `refresh` igual que el cron (`net.http_post` con el
+  secreto del vault): 5 leídos, 0 fallos, los 5 con `itm_in_stock = true` y
+  el mismo precio. Ninguna cuenta suya queda con artículos sin stock. Sin
+  avisos de «vuelve a haber stock» (0 dispositivos suscritos).
+
+### Estado final
+
+Hecho, desplegado y verificado con datos reales.

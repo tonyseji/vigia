@@ -55,6 +55,24 @@ describe('extractFromHtml', () => {
     expect(r.source).toBe('json-ld')
   })
 
+  // Sklum publica BackOrder («entrega estimada entre el 03/11 y el 05/11»):
+  // se puede comprar, solo tarda más. Sin stock es solo lo que la tienda dice
+  // que no se puede pedir; lo que no se reconoce queda sin dato.
+  const withAvailability = (availability: string) => `<script type="application/ld+json">
+    {"@type":"Product","name":"Mesita","offers":{"@type":"Offer","price":"94.95","priceCurrency":"EUR","availability":"https:\\/\\/schema.org\\/${availability}"}}
+    </script>`
+  it.each(['InStock', 'BackOrder', 'PreOrder', 'PreSale', 'MadeToOrder', 'LimitedAvailability', 'OnlineOnly'])(
+    'disponibilidad %s cuenta como en stock',
+    (a) => expect(extractFromHtml(withAvailability(a), 'https://tienda.example/p').inStock).toBe(true),
+  )
+  it.each(['OutOfStock', 'SoldOut', 'Discontinued'])(
+    'disponibilidad %s cuenta como sin stock',
+    (a) => expect(extractFromHtml(withAvailability(a), 'https://tienda.example/p').inStock).toBe(false),
+  )
+  it('disponibilidad desconocida no se da por sin stock', () => {
+    expect(extractFromHtml(withAvailability('InStoreOnly'), 'https://tienda.example/p').inStock).toBeUndefined()
+  })
+
   it('cae a Open Graph cuando no hay JSON-LD', () => {
     const html = `<html><head>
       <meta property="og:title" content="Mesa de centro roble">
