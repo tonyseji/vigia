@@ -103,8 +103,10 @@ lo publique por iCloud (B23). Sesión 31: Vinted y Wallapop se leen (JSON-LD); S
 bloqueadas en `store_rules` (migración 022). Probado con cuenta de pruebas propia; arreglada la fila
 de artículo entre 640 y 1000px (título oculto). Sesión 32: prueba completa como usuario; diálogo común
 (Escape, sin `confirm()`), fila móvil más densa, nombre legible para tiendas bloqueadas, campo de añadir más
-tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Detalle en `docs/PROGRESO.md`,
-sesiones 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 y 32.
+tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Sesión 33: la extensión ya no
+duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin precio fue un fallo puntual (B19); Vinted
+falla en el pase del servidor (B26, sin investigar). Detalle en `docs/PROGRESO.md` (sesiones 17 a 33) y
+`docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados
 el 2026-09-09. Su código sigue en el primer commit de este repo como único
@@ -137,7 +139,7 @@ vigia/
 ├── docs/
 │   ├── ARQUITECTURA.md      ← cómo encaja todo + esquema de BD
 │   ├── DECISIONES.md        ← decisiones con razonamiento
-│   ├── PROGRESO.md          ← log de sesiones
+│   ├── PROGRESO.md          ← log de sesiones (las antiguas en PROGRESO-ARCHIVO.md)
 │   ├── WORKFLOW.md          ← Cowork planifica, Claude Code implementa
 │   ├── DISENO.md            ← qué se copia de la referencia y qué cambia
 │   └── diseno-referencia.html ← prototipo aprobado, abrible en el navegador
