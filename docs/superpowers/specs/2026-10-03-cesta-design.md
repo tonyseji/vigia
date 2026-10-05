@@ -62,3 +62,13 @@ cargada sin errores (un fallo de lectura no puede vaciarla).
 Cestas guardadas con nombre en la base de datos («Salón opción A / B»),
 comparadas lado a lado y compartidas entre dispositivos. Gastos de envío: no
 se conocen, no se inventan; el desglose por tienda sirve para sumarlos a mano.
+
+## Actualización 2026-10-06 — lo vendido no suma (B27)
+
+Un artículo con `itm_in_stock = false` (vendido en Vinted/Wallapop, sin stock
+en el resto) no se puede comprar, así que no entra en ninguna de las tres
+cifras ni en el subtotal de su tienda. Se cuenta aparte (`unavailable` en
+`basketSummary`), la barra dice «+N sin stock», la línea lleva el precio
+tachado con la píldora «Vendido»/«Sin stock» y abajo se explica que no suma.
+Decisión en `docs/DECISIONES.md` (2026-10-06).
+

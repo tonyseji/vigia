@@ -1034,6 +1034,17 @@ a Cowork: decisiones en `DECISIONES.md` (2026-10-06) para revisarlas.
   dice «3 artículos · 2 tiendas · +1 sin stock» con 29,00 € (solo Wallapop),
   el detalle lo tacha y explica que no suma, y «Sin carpeta» suma 11,50 €.
 
+### Documentación al día (mismo día, a petición de Tony)
+
+Repaso de todos los `.md`: `ARQUITECTURA.md` (duplicados en `record-price`,
+qué se hace con `itm_in_stock`), `extension/README.md` (duplicados),
+`supabase/functions/scrape/README.md` (reescrito: decía «copia sin cambios» y
+«`pg_net` no portado»; ahora el orden de búsqueda, Vinted vendido y que
+cambiarlo obliga a redesplegar tres funciones), `README.md` (ya no «en
+reconstrucción»; tabla de documentos completa), `supabase/migrations/README.md`,
+spec de la cesta (lo vendido no suma) y `WORKFLOW.md` (excepciones acordadas:
+Claude Code decide cuando Tony se lo pide y cierra él los `.md`).
+
 ### Estado final
 
 Hecho y desplegado. Para Cowork: revisar la decisión del 2026-10-06.

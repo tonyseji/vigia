@@ -115,7 +115,9 @@ navegador de verdad, así que:
   un pase diario abre en una ventana minimizada los artículos con
   `itm_is_manual = true`, lee el precio y lo manda a la Edge Function
   `record-price`, que lo apunta y avisa de bajadas con las mismas reglas que
-  `refresh` (`refresh/notify.ts`).
+  `refresh` (`refresh/notify.ts`). Al guardar una página reconoce el artículo
+  aunque la dirección no se escriba igual (`findOwnItem`, misma clave `urlKey`
+  que la web y `save-link`, backlog B25); solo entre los del propio usuario.
 
 En el móvil, **Compartir → Vigía** (Android, `share_target` del manifiesto)
 abre `/compartir?url=…` (`src/lib/shareTarget.js`): solo llega la dirección,
@@ -158,7 +160,7 @@ Un artículo vigilado. Uno por URL y usuario.
 | `itm_price` | numeric | Último precio conocido. |
 | `itm_currency` | text | Default `EUR`. |
 | `itm_is_manual` | boolean | `true` si el precio lo mete el usuario porque la tienda bloquea. |
-| `itm_in_stock` | boolean | Nullable: hay tiendas que no lo dicen. |
+| `itm_in_stock` | boolean | Nullable: hay tiendas que no lo dicen. `false` (p. ej. un Vinted vendido, B26) se enseña apagado con «Vendido»/«Sin stock» y no suma en la cesta ni en los totales de grupo (B27, `stockLabel`, `itemsTotal`). |
 | `itm_notes` | text | |
 | `itm_fld_id` | uuid | FK a `folders`. Nullable. |
 | `itm_last_checked_at` | timestamptz | |

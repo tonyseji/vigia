@@ -50,7 +50,10 @@ el botón de recargar de la tarjeta de Vigía.
   la sesión. La contraseña no se guarda, solo los tokens.
 - **Escritura:** todo pasa por la Edge Function `record-price`, que valida el
   token, actualiza o crea el artículo, apunta el histórico con
-  `ph_source = 'browser'` y manda el aviso de bajada.
+  `ph_source = 'browser'` y manda el aviso de bajada. Al guardar una página
+  reconoce el artículo aunque la dirección no se escriba igual (barra final,
+  `www.`, parámetros de campaña): misma comparación que la web (`urlKey`,
+  backlog B25), así no se duplica.
 - **Pase:** manda la URL guardada del artículo, no la de la página, para que
   una redirección no cree un artículo duplicado. Entre artículo y artículo
   espera 4–8 s. Si la tienda pide captcha, ese artículo se salta y queda

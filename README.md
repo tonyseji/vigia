@@ -13,10 +13,15 @@ tú has decidido guardar.
 
 ## Estado
 
-**En reconstrucción.** Este repositorio contiene el esqueleto del proyecto; la
-funcionalidad se está portando desde una versión anterior que vivía entera
-dentro de una Edge Function de Supabase (ver el primer commit del historial).
-Las fases están en [`docs/ROADMAP.md`](docs/ROADMAP.md).
+**En uso.** Las seis fases están cerradas y la app funciona en
+[vigia-list.vercel.app](https://vigia-list.vercel.app): carpetas (también
+compartidas), refresco diario y avisos de bajada, cesta, vista de fotos,
+extensión de Chrome para las tiendas que no dejan leer el precio desde el
+servidor, y guardar desde Compartir en Android o con un atajo en el iPhone.
+Lo pendiente está en el backlog de [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+La versión anterior vivía entera dentro de una Edge Function de Supabase; su
+código solo queda en el primer commit del historial.
 
 ## Stack
 
@@ -48,11 +53,13 @@ npm run preview   # servir el build
 | [`CLAUDE.md`](CLAUDE.md) | Contexto del proyecto y reglas que no romper |
 | [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) | Cómo encaja todo y esquema de base de datos |
 | [`docs/DECISIONES.md`](docs/DECISIONES.md) | Qué se decidió, por qué, y qué se descartó |
-| [`docs/PROGRESO.md`](docs/PROGRESO.md) | Log de sesiones de trabajo |
+| [`docs/PROGRESO.md`](docs/PROGRESO.md) | Log de las sesiones recientes (las antiguas, en [`PROGRESO-ARCHIVO.md`](docs/PROGRESO-ARCHIVO.md)) |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Fases y pendientes |
 | [`docs/WORKFLOW.md`](docs/WORKFLOW.md) | Cómo se trabaja: quién decide y quién escribe código |
 | [`docs/DISENO.md`](docs/DISENO.md) | Cómo tiene que verse, y el prototipo aprobado al lado |
 | [`docs/TIENDAS.md`](docs/TIENDAS.md) | Qué tiendas dejan leer el precio |
+| [`extension/README.md`](extension/README.md) | La extensión de Chrome: instalarla y cómo está hecha |
+| [`supabase/functions/scrape/README.md`](supabase/functions/scrape/README.md) | El extractor de precios |
 
 ## Licencia
 

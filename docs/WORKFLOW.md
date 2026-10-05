@@ -69,6 +69,19 @@ claude
 7. Tony vuelve a Cowork con el resultado: revisar, iterar o planificar lo siguiente
 ```
 
+### Excepciones acordadas
+
+En la práctica, desde la sesión 32:
+
+- **Tony puede pedir a Claude Code que decida él** («¿no puedes hacerlo
+  tú?»). Entonces Claude Code decide, implementa y deja la decisión en
+  `DECISIONES.md` con «(decidido en Claude Code a petición de Tony)», para
+  que Cowork la revise después. No es lo normal: es para cosas pequeñas o
+  cuando esperar a Cowork no aporta.
+- **Al cerrar una tarea, Claude Code actualiza él mismo los `.md`**
+  (`PROGRESO.md`, `ROADMAP.md`, la línea de estado de `CLAUDE.md` y lo que
+  haya cambiado) y hace commit y push a `main`, sin esperar a Cowork.
+
 ---
 
 ## Formato del prompt para Claude Code
