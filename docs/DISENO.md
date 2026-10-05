@@ -40,7 +40,7 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 
 | Elemento | Regla |
 |---|---|
-| Franja lateral | Verde si el precio ha bajado, rojo si ha subido, ámbar si no hay precio. Es lo que permite escanear la lista sin leer. |
+| Franja lateral | Verde si el precio ha bajado, rojo si ha subido, ámbar si no hay precio, gris si está vendido o sin stock. Es lo que permite escanear la lista sin leer. |
 | Miniatura | 68×68, `object-contain` (la imagen completa, sin recortar) sobre fondo `photo` (blanco; gris claro en modo oscuro) con `mix-blend-multiply`, para que el fondo blanco de la foto de la tienda se funda con la caja y todas se vean del mismo tamaño. Si no hay imagen, un icono según el tipo de producto sobre `surface-2`. |
 | Nombre | Máximo dos líneas, y es el enlace a la tienda. |
 | Segunda línea | Dominio de la tienda · nº de registros · en ámbar, «la tienda bloquea la lectura» cuando aplica. |
@@ -48,6 +48,7 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 | Precio | Mono, `tabular-nums`, el número más grande de la fila. Columna de ancho fijo (132 px), igual que el selector de carpeta (92 px): todas las filas miden lo mismo y alinean en columnas. |
 | Variación | Debajo del precio, en una sola línea: el precio anterior tachado (cuando ha bajado) y la píldora con el porcentaje. Sin cambio (o uno que redondea a «0,0 %») no hay píldora. |
 | Sin precio | En vez del precio, la píldora ámbar «Sin precio · edítalo». |
+| Vendido / sin stock | Foto en gris y apagada (`opacity-55 grayscale`), precio en `ink-mut` y, en el sitio de la variación, una píldora neutra (`surface-2`): «Vendido» en segunda mano (Vinted, Wallapop), «Sin stock» en el resto. Igual en la tarjeta de Fotos y en la cesta, donde además el precio va tachado porque no suma. |
 
 **Por debajo de `lg:` (1024 px)** la fila se parte en dos líneas: foto y
 nombre arriba, precio, carpeta y acciones abajo, sin minigráfico. Una sola

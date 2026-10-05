@@ -999,3 +999,41 @@ el precio en la página» en el pase del servidor.
 ### Estado final
 
 Hecho y desplegado. Pendiente para Cowork: B27.
+
+
+## 2026-10-06 (Sesión 35) — Vendido / sin stock en la lista (B27)
+
+### Contexto
+
+Tras B26 un Vinted vendido quedaba con `itm_in_stock = false`, pero la
+interfaz no lo enseñaba. Tony pidió hacerlo en Claude Code en vez de esperar
+a Cowork: decisiones en `DECISIONES.md` (2026-10-06) para revisarlas.
+
+### Cambios
+
+- `stockLabel` (`src/lib/itemText.js`): «Vendido» en Vinted/Wallapop, «Sin
+  stock» en el resto; null si hay stock o no se sabe.
+- `ItemRow` y `ItemTile`: foto en gris y apagada, precio en gris, píldora en
+  el sitio de la variación, franja gris.
+- Cesta (`basket.js`, `Basket.jsx`): lo vendido no suma (`unavailable` en
+  `basketSummary`, fuera del subtotal de su tienda), precio tachado con la
+  píldora, «+N sin stock» en la barra y nota abajo. Sin subtotal en un
+  grupo donde nada suma (salía «0,00 €»).
+- Totales de grupo y de la lista (`itemsTotal` en `itemGroups.js`): tampoco
+  suman lo vendido. Antes «Sin carpeta» decía 21,50 € con la lámpara vendida
+  dentro; ahora 11,50 €.
+- «Copiar para Claude»: «10,00 € · Vendido».
+- `DISENO.md`: franja gris y fila «Vendido / sin stock».
+
+### Verificación
+
+- TDD: tests de `stockLabel` (3), cesta (2), `itemsTotal` (2) y
+  `itemToText` (2, archivo nuevo); 181 tests y build en verde.
+- En producción con la cuenta de pruebas: Lista y Fotos en oscuro, cesta en
+  móvil (375 px) en claro. El Vinted sale apagado con «Vendido», la barra
+  dice «3 artículos · 2 tiendas · +1 sin stock» con 29,00 € (solo Wallapop),
+  el detalle lo tacha y explica que no suma, y «Sin carpeta» suma 11,50 €.
+
+### Estado final
+
+Hecho y desplegado. Para Cowork: revisar la decisión del 2026-10-06.

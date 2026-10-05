@@ -130,7 +130,8 @@ export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMo
                   <h3 className="flex items-baseline gap-2 text-xs font-semibold uppercase tracking-wide text-ink-mut">
                     <span className="truncate">{group.store}</span>
                     <span className="h-px flex-1 bg-line" />
-                    {group.lines.some((l) => l.item.itm_price != null) && (
+                    {/* Sin subtotal si nada del grupo suma (sin precio, o vendido: B27). */}
+                    {group.lines.some((l) => l.item.itm_price != null && l.item.itm_in_stock !== false) && (
                       <b className="flex-none font-mono font-normal normal-case tracking-normal">{formatPrice(group.subtotal)}</b>
                     )}
                   </h3>

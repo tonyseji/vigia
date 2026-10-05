@@ -1132,3 +1132,28 @@ pieza nueva cuando la línea bajo el campo basta).
 **Revisitar:** si Cowork prefiere otro reparto de la fila móvil o quiere el
 minigráfico de vuelta en tablet (hoy solo desde `lg:`).
 
+### 2026-10-06 — Vendido / sin stock en la lista (decidido en Claude Code a petición de Tony)
+Tony pidió resolver B27 directamente, sin pasar por Cowork. Se deja escrito
+aquí para revisarlo.
+**Decisión:**
+1. **Texto:** «Vendido» en segunda mano (Vinted, Wallapop: cada anuncio es
+   una unidad, así que sin stock es que se ha vendido) y «Sin stock» en el
+   resto, la expresión que la app ya usaba («vuelva a haber stock»).
+   `stockLabel` en `src/lib/itemText.js`.
+2. **Cómo se ve:** foto en gris y apagada, precio en gris, píldora neutra en
+   el sitio de la variación y franja gris. Se apaga pero no se esconde: el
+   precio al que se vendió sigue siendo información útil.
+3. **No suma:** ni en la cesta (precio tachado, nota «N vendidos o sin stock
+   no suman») ni en el total de cada grupo de la lista. Esos totales
+   responden a «cuánto costaría», y lo vendido no se puede comprar.
+4. **Se sigue leyendo cada día:** si se cancela la venta o vuelve el stock,
+   salta el aviso de «vuelve a haber stock». Una lectura diaria por artículo
+   no cuesta nada que importe.
+5. «Copiar para Claude» añade «· Vendido» junto al precio.
+**Descartado:** esconder lo vendido o moverlo a una sección aparte (es el
+histórico de algo que el usuario eligió guardar: se queda donde estaba);
+tachar el precio en la lista (en la cesta sí, porque allí significa «no
+suma»); dejar de leerlo (perdería el aviso de vuelta).
+**Revisitar:** si Cowork quiere un filtro «ocultar vendidos» o archivar
+automáticamente lo vendido tras un tiempo.
+
