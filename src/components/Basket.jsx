@@ -51,6 +51,7 @@ export function BasketBar({ summary, picking, onTogglePicking, onOpen }) {
           <button
             type="button"
             onClick={onOpen}
+            aria-label={`Ver cesta: ${countText(summary)}, ${formatPrice(summary.total)}`}
             className="flex min-w-0 flex-1 flex-col items-start rounded text-left outline-none focus-visible:outline-2 focus-visible:outline-accent"
           >
             <span className="truncate text-xs text-ink-mut">{countText(summary)}</span>

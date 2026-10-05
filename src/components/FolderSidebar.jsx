@@ -287,20 +287,25 @@ function FolderRow({
       className={`group flex items-center gap-1 rounded-md pr-1 ${active ? 'bg-accent-soft' : 'hover:bg-surface-2'}`}
       style={{ paddingLeft: indent ? '1.75rem' : '0.5rem' }}
     >
-      {folder && (
+      {/* Sin subcarpetas, un hueco y no un botón invisible: con el teclado
+          era una parada sin nombre que no hacía nada. */}
+      {folder && hasChildren && (
         <button
           type="button"
-          onClick={hasChildren ? onToggle : undefined}
-          aria-label={hasChildren ? (expanded ? 'Contraer' : 'Expandir') : undefined}
-          className={`flex h-5 w-5 flex-none items-center justify-center text-ink-mut outline-none focus-visible:outline-2 focus-visible:outline-accent ${hasChildren ? '' : 'invisible'}`}
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${label}`}
+          className="flex h-5 w-5 flex-none items-center justify-center text-ink-mut outline-none focus-visible:outline-2 focus-visible:outline-accent"
         >
           <IconChevronRight className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </button>
       )}
+      {folder && !hasChildren && <span className="h-5 w-5 flex-none" aria-hidden="true" />}
 
       <button
         type="button"
         onClick={onClick}
+        aria-current={active ? 'true' : undefined}
         className={`flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent ${active ? 'font-medium text-ink' : 'text-ink'}`}
       >
         {icon ?? <IconCarpeta className="h-3.5 w-3.5 flex-none text-ink-mut" />}
@@ -314,7 +319,8 @@ function FolderRow({
           <button
             type="button"
             onClick={onMenuToggle}
-            aria-label="Más opciones"
+            aria-label={`Más opciones de ${label}`}
+            aria-expanded={menuOpen}
             className={`flex h-6 w-6 items-center justify-center rounded text-ink-mut outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent ${menuOpen ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100'}`}
           >
             <IconMasOpciones className="h-4 w-4" />

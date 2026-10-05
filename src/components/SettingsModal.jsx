@@ -18,6 +18,7 @@ const REFRESH_LABELS = {
 export default function SettingsModal({ settings, onSave, onChangePassword, onClose }) {
   const [form, setForm] = useState(settings)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const push = usePushNotifications()
   const [showPassword, setShowPassword] = useState(false)
@@ -45,7 +46,10 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
       setError(result.error)
       return
     }
-    onClose()
+    // Un momento de «Guardado ✓» antes de cerrar: antes se cerraba sin
+    // más y no quedaba claro si había guardado.
+    setSaved(true)
+    setTimeout(onClose, 700)
   }
 
   return (
@@ -69,15 +73,19 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
         </label>
         {form.us_refresh_mode === 'daily' && (
           <label className="flex flex-col gap-1 text-sm text-ink-mut">
-            Hora del pase (0-23)
-            <input
-              type="number"
-              min={0}
-              max={23}
+            Hora del pase (hora de España)
+            {/* El pase compara con la hora de Madrid (migración 007). */}
+            <select
               value={form.us_refresh_hour}
               onChange={(e) => set('us_refresh_hour', e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
-            />
+              className="rounded-lg border border-line bg-surface px-3 py-1.5 font-mono tabular-nums text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {Array.from({ length: 24 }, (_, hour) => (
+                <option key={hour} value={hour}>
+                  {String(hour).padStart(2, '0')}:00
+                </option>
+              ))}
+            </select>
           </label>
         )}
         {settings.us_last_refresh_at && (
@@ -229,10 +237,11 @@ export default function SettingsModal({ settings, onSave, onChangePassword, onCl
         </button>
         <button
           type="submit"
-          disabled={saving}
-          className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+          disabled={saving || saved}
+          aria-live="polite"
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${saved ? 'bg-ok' : 'bg-accent disabled:opacity-60'}`}
         >
-          {saving ? 'Guardando…' : 'Guardar'}
+          {saved ? 'Guardado ✓' : saving ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
     </Dialog>
