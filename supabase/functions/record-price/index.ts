@@ -14,7 +14,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendPush, type PushSubscriptionRow } from "../refresh/push.ts";
 import { alertReasons, buildPushBody, type NotifySettings } from "../refresh/notify.ts";
-import { cleanUrl, itemUpdate, parsePricePayload } from "./record.ts";
+import { cleanUrl, findOwnItem, itemUpdate, parsePricePayload } from "./record.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -76,18 +76,19 @@ Deno.serve(async (req) => {
 
   // El pase de la extension manda el id del articulo que esta leyendo; al
   // guardar una pagina se busca por la URL canonica y por la de la barra
-  // (el articulo pudo guardarse con cualquiera de las dos).
+  // (el articulo pudo guardarse con cualquiera de las dos), y aunque no se
+  // escriban igual que la guardada (findOwnItem). Solo entre los del
+  // usuario: con service_role nunca se escribe en un articulo ajeno.
   let lookup = admin
     .from("items")
     .select("itm_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
     .eq("itm_usr_id", user.id);
   if (data.itemId) lookup = lookup.eq("itm_id", data.itemId);
-  else {
-    const urls = [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null);
-    lookup = lookup.in("itm_url", [...new Set(urls)]);
-  }
-  const { data: existing, error: findError } = await lookup.limit(1).maybeSingle();
+  const { data: found, error: findError } = await lookup;
   if (findError) return json({ error: "No se pudo leer la lista" }, 500);
+  const existing = data.itemId
+    ? found?.[0] ?? null
+    : findOwnItem(found ?? [], [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null));
   // Borrado mientras el pase lo leia: no se vuelve a crear.
   if (data.itemId && !existing) return json({ error: "El articulo ya no esta en la lista" }, 404);
 

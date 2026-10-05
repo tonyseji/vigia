@@ -2,6 +2,8 @@
 // que se escribe en el articulo. Sin Deno ni Supabase, para testearlas con
 // Vitest como refresh/notify.ts.
 
+import { urlKey } from "../save-link/link.ts";
+
 export interface PricePayload {
   url: string;
   /** La de la barra de direcciones, si no es la canonica. */
@@ -60,6 +62,16 @@ export function cleanUrl(raw: string): string {
     if (TRACKING_PARAMS.some((d) => key.toLowerCase().startsWith(d))) u.searchParams.delete(key);
   }
   return u.toString();
+}
+
+/** El articulo propio que ya sea alguna de `urls`, aunque no se escriba
+ * igual: barra final, «www.», parametros de campaña (urlKey, la misma
+ * comparacion que la web y save-link; backlog B25). Si ya habia duplicados
+ * de antes, gana el de la direccion exacta. */
+export function findOwnItem<T extends { itm_url: string }>(items: T[], urls: string[]): T | null {
+  const keys = new Set(urls.map(urlKey).filter((k): k is string => k != null));
+  const same = items.filter((item) => keys.has(urlKey(item.itm_url) ?? ""));
+  return same.find((item) => urls.includes(item.itm_url)) ?? same[0] ?? null;
 }
 
 export interface ExistingItem {

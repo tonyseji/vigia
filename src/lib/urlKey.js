@@ -26,7 +26,8 @@ const IGNORED_PREFIXES = [...TRACKING_PARAMS, 'utm_', '_gl', 'gad_', 'gbraid', '
  * esquema, sin «www.», sin barra final, sin hash, sin parámetros de
  * seguimiento y con el resto ordenados. Los parámetros que quedan se
  * respetan (en algunas tiendas eligen variante, p. ej. `id_c` en Sklum).
- * null si no es una URL. */
+ * null si no es una URL. Copiada en supabase/functions/save-link/link.ts,
+ * que también usa record-price: si se cambia aquí, allí también. */
 export function urlKey(raw) {
   let u
   try {

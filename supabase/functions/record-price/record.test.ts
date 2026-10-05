@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cleanUrl, itemUpdate, parsePricePayload } from './record.ts'
+import { cleanUrl, findOwnItem, itemUpdate, parsePricePayload } from './record.ts'
 
 // Mismo criterio que refresh/notify.test.ts: record.ts no usa nada de Deno.
 
@@ -42,6 +42,30 @@ describe('parsePricePayload', () => {
 describe('cleanUrl', () => {
   it('quita hash y parámetros de seguimiento, conserva el resto', () => {
     expect(cleanUrl('https://t.test/p?utm_source=x&color=rojo&gclid=1#galeria')).toBe('https://t.test/p?color=rojo')
+  })
+})
+
+describe('findOwnItem', () => {
+  const mesa = { itm_id: 'a', itm_url: 'https://www.tienda.test/mesa/' }
+  const silla = { itm_id: 'b', itm_url: 'https://tienda.test/silla?color=rojo' }
+
+  it('encuentra el artículo aunque la dirección no se escriba igual (B25)', () => {
+    expect(findOwnItem([silla, mesa], ['https://tienda.test/mesa?utm_campaign=x'])).toBe(mesa)
+    expect(findOwnItem([silla, mesa], ['http://TIENDA.test/Silla?color=rojo#foto'])).toBe(silla)
+  })
+
+  it('vale con la canónica o con la de la barra', () => {
+    expect(findOwnItem([mesa], ['https://tienda.test/otra', 'https://tienda.test/mesa'])).toBe(mesa)
+  })
+
+  it('un parámetro que no es de seguimiento es otro artículo', () => {
+    expect(findOwnItem([silla], ['https://tienda.test/silla?color=azul'])).toBeNull()
+    expect(findOwnItem([mesa], ['https://tienda.test/sillas'])).toBeNull()
+  })
+
+  it('si ya había duplicados, prefiere el de la dirección exacta', () => {
+    const otraMesa = { itm_id: 'c', itm_url: 'https://tienda.test/mesa' }
+    expect(findOwnItem([mesa, otraMesa], ['https://tienda.test/mesa'])).toBe(otraMesa)
   })
 })
 
