@@ -948,3 +948,54 @@ Tony pidió las dos mejoras pendientes más directas del backlog: B25 y B19.
 Hecho y desplegado. Queda abierto que la extensión cree un artículo propio
 cuando ese artículo ya está en una carpeta compartida por otro (decisión
 para Cowork si llega a molestar).
+
+
+## 2026-10-06 (Sesión 34) — Vinted «sin precio»: el artículo estaba vendido (B26)
+
+### Contexto
+
+Tony pidió mirar B26: el Vinted de la cuenta de pruebas daba «No se encontró
+el precio en la página» en el pase del servidor.
+
+### Investigación
+
+- Se reproducía siempre (4 de 4 llamadas a `scrape`): la ficha llegaba
+  entera (título, foto), sin bloqueo, pero sin JSON-LD ni metadatos de precio.
+  Lo mismo desde `pg_net`, así que no era la IP.
+- Primera hipótesis, que Vinted había quitado el JSON-LD de todas sus fichas:
+  descartada. Otras 6 fichas sacadas del catálogo lo siguen trayendo.
+- La diferencia: en la nuestra `can_buy` e `instant_buy` son `false`, faltan
+  los bloques `buy`/`make_offer`/`ask_seller` y aparece `buyer_item_status`
+  con `"title":"Vendido"`. En la ficha, a la vista: «Vendido». La sesión 31
+  supuso que al venderse la ficha desaparece; no es así.
+- El precio sigue en los datos de React (`self.__next_f.push`), con las
+  comillas escapadas: `"id":"10247399138",…,"price":{"amount":"10",…}`. Por
+  eso el último recurso genérico (`"price": 10`) no lo cogía.
+
+### Cambios
+
+- `scrape/extract.ts`, caso Vinted en `domainSpecific`: si no hay precio,
+  lo saca del objeto con el id de la URL (sin cruzar el comienzo de otro
+  objeto, para no coger el de otro artículo de la página), y si el lateral
+  lleva `buyer_item_status` de ese id, `inStock: false`.
+- Desplegadas `scrape` v9, `refresh` v8 y `save-link` v3 (las tres usan el
+  extractor; lo único que cambia respecto a lo desplegado es esto y lo de
+  la sesión 33).
+- `TIENDAS.md` (Vinted) y backlog: B26 cerrado, **B27** nuevo (la lista no
+  enseña «Vendido»/«sin stock»; decisión de diseño para Cowork).
+
+### Verificación
+
+- TDD: 5 tests nuevos (precio del artículo de la URL, decimales, nunca el
+  de otro artículo, vendido sin stock, aviso de otro artículo no cuenta),
+  en rojo y luego en verde; 172 tests y build en verde.
+- Con el HTML real (2 MB): la vendida da 10 € sin stock en ~50 ms; una
+  normal sigue saliendo por JSON-LD (15 €, en stock).
+- En producción con la cuenta de pruebas: `scrape` da 10 €/sin stock para la
+  vendida, 15 €/en stock para otra y Wallapop 29 € igual; «Actualizar»
+  (`refresh`) da `updated: 2, failed: 0` y el Vinted queda sin error y con
+  `itm_in_stock = false`. `save-link` responde 401 sin clave.
+
+### Estado final
+
+Hecho y desplegado. Pendiente para Cowork: B27.

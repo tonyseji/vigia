@@ -308,6 +308,30 @@ function domainSpecific(html: string, url: string, r: Extracted) {
     if (av) r.inStock = !/no disponible|not available|unavailable|agotado/i.test(av[1]);
     else r.inStock ??= /a-color-success[^>]*>\s*(En stock|Disponible)/i.test(html) ? true : undefined;
   }
+  // Vinted, al venderse un articulo, deja la ficha pero le quita el JSON-LD
+  // y los botones de compra (backlog B26). El precio sigue en los datos de
+  // React (self.__next_f.push), con las comillas escapadas, y el lateral
+  // lleva el aviso de estado «Vendido» (buyer_item_status). Siempre del
+  // articulo de la URL, nunca de otro de la pagina: entre su id y su precio
+  // no puede empezar otro objeto.
+  const vintedId = /(^|\.)vinted\./i.test(host) ? new URL(url).pathname.match(/\/items\/(\d+)/)?.[1] : undefined;
+  if (vintedId) {
+    const data = html.replace(/\\"/g, '"');
+    if (!r.price) {
+      const m = data.match(new RegExp(
+        `[{,]"id":"?${vintedId}"?,(?:(?![{,]"id":)[\\s\\S]){0,1000}?"price":\\{"amount":"(\\d+(?:\\.\\d+)?)","currency_code":"([A-Z]{3})"`,
+      ));
+      const price = m ? Number(m[1]) : NaN;
+      if (price > 0) {
+        r.price = price;
+        r.currency = m![2];
+        r.source = "vinted";
+      }
+    }
+    if (new RegExp(`"data":\\{"item_id":"${vintedId}"[^}]*\\},"exposures":\\[[^\\]]*\\],"name":"buyer_item_status"`).test(data)) {
+      r.inStock = false;
+    }
+  }
 }
 
 export function extractFromHtml(html: string, url: string): Extracted {

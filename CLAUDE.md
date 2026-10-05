@@ -104,8 +104,9 @@ bloqueadas en `store_rules` (migración 022). Probado con cuenta de pruebas prop
 de artículo entre 640 y 1000px (título oculto). Sesión 32: prueba completa como usuario; diálogo común
 (Escape, sin `confirm()`), fila móvil más densa, nombre legible para tiendas bloqueadas, campo de añadir más
 tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Sesión 33: la extensión ya no
-duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin precio fue un fallo puntual (B19); Vinted
-falla en el pase del servidor (B26, sin investigar). Detalle en `docs/PROGRESO.md` (sesiones 17 a 33) y
+duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin precio fue un fallo puntual (B19). Sesión 34: Vinted «fallaba» porque
+el artículo estaba vendido; el extractor lee el precio sin JSON-LD y lo marca sin stock (B26); enseñarlo en la lista,
+para Cowork (B27). Detalle en `docs/PROGRESO.md` (sesiones 17 a 34) y
 `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados

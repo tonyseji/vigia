@@ -17,7 +17,7 @@
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
 | Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |
 | Maisons du Monde | ⚠️ | Extensión de Chrome (pase diario) o botón «Guardar en Vigía» | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el navegador sí (JSON-LD de la página abierta). Con la extensión, precio diario mientras Chrome esté abierto (`extension/README.md`). Ver «Maisons du Monde: qué se probó». |
-| Vinted | ✅ | JSON-LD | Probado el 2026-10-04 desde la IP de Postgres (`pg_net`), no desde la Edge Function. Segunda mano: al venderse, la ficha desaparece. |
+| Vinted | ✅ | JSON-LD (vendidos: datos de React) | Probado el 2026-10-04 desde la IP de Postgres y el 2026-10-06 desde la Edge Function. Segunda mano: al venderse, la ficha **no** desaparece; Vinted le quita el JSON-LD y los botones de compra y pone «Vendido» (`buyer_item_status`). El extractor saca entonces el precio de los datos de React (atado al id de la URL) y marca sin stock (B26). |
 | Wallapop | ✅ | JSON-LD | Igual que Vinted (precio y `availability`). Segunda mano. |
 | Shein | ❌ | — | Captcha propio (`/risk/challenge?captcha_type=909`) en búsqueda y categorías desde Supabase. Bloqueada en `store_rules` (migración 022): se guarda con precio a mano. No probado si una ficha abierta en el navegador trae JSON-LD. |
 | AliExpress | ❌ | — | Una ficha pegada en la app se guardó sin precio (2026-10-04); el precio lo pinta JavaScript. Los enlaces de compartir son `a.aliexpress.com/_…` (redirigen). Bloqueada (migración 022). |

@@ -75,6 +75,50 @@ describe('extractFromHtml', () => {
     expect(r.title).toBe('Producto sin datos estructurados')
     expect(r.price).toBeUndefined()
   })
+
+  // Vinted dejo de publicar JSON-LD en octubre de 2026 (B26): el precio solo
+  // va en los datos de React, dentro de un string con las comillas escapadas.
+  const vinted = (objects: string) => String.raw`<html><head>
+    <meta property="og:title" content="Lámpara IKEA tomelilla en perfecto estado | Vinted">
+    <meta property="og:image" content="https://images1.vinted.net/t/foto.webp">
+    </head><body><p>10,00 €</p><script>self.__next_f.push([1,"e3:[\"$\",\"$Le4\",null,{\"value\":${objects}}]\n"])</script></body></html>`
+  const item = (id: string, amount: string) =>
+    String.raw`{\"id\":\"${id}\",\"seller_id\":\"33660104\",\"business\":false,\"buyerReservation\":null,\"sellerReservation\":null,\"price\":{\"amount\":\"${amount}\",\"currency_code\":\"EUR\"},\"title\":\"Lámpara\"}`
+  const url = 'https://www.vinted.es/items/10247399138-lampara-ikea-tomelilla-en-perfecto-estado'
+
+  it('Vinted: lee el precio del artículo de la URL en los datos de React', () => {
+    const r = extractFromHtml(vinted(item('10247399138', '10')), url)
+    expect(r.price).toBe(10)
+    expect(r.currency).toBe('EUR')
+    expect(r.source).toBe('vinted')
+    expect(r.title).toBe('Lámpara IKEA tomelilla en perfecto estado | Vinted')
+  })
+
+  it('Vinted: precio con decimales', () => {
+    expect(extractFromHtml(vinted(item('10247399138', '12.5')), url).price).toBe(12.5)
+  })
+
+  it('Vinted: nunca coge el precio de otro artículo de la página', () => {
+    expect(extractFromHtml(vinted(item('999', '50')), url).price).toBeUndefined()
+    const both = `[${item('999', '50')},${item('10247399138', '10')}]`
+    expect(extractFromHtml(vinted(both), url).price).toBe(10)
+  })
+
+  // Al venderse, Vinted deja la ficha pero quita el JSON-LD y los botones de
+  // compra, y pone en el lateral el aviso «Vendido» (buyer_item_status).
+  const status = (id: string) =>
+    String.raw`{\"data\":{\"item_id\":\"${id}\",\"seller_id\":\"33660104\",\"theme\":\"SUCCESS\",\"title\":\"Vendido\"},\"exposures\":[],\"name\":\"buyer_item_status\",\"section\":\"sidebar\",\"type\":\"buyer_item_status\"}`
+
+  it('Vinted: un artículo vendido tiene precio pero no stock', () => {
+    const r = extractFromHtml(vinted(`[${item('10247399138', '10')},${status('10247399138')}]`), url)
+    expect(r.price).toBe(10)
+    expect(r.inStock).toBe(false)
+  })
+
+  it('Vinted: el aviso de estado de otro artículo no cuenta', () => {
+    const r = extractFromHtml(vinted(`[${item('10247399138', '10')},${status('999')}]`), url)
+    expect(r.inStock).toBeUndefined()
+  })
 })
 
 describe('isBotPage', () => {
