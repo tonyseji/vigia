@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { titleFromUrl, displayTitle, normalizeSearch } from '../itemText.js'
+import { titleFromUrl, displayTitle, normalizeSearch, stockLabel } from '../itemText.js'
 
 describe('titleFromUrl', () => {
   it('saca el nombre de una ficha de Shein', () => {
@@ -43,5 +43,26 @@ describe('normalizeSearch', () => {
   it('ignora tildes y mayúsculas', () => {
     expect(normalizeSearch('Lámpara de PIE')).toBe('lampara de pie')
     expect(normalizeSearch('lampara de pie').includes(normalizeSearch('LÁMPARA'))).toBe(true)
+  })
+})
+
+describe('stockLabel', () => {
+  const item = (url, inStock) => ({ itm_url: url, itm_in_stock: inStock })
+
+  it('nada si hay stock o no se sabe', () => {
+    expect(stockLabel(item('https://www.ikea.com/es/p', true))).toBeNull()
+    expect(stockLabel(item('https://www.ikea.com/es/p', null))).toBeNull()
+    expect(stockLabel(item('https://www.ikea.com/es/p', undefined))).toBeNull()
+  })
+
+  it('«Vendido» en segunda mano, donde cada anuncio es una unidad', () => {
+    expect(stockLabel(item('https://www.vinted.es/items/1-lampara', false))).toBe('Vendido')
+    expect(stockLabel(item('https://es.wallapop.com/item/lampara-1', false))).toBe('Vendido')
+    expect(stockLabel(item('https://www.vinted.fr/items/1', false))).toBe('Vendido')
+  })
+
+  it('«Sin stock» en el resto de tiendas', () => {
+    expect(stockLabel(item('https://www.ikea.com/es/p', false))).toBe('Sin stock')
+    expect(stockLabel(item('no es una url', false))).toBe('Sin stock')
   })
 })

@@ -59,3 +59,20 @@ export function normalizeSearch(text) {
     .replace(/\p{M}/gu, '')
     .toLowerCase()
 }
+
+// Segunda mano: cada anuncio es una sola unidad, así que sin stock es que se
+// ha vendido (docs/TIENDAS.md, B26).
+const SECOND_HAND = /(^|\.)(vinted|wallapop)\./i
+
+/** «Vendido» o «Sin stock» si la última lectura dijo que no se puede
+ * comprar; null si hay stock o no se sabe (B27). */
+export function stockLabel(item) {
+  if (item.itm_in_stock !== false) return null
+  let host = ''
+  try {
+    host = new URL(item.itm_url).hostname
+  } catch {
+    // sin dirección válida: no se sabe qué tienda es
+  }
+  return SECOND_HAND.test(host) ? 'Vendido' : 'Sin stock'
+}

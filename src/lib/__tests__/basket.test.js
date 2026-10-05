@@ -52,6 +52,7 @@ describe('basketSummary', () => {
       totalThen: 250.5,
       totalMin: 210.5,
       unpriced: 0,
+      unavailable: 0,
       stores: 1,
     })
   })
@@ -65,6 +66,20 @@ describe('basketSummary', () => {
     expect(s.total).toBe(10)
     expect(s.units).toBe(4)
     expect(s.unpriced).toBe(1)
+  })
+
+  it('lo vendido o sin stock no suma (no se puede comprar), pero se cuenta aparte', () => {
+    const sold = { ...item('b', 25, hist(30, 25)), itm_in_stock: false }
+    const s = basketSummary([
+      { item: item('a', 10, hist(10)), qty: 1 },
+      { item: sold, qty: 2 },
+    ])
+    expect(s.total).toBe(10)
+    expect(s.totalThen).toBe(10)
+    expect(s.totalMin).toBe(10)
+    expect(s.units).toBe(3)
+    expect(s.unavailable).toBe(1)
+    expect(s.unpriced).toBe(0)
   })
 
   it('sin histórico, el precio de hoy hace de referencia y de mínimo', () => {
@@ -92,6 +107,14 @@ describe('basketSummary', () => {
 })
 
 describe('groupByStore', () => {
+  it('lo vendido no entra en el subtotal de su tienda', () => {
+    const lines = [
+      { item: item('a', 10, [], 'https://www.vinted.es/items/1'), qty: 1 },
+      { item: { ...item('b', 40, [], 'https://www.vinted.es/items/2'), itm_in_stock: false }, qty: 1 },
+    ]
+    expect(groupByStore(lines)[0].subtotal).toBe(10)
+  })
+
   it('agrupa por tienda con subtotal, la más cara primero', () => {
     const lines = [
       { item: item('a', 10, [], 'https://www.ikea.com/x'), qty: 1 },

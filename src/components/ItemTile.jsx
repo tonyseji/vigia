@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.js'
-import { displayTitle } from '../lib/itemText.js'
+import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
 
@@ -48,8 +48,11 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
   const pct = item.itm_price != null && reference != null ? priceChangePct(item.itm_price, reference) : null
   const manualStatus = manualPriceStatus(item)
   const title = displayTitle(item)
-  const state = item.itm_price == null ? 'n' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
-  const stripeColor = state === 'd' ? 'var(--color-ok)' : state === 'u' ? 'var(--color-bad)' : state === 'n' ? 'var(--color-warn)' : 'transparent'
+  // Vendido o sin stock (B27): foto y precio apagados, la etiqueta ocupa el
+  // sitio de la variación y la franja pasa a gris (subir o bajar ya no cuenta).
+  const stock = item.itm_price != null ? stockLabel(item) : null
+  const state = item.itm_price == null ? 'n' : stock ? 's' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
+  const stripeColor = { d: 'var(--color-ok)', u: 'var(--color-bad)', n: 'var(--color-warn)', s: 'var(--color-ink-mut)' }[state] ?? 'transparent'
 
   return (
     <article
@@ -62,7 +65,11 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           // Cuadrada (casi todas las tiendas publican la foto 1:1) y con
           // multiply para que el fondo blanco de la foto se funda con la caja.
           // Absoluta: una foto vertical no puede estirar el cuadrado.
-          <img src={item.itm_image_url} alt="" className="absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply" />
+          <img
+            src={item.itm_image_url}
+            alt=""
+            className={`absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply ${stock ? 'opacity-55 grayscale' : ''}`}
+          />
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-9 w-9 text-ink-mut opacity-80" />
         )}
@@ -121,8 +128,10 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
             // Alto fijo (precio + píldora) para que el precio quede a la misma
             // altura en todas las tarjetas, tengan variación o no.
             <div className="flex min-h-[46px] flex-none flex-col gap-1">
-              <span className="font-mono text-[14.5px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
-              {showPct(pct) && (
+              <span className={`font-mono text-[14.5px] font-semibold tabular-nums ${stock ? 'text-ink-mut' : ''}`}>{formatPrice(item.itm_price)}</span>
+              {stock ? (
+                <span className="w-fit rounded-md bg-surface-2 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-mut">{stock}</span>
+              ) : showPct(pct) && (
                 <span
                   className="w-fit rounded-md px-1.5 py-0.5 font-mono text-[10.5px] tabular-nums"
                   style={{

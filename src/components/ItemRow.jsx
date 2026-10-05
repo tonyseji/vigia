@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MANUAL_HINT, BROWSER_HINT, manualPriceStatus } from '../lib/browserImport.js'
 import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.js'
 import { itemToText, copyToClipboard } from '../lib/clipboard.js'
-import { displayTitle } from '../lib/itemText.js'
+import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
 import Sparkline from './Sparkline.jsx'
 import EditItemModal from './EditItemModal.jsx'
@@ -52,8 +52,11 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
   const pct = item.itm_price != null && reference != null ? priceChangePct(item.itm_price, reference) : null
   const manualStatus = manualPriceStatus(item)
   const title = displayTitle(item)
-  const state = item.itm_price == null ? 'n' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
-  const stripeColor = state === 'd' ? 'var(--color-ok)' : state === 'u' ? 'var(--color-bad)' : state === 'n' ? 'var(--color-warn)' : 'transparent'
+  // Vendido o sin stock (B27): foto y precio apagados, la etiqueta ocupa el
+  // sitio de la variación y la franja pasa a gris (subir o bajar ya no cuenta).
+  const stock = item.itm_price != null ? stockLabel(item) : null
+  const state = item.itm_price == null ? 'n' : stock ? 's' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
+  const stripeColor = { d: 'var(--color-ok)', u: 'var(--color-bad)', n: 'var(--color-warn)', s: 'var(--color-ink-mut)' }[state] ?? 'transparent'
 
   return (
     <article
@@ -75,7 +78,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
       )}
 
       <div
-        className={`order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'}`}
+        className={`order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'} ${stock ? 'opacity-55 grayscale' : ''}`}
       >
         {item.itm_image_url ? (
           // multiply: el fondo blanco de la foto de la tienda se funde con la
@@ -141,10 +144,12 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
           </button>
         ) : (
           <>
-            <span className="font-mono text-[17px] font-semibold tabular-nums">{formatPrice(item.itm_price)}</span>
+            <span className={`font-mono text-[17px] font-semibold tabular-nums ${stock ? 'text-ink-mut' : ''}`}>{formatPrice(item.itm_price)}</span>
             {/* Variación y precio anterior en una sola línea: con el tachado
                 debajo, las filas con bajada quedaban más altas que el resto. */}
-            {showPct(pct) && (
+            {stock ? (
+              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11.5px] font-medium text-ink-mut">{stock}</span>
+            ) : showPct(pct) && (
               <div className="flex items-center gap-1.5">
                 {pct < 0 && reference != null && (
                   <span className="font-mono text-[11px] text-ink-mut line-through">{formatPrice(reference)}</span>

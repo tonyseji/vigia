@@ -3,7 +3,7 @@ import { formatPrice } from '../lib/format.js'
 import { groupByStore } from '../lib/basket.js'
 import { IconCesta, ProductIcon } from './icons/index.jsx'
 import { ConfirmDialog } from './Dialog.jsx'
-import { displayTitle } from '../lib/itemText.js'
+import { displayTitle, stockLabel } from '../lib/itemText.js'
 
 function formatDiff(diff) {
   return `${diff > 0 ? '+' : ''}${formatPrice(diff)}`
@@ -33,6 +33,7 @@ function countText(summary) {
   const parts = [`${summary.units} artículo${summary.units === 1 ? '' : 's'}`]
   if (summary.stores > 1) parts.push(`${summary.stores} tiendas`)
   if (summary.unpriced > 0) parts.push(`+${summary.unpriced} sin precio`)
+  if (summary.unavailable > 0) parts.push(`+${summary.unavailable} sin stock`)
   return parts.join(' · ')
 }
 
@@ -163,6 +164,13 @@ export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMo
                   {summary.unpriced === 1 ? '1 artículo sin precio no suma.' : `${summary.unpriced} artículos sin precio no suman.`}
                 </dd>
               )}
+              {summary.unavailable > 0 && (
+                <dd className="col-span-2 text-xs text-ink-mut">
+                  {summary.unavailable === 1
+                    ? '1 artículo vendido o sin stock no suma.'
+                    : `${summary.unavailable} artículos vendidos o sin stock no suman.`}
+                </dd>
+              )}
             </dl>
           )}
           <div className="flex items-center justify-between gap-2">
@@ -199,12 +207,13 @@ export function BasketSheet({ lines, summary, onSetQty, onStep, onClear, onAddMo
 
 function BasketLine({ line, onSetQty, onStep }) {
   const { item, qty } = line
+  const stock = item.itm_price != null ? stockLabel(item) : null
   const stepClass =
     'grid h-7 w-7 place-items-center rounded-md border border-line text-ink outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40'
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-0.5' : 'bg-surface-2'}`}
+        className={`grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-0.5' : 'bg-surface-2'} ${stock ? 'opacity-55 grayscale' : ''}`}
       >
         {item.itm_image_url ? (
           <img src={item.itm_image_url} alt="" className="h-full w-full object-contain mix-blend-multiply" />
@@ -243,6 +252,12 @@ function BasketLine({ line, onSetQty, onStep }) {
       <div className="flex flex-none flex-col items-end">
         {item.itm_price == null ? (
           <span className="rounded-md bg-warn-soft px-1.5 py-0.5 text-[10.5px] text-warn">Sin precio</span>
+        ) : stock ? (
+          // No suma al total (basketSummary): el precio tachado lo dice.
+          <>
+            <span className="font-mono text-sm tabular-nums text-ink-mut line-through">{formatPrice(item.itm_price * qty)}</span>
+            <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-mut">{stock}</span>
+          </>
         ) : (
           <>
             <span className="font-mono text-sm font-semibold tabular-nums">{formatPrice(item.itm_price * qty)}</span>

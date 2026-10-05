@@ -26,21 +26,30 @@ function historyPrices(item) {
   return (item.price_history ?? []).map((h) => h.ph_price).filter((p) => p != null)
 }
 
+/** Vendido o sin stock en la última lectura: no se puede comprar. */
+const unavailable = (item) => item.itm_in_stock === false
+
 /** Totales de la cesta. «Al guardarlos» usa el primer precio registrado de
  * cada artículo (el mismo que la variación de cada fila); «mínimo» el más
- * bajo registrado. Los artículos sin precio no suman ninguna de las tres. */
+ * bajo registrado. Los artículos sin precio y los vendidos o sin stock (B27)
+ * no suman ninguna de las tres: se cuentan aparte. */
 export function basketSummary(lines) {
   let units = 0
   let total = 0
   let totalThen = 0
   let totalMin = 0
   let unpriced = 0
+  let unavailableCount = 0
   const stores = new Set()
   for (const { item, qty } of lines) {
     units += qty
     stores.add(storeOf(item.itm_url))
     if (item.itm_price == null) {
       unpriced += 1
+      continue
+    }
+    if (unavailable(item)) {
+      unavailableCount += 1
       continue
     }
     const history = historyPrices(item)
@@ -54,6 +63,7 @@ export function basketSummary(lines) {
     totalThen: round2(totalThen),
     totalMin: round2(totalMin),
     unpriced,
+    unavailable: unavailableCount,
     stores: stores.size,
   }
 }
@@ -67,7 +77,7 @@ export function groupByStore(lines) {
     if (!groups.has(store)) groups.set(store, { store, lines: [], subtotal: 0 })
     const group = groups.get(store)
     group.lines.push(line)
-    group.subtotal = round2(group.subtotal + (line.item.itm_price ?? 0) * line.qty)
+    if (!unavailable(line.item)) group.subtotal = round2(group.subtotal + (line.item.itm_price ?? 0) * line.qty)
   }
   return [...groups.values()].sort((a, b) => b.subtotal - a.subtotal || a.store.localeCompare(b.store, 'es'))
 }
