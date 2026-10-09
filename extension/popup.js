@@ -16,8 +16,17 @@ function line(text, className = '') {
   return p
 }
 
+/** Sin conexión con Vigía no se sabe ni si hay sesión: se dice y ya. */
+function showError(status) {
+  if (!status?.error) return false
+  $('offline').textContent = status.error
+  $('offline').hidden = false
+  return true
+}
+
 async function init() {
   const status = await send({ type: 'status' })
+  if (showError(status)) return
   if (!status.user) {
     $('login').hidden = false
     $('email').focus()
@@ -109,7 +118,9 @@ $('login').addEventListener('submit', async (e) => {
     return
   }
   $('password').value = ''
-  showApp(await send({ type: 'status' }))
+  const status = await send({ type: 'status' })
+  if (showError(status)) return
+  showApp(status)
   saveCurrentTab()
 })
 

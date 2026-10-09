@@ -18,7 +18,9 @@ chrome.runtime.onStartup.addListener(() => {
   chrome.alarms.create('pase', { delayInMinutes: 2, periodInMinutes: 60 })
 })
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'pase') runPassIfDue()
+  // Sin conexión no se puede ni renovar la sesión: se reintenta en la
+  // siguiente alarma.
+  if (alarm.name === 'pase') runPassIfDue().catch(() => {})
 })
 
 // Un pase que falló entero (sin conexión, sesión caducada) no cuenta: se
@@ -133,7 +135,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     login: async () => {
       try {
         const user = await login(message.email, message.password)
-        runPassIfDue()
+        runPassIfDue().catch(() => {})
         return { user }
       } catch (err) {
         return { error: err.message }
@@ -152,6 +154,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   const handler = handlers[message?.type]
   if (!handler) return false
-  handler().then(sendResponse)
+  // Si algo falla (sin conexión), el popup recibe el motivo en vez de
+  // quedarse sin respuesta.
+  handler()
+    .catch((err) => ({ error: err instanceof Error ? err.message : String(err) }))
+    .then(sendResponse)
   return true
 })

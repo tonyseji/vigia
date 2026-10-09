@@ -1171,3 +1171,20 @@ decisión (B29 sigue abierto):** cómo dar a Amazon una ubicación española de
 forma estable — guardar en BD un par de cookies con «Enviar a 28001»
 (sacadas una vez, renovar al año; tabla sin `user_id`, excepción a la regla
 `_own`: para Cowork) o pasar Amazon a la extensión de Chrome.
+
+### Tercera parte: «Failed to fetch» en la extensión
+
+Tony mandó el error de `chrome://extensions`: `Uncaught (in promise)
+TypeError: Failed to fetch` en `api.js` (`authRequest`, renovar la sesión).
+Es un fallo de red puntual (el servidor de Auth respondía bien al mirarlo),
+pero la extensión no lo recogía: en la alarma quedaba como error sin
+capturar, y si pasaba al abrir el icono el popup no recibía respuesta y se
+quedaba en blanco.
+
+- `api.js`: `netFetch` convierte el fallo de red en «No hay conexión con
+  Vigía. Revisa la conexión y vuelve a probar.».
+- `background.js`: la alarma y el login capturan el error de
+  `runPassIfDue` (se reintenta en la siguiente alarma); los mensajes del
+  popup responden siempre, con `{ error }` si algo falla.
+- `popup`: enseña ese error en vez de quedarse en blanco. Versión 1.0.1;
+  hay que recargarla en `chrome://extensions`.

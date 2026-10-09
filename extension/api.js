@@ -8,10 +8,22 @@
 
 export const APP_URL = 'https://vigia-list.vercel.app'
 
+export const OFFLINE = 'No hay conexión con Vigía. Revisa la conexión y vuelve a probar.'
+
+/** fetch con un error que se entiende: sin red (o al despertar el ordenador,
+ * antes de que vuelva la conexión) fetch falla con «Failed to fetch». */
+async function netFetch(url, options) {
+  try {
+    return await fetch(url, options)
+  } catch {
+    throw new Error(OFFLINE)
+  }
+}
+
 async function getConfig() {
   const { config } = await chrome.storage.local.get('config')
   if (config) return config
-  const res = await fetch(`${APP_URL}/extension-config.json`, { cache: 'no-store' })
+  const res = await netFetch(`${APP_URL}/extension-config.json`, { cache: 'no-store' })
   if (!res.ok) throw new Error('No se pudo conectar con Vigía. Revisa la conexión.')
   const fresh = await res.json()
   await chrome.storage.local.set({ config: fresh })
@@ -20,7 +32,7 @@ async function getConfig() {
 
 async function authRequest(grantType, body) {
   const config = await getConfig()
-  const res = await fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=${grantType}`, {
+  const res = await netFetch(`${config.supabaseUrl}/auth/v1/token?grant_type=${grantType}`, {
     method: 'POST',
     headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -85,7 +97,7 @@ async function authedFetch(path, options = {}) {
   const session = await getSession()
   if (!session) throw new Error('Inicia sesión en la extensión.')
   const config = await getConfig()
-  return fetch(`${config.supabaseUrl}${path}`, {
+  return netFetch(`${config.supabaseUrl}${path}`, {
     ...options,
     headers: {
       apikey: config.anonKey,
