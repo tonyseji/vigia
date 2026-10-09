@@ -1178,7 +1178,9 @@ tiendas marcadas como bloqueadas (`itm_is_manual`).
    venga (ASIN).
 **Descartado de momento:** cookies con «Enviar a 28001» para que el servidor
 vea Amazon desde España (probado que funciona desde `pg_net`, pero obtener
-y renovar las cookies de forma automática no salió fiable) y dar a la
-extensión permiso para leer cualquier web (`https://*/*`), que haría el
-relevo válido para cualquier tienda: es un permiso amplio y lo decide Tony.
-Hoy el pase puede leer Maisons du Monde, Kave Home y Amazon.es.
+y renovar las cookies de forma automática no salió fiable) .
+**Permiso para cualquier tienda:** Tony lo aprobó el mismo día («tiene que
+ser cómodo»). La extensión (1.2.0) lleva `https://*/*` en
+`host_permissions`, así el relevo vale para cualquier tienda sin añadirlas
+a mano. Solo lee las pestañas que abre el pase, con direcciones de la
+lista de Vigía.

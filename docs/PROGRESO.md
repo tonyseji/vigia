@@ -1228,7 +1228,10 @@ Tony: «todo debe funcionar; si algo no va, que vaya otra cosa».
   Extensión 1.1.0.
 - Tests: 216 en verde; build en verde.
 
+- Tony lo probó: la mesa ya tiene precio. Aprobó el permiso para cualquier
+  tienda: `host_permissions` con `https://*/*`, extensión 1.2.0.
+
 ### Estado final
 
-Hecho y subido. Tony tiene que recargar la extensión (aceptar el permiso de
-Amazon si Chrome lo pide) y borrar dos de las tres mesas.
+Hecho, subido y probado por Tony con la mesa de Amazon. Tiene que recargar
+la extensión para la 1.2.0 (Chrome puede pedir aceptar el permiso nuevo).

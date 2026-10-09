@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Vigía",
   "short_name": "Vigía",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Guarda en Vigía el producto que estás viendo y actualiza cada día el precio de las tiendas que no dejan leerlo desde el servidor.",
   "icons": { "16": "icons/icon.png", "32": "icons/icon.png", "48": "icons/icon.png", "128": "icons/icon.png" },
   "action": {
@@ -15,8 +15,6 @@
   "host_permissions": [
     "https://vigia-list.vercel.app/*",
     "https://ovmnzlbcmuppqctkyngi.supabase.co/*",
-    "https://www.maisonsdumonde.com/*",
-    "https://kavehome.com/*",
-    "https://www.amazon.es/*"
+    "https://*/*"
   ]
 }

@@ -40,7 +40,7 @@ el botón de recargar de la tarjeta de Vigía.
 
 | Archivo | Qué hace |
 |---|---|
-| `manifest.json` | Permisos: `activeTab` + `scripting` para leer la pestaña al pulsar el icono; `host_permissions` para las tiendas del pase, Supabase y la web. |
+| `manifest.json` | Permisos: `activeTab` + `scripting` para leer la pestaña al pulsar el icono; `host_permissions` para el pase (cualquier tienda `https`), Supabase y la web. |
 | `background.js` | Service worker. Pase diario (`chrome.alarms`), guardar la pestaña, sesión. |
 | `api.js` | Login con email y contraseña contra Supabase Auth, renovación del token, lectura de artículos y llamada a `record-price`. |
 | `extract.js` | Lee JSON-LD / Open Graph de la página, y la ficha de Amazon (no tiene JSON-LD). Misma lógica que el botón de marcadores (`src/lib/browserImport.js`). |
@@ -62,7 +62,7 @@ el botón de recargar de la tarjeta de Vigía.
   una redirección no cree un artículo duplicado. Entre artículo y artículo
   espera 4–8 s. Si la tienda pide captcha, ese artículo se salta y queda
   anotado en la ventana del icono.
-- **Tienda nueva en el pase:** añadir su dominio a `host_permissions` en
-  `manifest.json` (sin permiso, el pase no puede leer la pestaña; guardar
-  con el icono sí funciona en cualquier tienda, con `activeTab`). Hoy:
-  Maisons du Monde, Kave Home y Amazon.es.
+- **Cualquier tienda en el pase:** `host_permissions` incluye `https://*/*`
+  (decisión de Tony, 2026-10-09): el pase puede leer la ficha de cualquier
+  tienda sin tocar el manifiesto. Solo lee las pestañas que abre él mismo,
+  con las direcciones de la lista de Vigía.
