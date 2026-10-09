@@ -1094,3 +1094,56 @@ pinta en gris y no lo suma).
 ### Estado final
 
 Hecho, desplegado y verificado con datos reales.
+
+## 2026-10-09 (Sesión 37) — Amazon sin precio con el enlace corto de la app (B29)
+
+### Contexto
+
+Tony añadió una mesa de centro de Amazon y se quedó sin precio ni foto, con
+el título acabado en «: Amazon.es: Hogar». La pegó desde la app de Amazon,
+que comparte enlaces cortos: `https://amzn.eu/d/0dkUtoav`.
+
+### Causa
+
+Todo lo específico de Amazon en `scrape/extract.ts` (salir por `pg_net`, el
+control del interstitial sin `productTitle`, leer precio, foto y stock del
+HTML) se activa con `/amazon\./` sobre el host de la URL **pegada**. Con
+`amzn.eu` no se activaba nada: el `fetch` seguía la redirección hasta la
+ficha, pero se leía como una página cualquiera (Amazon no tiene JSON-LD),
+así que solo salía el `<title>`. Además se guardaba `amzn.eu` como
+dirección: la tienda se veía como «amzn.eu» y ni la comparación de
+duplicados ni la extensión la reconocían como la ficha de Amazon.
+
+### Cambios
+
+- `expandShortLink` en `scrape/extract.ts`: para `amzn.eu`, `amzn.to`,
+  `amzn.com`, `amzn.asia` y `a.co` sigue la redirección (GET con
+  `redirect: "manual"`; a HEAD amzn.eu responde 404) y deja la ficha de
+  Amazon como `/dp/ASIN`, sin los parámetros de compartir. Si falla, la
+  dirección queda como estaba. `extractFromUrl` la usa siempre, así que
+  `refresh` también lee bien los enlaces cortos ya guardados.
+- `scrape` expande antes de mirar `store_rules` y devuelve `url`; la web
+  (`useItems.addItem`) guarda esa dirección y vuelve a comprobar duplicados
+  con ella. `save-link` (atajo de iOS) expande antes de comparar y guardar.
+- Desplegadas con la CLI (`--no-verify-jwt --use-api`): `scrape`, `refresh`
+  y `save-link`.
+
+### Verificación
+
+- TDD: 4 tests de `expandShortLink` con `fetch` simulado (fallaban antes);
+  198 tests y build en verde; CI en verde.
+- El enlace real redirige a `https://www.amazon.es/dp/B0GWHLD5NG`. Con el
+  HTML completo de esa ficha el extractor da 185 €, en stock, título del
+  producto y foto. Una petición desde la máquina local recibió una versión
+  recortada sin precio (Amazon varía la respuesta); en producción Amazon va
+  por `pg_net`.
+- **No verificado en producción**: la sesión de la cuenta de pruebas había
+  caducado en el navegador integrado y no se permitió tocar el artículo de
+  Tony por SQL. El artículo existente sigue con `amzn.eu`, sin foto ni
+  precio: Tony tiene que borrarlo y volver a pegar el enlace (o pulsar
+  Actualizar, que lee el precio pero no cambia dirección, título ni foto).
+
+### Estado final
+
+Hecho y desplegado. Falta que Tony vuelva a añadir la mesa y confirme que
+sale con precio.

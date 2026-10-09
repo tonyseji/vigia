@@ -14,7 +14,7 @@
 | IKEA | ✅ | JSON-LD | Sin problemas conocidos. |
 | Sklum | ✅ | JSON-LD | Lo que tarda en llegar lo publica como `BackOrder` («entrega estimada…»): cuenta como en stock (B28). |
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
-| Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. |
+| Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. Los enlaces cortos de la app (`amzn.eu/d/…`) se expanden a la ficha `/dp/ASIN` antes de leer (B29). |
 | Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |
 | Maisons du Monde | ⚠️ | Extensión de Chrome (pase diario) o botón «Guardar en Vigía» | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el navegador sí (JSON-LD de la página abierta). Con la extensión, precio diario mientras Chrome esté abierto (`extension/README.md`). Ver «Maisons du Monde: qué se probó». |
 | Vinted | ✅ | JSON-LD (vendidos: datos de React) | Probado el 2026-10-04 desde la IP de Postgres y el 2026-10-06 desde la Edge Function. Segunda mano: al venderse, la ficha **no** desaparece; Vinted le quita el JSON-LD y los botones de compra y pone «Vendido» (`buyer_item_status`). El extractor saca entonces el precio de los datos de React (atado al id de la URL) y marca sin stock (B26). |
