@@ -6,7 +6,7 @@
 // No escribe en items/price_history: eso lo hace el frontend con su propio
 // cliente de sesion, para que RLS decida quien puede insertar que.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { extractFromUrl, setAltFetcher } from "./extract.ts";
+import { expandShortLink, extractFromUrl, setAltFetcher } from "./extract.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -90,6 +90,9 @@ Deno.serve(async (req) => {
     throw new Error("Tiempo de espera agotado (pg_net)");
   });
 
+  // Un enlace corto (amzn.eu/d/...) se expande antes de mirar store_rules:
+  // la regla es de la tienda, no del acortador. La web guarda `url`.
+  url = await expandShortLink(url);
   const domain = domainOf(url);
   const { data: rule } = await admin
     .from("store_rules")
@@ -98,7 +101,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (rule?.sr_blocked) {
-    return new Response(JSON.stringify({ blocked: true, domain }), {
+    return new Response(JSON.stringify({ blocked: true, domain, url }), {
       status: 200,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
@@ -106,7 +109,7 @@ Deno.serve(async (req) => {
 
   try {
     const extracted = await extractFromUrl(url);
-    return new Response(JSON.stringify({ blocked: false, ...extracted }), {
+    return new Response(JSON.stringify({ blocked: false, ...extracted, url }), {
       status: 200,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });

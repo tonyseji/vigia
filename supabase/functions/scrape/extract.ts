@@ -8,6 +8,7 @@ export interface Extracted {
   currency?: string;
   inStock?: boolean;
   source?: string; // qué método encontró el precio
+  url?: string; // la dirección leída de verdad, si era un enlace corto (expandShortLink)
 }
 
 const CHROME_UA =
@@ -71,6 +72,34 @@ export function setAltFetcher(fn: AltFetcher) {
 }
 
 const BLOCK_STATUSES = [401, 403, 429, 500, 502, 503];
+
+// Enlaces cortos de compartir (la app de Amazon da amzn.eu/d/...). Sin
+// expandirlos el host no es amazon.* y no se aplica nada de lo específico de
+// Amazon: ni pg_net, ni el control del interstitial, ni la lectura del precio.
+const SHORT_LINK_HOST = /^(amzn\.(eu|to|com|asia)|a\.co)$/i;
+
+/** La dirección a la que lleva un enlace corto; cualquier otra, tal cual.
+ * Una ficha de Amazon queda en su forma corta (/dp/ASIN), sin los
+ * parámetros de compartir. Si no se puede expandir, devuelve la de entrada. */
+export async function expandShortLink(url: string, timeoutMs = 8000): Promise<string> {
+  let current = url;
+  for (let hop = 0; hop < 3 && SHORT_LINK_HOST.test(new URL(current).hostname); hop++) {
+    try {
+      // GET y no HEAD: amzn.eu responde 404 a HEAD.
+      const res = await fetch(current, { redirect: "manual", headers: HEADER_PROFILES[0], signal: AbortSignal.timeout(timeoutMs) });
+      await res.body?.cancel();
+      const location = res.headers.get("location");
+      if (!location) break;
+      current = new URL(location, current).toString();
+    } catch {
+      break;
+    }
+  }
+  if (current === url) return url;
+  const u = new URL(current);
+  const asin = /amazon\./i.test(u.hostname) && u.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i)?.[1];
+  return asin ? `${u.origin}/dp/${asin}` : current;
+}
 
 /** Páginas "200 OK" que en realidad son un muro anti-bot o un interstitial sin producto */
 export function isBotPage(url: string, html: string): boolean {
@@ -433,6 +462,7 @@ export function extractFromHtml(html: string, url: string): Extracted {
 }
 
 export async function extractFromUrl(url: string, profile?: number): Promise<Extracted> {
-  const html = await fetchHtml(url, 15000, profile);
-  return extractFromHtml(html, url);
+  const real = await expandShortLink(url);
+  const html = await fetchHtml(real, 15000, profile);
+  return { ...extractFromHtml(html, real), ...(real !== url ? { url: real } : {}) };
 }

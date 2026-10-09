@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { parsePrice, extractFromHtml, isBotPage } from './extract.ts'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { parsePrice, extractFromHtml, isBotPage, expandShortLink } from './extract.ts'
 
 // extract.ts no usa ninguna API especifica de Deno mas alla de
 // fetch/URL/AbortController globales, ya estandar tambien en Vitest/Node.
@@ -164,5 +164,40 @@ describe('isBotPage', () => {
   it('amazon con productTitle es pagina real', () => {
     const html = '<html><body><span id="productTitle">Sofa Noa</span></body></html>'
     expect(isBotPage('https://amazon.es/dp/B0X', html)).toBe(false)
+  })
+})
+
+// Enlace de compartir de la app de Amazon (amzn.eu/d/...): sin expandirlo,
+// el host no es amazon.* y no se aplicaba nada de lo especifico de Amazon
+// (salia el titulo de <title> y sin precio ni foto).
+describe('expandShortLink', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  function redirectTo(location: string | null) {
+    const fetchMock = vi.fn(async () => new Response(null, {
+      status: location ? 301 : 404,
+      headers: location ? { location } : {},
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('amzn.eu lleva a la ficha /dp/ de amazon.es, sin parametros de compartir', async () => {
+    redirectTo('https://www.amazon.es/dp/B0GWHLD5NG?ref=cm_sw_r_apan_dp_X&ref_=cm_sw_r_apan_dp_X&social_share=cm_sw_r_apan_dp_X')
+    expect(await expandShortLink('https://amzn.eu/d/0dkUtoav')).toBe('https://www.amazon.es/dp/B0GWHLD5NG')
+  })
+  it('una direccion normal ni se toca ni se pide', async () => {
+    const fetchMock = redirectTo(null)
+    const url = 'https://www.amazon.es/Soweiz-Mesa/dp/B0GWHLD5NG?ref=x'
+    expect(await expandShortLink(url)).toBe(url)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+  it('si el enlace corto no redirige, se queda como estaba', async () => {
+    redirectTo(null)
+    expect(await expandShortLink('https://amzn.eu/d/roto')).toBe('https://amzn.eu/d/roto')
+  })
+  it('si la red falla, se queda como estaba', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('red') }))
+    expect(await expandShortLink('https://amzn.to/3abc')).toBe('https://amzn.to/3abc')
   })
 })

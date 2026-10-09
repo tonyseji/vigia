@@ -81,7 +81,7 @@ export function useItems() {
   }, [])
 
   const addItem = useCallback(async (rawUrl, folderId = null) => {
-    const url = cleanUrl(rawUrl)
+    let url = cleanUrl(rawUrl)
     // Antes de leer el precio: si ya está, no se gasta una lectura.
     const found = await findExisting([url])
     if (found.error) return { error: found.error }
@@ -95,6 +95,15 @@ export function useItems() {
     if (fnError) return { error: 'No se pudo leer el precio. Inténtalo de nuevo.' }
     if (fnData?.blocked) return { blocked: true }
     if (fnData?.error) return { error: fnData.error }
+
+    // Enlace corto (amzn.eu/d/... de la app de Amazon): scrape devuelve la
+    // ficha a la que lleva, y es esa la que se guarda y se compara.
+    if (fnData?.url && cleanUrl(fnData.url) !== url) {
+      url = cleanUrl(fnData.url)
+      const again = await findExisting([url])
+      if (again.error) return { error: again.error }
+      if (again.existing) return { error: duplicateMessage(again.existing) }
+    }
 
     const { data: item, error: insertError } = await supabase
       .from('items')

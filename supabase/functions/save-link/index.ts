@@ -13,7 +13,7 @@
 // hace de token y se valida a mano. Escribe con service_role, siempre como
 // el usuario de la clave.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { type Extracted, extractFromUrl, setAltFetcher } from "../scrape/extract.ts";
+import { expandShortLink, type Extracted, extractFromUrl, setAltFetcher } from "../scrape/extract.ts";
 import { cleanUrl } from "../record-price/record.ts";
 import { duplicateMessage, findSameItem, findUrl, hashKey, parseKey, savedMessage, type VisibleItem } from "./link.ts";
 
@@ -54,7 +54,9 @@ Deno.serve(async (req) => {
 
   const found = findUrl(body.url);
   if (!found) return text("No he encontrado ninguna dirección web en lo compartido.", 400);
-  const url = cleanUrl(found);
+  // Enlace corto (amzn.eu/d/... desde la app de Amazon): se guarda la ficha
+  // de verdad, para que se compare y se lea como cualquier otra de la tienda.
+  const url = cleanUrl(await expandShortLink(found));
 
   // Lo que el usuario ve en su lista (RLS, migracion 016): lo suyo y lo de
   // las carpetas compartidas con el, subcarpetas incluidas.
