@@ -108,7 +108,7 @@ duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin pr
 el artículo estaba vendido; el extractor lee el precio sin JSON-LD y lo marca sin stock (B26). Sesión 35: la lista,
 las fotos y la cesta enseñan «Vendido»/«Sin stock» y no lo suman (B27, decidido en Claude Code, para revisar en Cowork). Sesión 36: Sklum salía «Sin stock» por publicar `BackOrder` (se puede pedir);
 ahora cuenta como en stock, y sin stock solo si la tienda lo dice (B28). Sesión 37: los enlaces cortos de Amazon
-(`amzn.eu/d/…`) se quedaban sin precio; ahora se expanden a la ficha y se guarda esa (B29, falta que Tony lo confirme). Detalle en `docs/PROGRESO.md` (sesiones 17 a 37) y
+(`amzn.eu/d/…`) se quedaban sin precio; ahora se expanden a la ficha; aun así Amazon no da precio porque ve el servidor en Irlanda (B29 abierto, decisión pendiente). Detalle en `docs/PROGRESO.md` (sesiones 17 a 37) y
 `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 La app antigua ya no existe en Supabase: función, cron y tablas retirados

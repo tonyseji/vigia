@@ -1143,7 +1143,31 @@ duplicados ni la extensión la reconocían como la ficha de Amazon.
   precio: Tony tiene que borrarlo y volver a pegar el enlace (o pulsar
   Actualizar, que lee el precio pero no cambia dirección, título ni foto).
 
+### Segunda parte: sigue sin precio (Amazon lo ve desde Irlanda)
+
+Tony la volvió a añadir: dirección, título, foto bien; precio no. En la
+respuesta guardada por `pg_net` (`net._http_response`) se ve «Enviar a
+**Irlanda**» y «No disponible.»: la BD está en `eu-west-1` y esa mesa no se
+envía a Irlanda, así que Amazon no enseña precio. Desde España, 185 €.
+
+- Probado: fijar «Enviar a 28001» (modal de ubicación → `address-change`)
+  deja la ubicación en dos cookies, `session-id` + `ubid-acbes`, que duran
+  un año. Mandadas como `Cookie` en un `net.http_get` desde la BD, Amazon
+  responde «Madrid 28001» con la zona de precio completa.
+- `pg_net` solo guarda una cabecera `set-cookie`, así que el cambio de
+  ubicación no se puede hacer entero desde la BD. Desde una Edge Function
+  (función temporal `amazon-probe`, ya borrada) la portada de Amazon pasa
+  solo a veces (1 de 7); reintentar hasta que pase es saltarse su anti-bot y
+  se descartó.
+- Segundo fallo arreglado: en esa ficha Amazon deja **vacío** el
+  `a-offscreen` del precio y el extractor se quedaba con el hueco. Ahora
+  solo vale con cifras y si no, sigue a `a-price-whole` + `a-price-fraction`
+  (2 tests; 200 en verde). `scrape`, `refresh` y `save-link` redesplegadas.
+
 ### Estado final
 
-Hecho y desplegado. Falta que Tony vuelva a añadir la mesa y confirme que
-sale con precio.
+Enlace corto y precio vacío arreglados y desplegados. **Pendiente de
+decisión (B29 sigue abierto):** cómo dar a Amazon una ubicación española de
+forma estable — guardar en BD un par de cookies con «Enviar a 28001»
+(sacadas una vez, renovar al año; tabla sin `user_id`, excepción a la regla
+`_own`: para Cowork) o pasar Amazon a la extensión de Chrome.
