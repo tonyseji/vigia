@@ -1188,3 +1188,25 @@ quedaba en blanco.
   popup responden siempre, con `{ error }` si algo falla.
 - `popup`: enseña ese error en vez de quedarse en blanco. Versión 1.0.1;
   hay que recargarla en `chrome://extensions`.
+
+### Cuarta parte: la extensión no lee Amazon y tres copias de la mesa
+
+Tony probó la extensión en la ficha («No encuentro el precio en esta
+página») y añadió la mesa pegando otras dos direcciones: tres artículos
+(`/dp/B0GWHLD5NG`, la misma con `?th=1` y la larga del buscador), ninguno
+con precio (el servidor sigue viéndola desde Irlanda).
+
+- **Mismo artículo por ASIN en Amazon:** `amazonProduct` en
+  `src/lib/urlKey.js` y su copia en `save-link/link.ts` (que `record-price`
+  importa). `cleanUrl` guarda las fichas de Amazon como `/dp/ASIN` y
+  `urlKey` las compara así: la web, el atajo de iOS y la extensión ya no
+  duplican la misma ficha.
+- **La extensión lee Amazon** (`extension/extract.js`, versión 1.0.2): precio
+  de la zona `corePriceDisplay` (a-offscreen con cifras, si no
+  a-price-whole + a-price-fraction), título, foto `data-old-hires` y stock
+  de `#availability` («Envío en N días» cuenta como disponible). Probado con
+  la ficha real abierta en el navegador integrado: 185 €, título y foto.
+  El botón de marcadores (`browserImport.js`) **no** lleva aún lo de Amazon.
+- Tests: 210 en verde. `record-price` y `save-link` redesplegadas.
+- Las tres copias siguen en la lista de Tony (no se permitió borrar por
+  SQL): tiene que borrar dos desde la app.

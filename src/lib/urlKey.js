@@ -5,12 +5,24 @@
 
 const TRACKING_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid', 'mc_eid', 'ref', 'tag', '_ga', 'srsltid']
 
+/** En Amazon el producto es el ASIN: la misma ficha llega como /dp/ASIN,
+ * con ?th=1 o con el nombre y el rastro del buscador. Esta es la que se
+ * guarda. null si no es una ficha de Amazon. Copiada en
+ * supabase/functions/save-link/link.ts (record-price la importa de ahí). */
+function amazonProduct(u) {
+  if (!/(^|\.)amazon\.[a-z.]+$/i.test(u.hostname)) return null
+  const asin = u.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?=[/?]|$)/i)?.[1]
+  return asin ? `${u.origin}/dp/${asin.toUpperCase()}` : null
+}
+
 /** La dirección que se guarda en itm_url. Copiada en
  * supabase/functions/record-price/record.ts: la misma URL tiene que dar el
  * mismo itm_url venga de la web o de la extensión. Si se cambia aquí, allí
  * también. */
 export function cleanUrl(raw) {
   const u = new URL(raw)
+  const amazon = amazonProduct(u)
+  if (amazon) return amazon
   u.hash = ''
   for (const key of [...u.searchParams.keys()]) {
     if (TRACKING_PARAMS.some((d) => key.toLowerCase().startsWith(d))) u.searchParams.delete(key)
@@ -35,6 +47,8 @@ export function urlKey(raw) {
   } catch {
     return null
   }
+  const amazon = amazonProduct(u)
+  if (amazon) u = new URL(amazon)
   const host = u.hostname.toLowerCase().replace(/^www\./, '')
   const path = u.pathname.replace(/\/+$/, '').toLowerCase()
   const params = [...u.searchParams.entries()]

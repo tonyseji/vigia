@@ -57,3 +57,28 @@ describe('findSameItem', () => {
     expect(findSameItem(items, ['https://tienda.test/nueva'])).toBeNull()
   })
 })
+
+// En Amazon el producto es el ASIN: la misma mesa llega como /dp/ASIN, con
+// ?th=1 o con el nombre y todo el rastro del buscador (sesión 37, tres
+// copias de la misma mesa).
+describe('Amazon por ASIN', () => {
+  const corta = 'https://www.amazon.es/dp/B0GWHLD5NG'
+  const variante = 'https://www.amazon.es/dp/B0GWHLD5NG?th=1'
+  const buscador = 'https://www.amazon.es/Soweiz-elevable-estante-extensible-multifuncional/dp/B0GWHLD5NG/ref=sr_1_15?dib=eyJ2&dib_tag=se&keywords=Soweiz&qid=1&sr=8-15&th=1'
+
+  it('cleanUrl deja la ficha en /dp/ASIN', () => {
+    expect(cleanUrl(variante)).toBe(corta)
+    expect(cleanUrl(buscador)).toBe(corta)
+    expect(cleanUrl('https://www.amazon.es/gp/product/B0GWHLD5NG?psc=1')).toBe(corta)
+  })
+  it('las tres direcciones son el mismo artículo', () => {
+    expect(urlKey(variante)).toBe(urlKey(corta))
+    expect(urlKey(buscador)).toBe(urlKey(corta))
+  })
+  it('otro ASIN (otro color) es otro artículo', () => {
+    expect(urlKey('https://www.amazon.es/dp/B0GWHLD5NX')).not.toBe(urlKey(corta))
+  })
+  it('lo que no es una ficha de Amazon no cambia', () => {
+    expect(cleanUrl('https://www.amazon.es/s?k=mesa')).toBe('https://www.amazon.es/s?k=mesa')
+  })
+})

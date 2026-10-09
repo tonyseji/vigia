@@ -2,7 +2,7 @@
 // que se escribe en el articulo. Sin Deno ni Supabase, para testearlas con
 // Vitest como refresh/notify.ts.
 
-import { urlKey } from "../save-link/link.ts";
+import { amazonProduct, urlKey } from "../save-link/link.ts";
 
 export interface PricePayload {
   url: string;
@@ -57,6 +57,8 @@ const TRACKING_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term",
  * mismo itm_url venga de la web o de la extension, o se duplicaria. */
 export function cleanUrl(raw: string): string {
   const u = new URL(raw);
+  const amazon = amazonProduct(u);
+  if (amazon) return amazon;
   u.hash = "";
   for (const key of [...u.searchParams.keys()]) {
     if (TRACKING_PARAMS.some((d) => key.toLowerCase().startsWith(d))) u.searchParams.delete(key);

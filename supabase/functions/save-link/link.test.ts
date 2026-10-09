@@ -47,6 +47,9 @@ describe('findSameItem', () => {
   it('la copia de urlKey da lo mismo que la de la web', () => {
     const url = 'http://WWW.Tienda.test/Mesa/?utm_source=x&b=2&a=1#foto'
     expect(urlKey(url)).toBe(webUrlKey(url))
+    const amazon = 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG/ref=sr_1_15?th=1'
+    expect(urlKey(amazon)).toBe(webUrlKey(amazon))
+    expect(urlKey(amazon)).toBe(urlKey('https://amazon.es/dp/B0GWHLD5NG'))
   })
 
   it('encuentra el mismo artículo aunque no se escriba igual, y prefiere el propio', () => {

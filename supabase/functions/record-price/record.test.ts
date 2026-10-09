@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { cleanUrl, findOwnItem, itemUpdate, parsePricePayload } from './record.ts'
+import { cleanUrl as webCleanUrl } from '../../../src/lib/urlKey.js'
 
 // Mismo criterio que refresh/notify.test.ts: record.ts no usa nada de Deno.
 
@@ -42,6 +43,11 @@ describe('parsePricePayload', () => {
 describe('cleanUrl', () => {
   it('quita hash y parámetros de seguimiento, conserva el resto', () => {
     expect(cleanUrl('https://t.test/p?utm_source=x&color=rojo&gclid=1#galeria')).toBe('https://t.test/p?color=rojo')
+  })
+  it('la copia da lo mismo que la de la web, también en Amazon', () => {
+    const url = 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG/ref=sr_1_15?th=1'
+    expect(cleanUrl(url)).toBe(webCleanUrl(url))
+    expect(cleanUrl(url)).toBe('https://www.amazon.es/dp/B0GWHLD5NG')
   })
 })
 

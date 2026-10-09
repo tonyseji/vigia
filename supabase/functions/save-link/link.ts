@@ -45,6 +45,13 @@ export async function hashKey(key: string): Promise<string> {
 const TRACKING_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "mc_eid", "ref", "tag", "_ga", "srsltid"];
 const IGNORED_PREFIXES = [...TRACKING_PARAMS, "utm_", "_gl", "gad_", "gbraid", "wbraid", "dclid", "msclkid", "awc", "aw_affid", "sv1", "sv_campaign_id", "highlightedoffercode"];
 
+/** Copia de amazonProduct (src/lib/urlKey.js); record-price la importa de aqui: en Amazon el producto es el ASIN. */
+export function amazonProduct(u: URL): string | null {
+  if (!/(^|\.)amazon\.[a-z.]+$/i.test(u.hostname)) return null;
+  const asin = u.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?=[/?]|$)/i)?.[1];
+  return asin ? `${u.origin}/dp/${asin.toUpperCase()}` : null;
+}
+
 export function urlKey(raw: string): string | null {
   let u: URL;
   try {
@@ -52,6 +59,8 @@ export function urlKey(raw: string): string | null {
   } catch {
     return null;
   }
+  const amazon = amazonProduct(u);
+  if (amazon) u = new URL(amazon);
   const host = u.hostname.toLowerCase().replace(/^www\./, "");
   const path = u.pathname.replace(/\/+$/, "").toLowerCase();
   const params = [...u.searchParams.entries()]

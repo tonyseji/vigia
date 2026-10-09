@@ -36,6 +36,40 @@ export function extractProduct() {
     return Number(s.replace(/[^\d.]/g, ''))
   }
 
+  // Amazon no publica JSON-LD: se lee de la ficha, como domainSpecific en
+  // scrape/extract.ts. El a-offscreen del precio puede venir vacío; entonces
+  // vale a-price-whole + a-price-fraction.
+  if (/(^|\.)amazon\.[a-z.]+$/i.test(new URL(location.href).hostname)) {
+    let raw = null
+    for (const sel of ['#corePriceDisplay_desktop_feature_div', '#corePrice_feature_div', '#apex_desktop', '#corePriceDisplay_mobile_feature_div']) {
+      const zone = document.querySelector(sel)
+      if (!zone) continue
+      const offscreen = [...zone.querySelectorAll('.a-price .a-offscreen')].map((el) => el.textContent.trim()).find((t) => /\d/.test(t))
+      const whole = zone.querySelector('.a-price-whole')
+      const fraction = zone.querySelector('.a-price-fraction')
+      if (offscreen) raw = offscreen
+      else if (whole) raw = `${whole.textContent.replace(/[^\d.]/g, '')},${fraction ? fraction.textContent.trim() : '00'}`
+      if (raw) break
+    }
+    const amazonPrice = toNumber(raw && raw.replace(/[^\d.,]/g, ''))
+    if (!Number.isFinite(amazonPrice)) return { blocked: false, price: null }
+    const title = document.querySelector('#productTitle')
+    const image = document.querySelector('#landingImage')
+    const availability = document.querySelector('#availability')
+    const stockText = availability ? availability.textContent : ''
+    const canonical = document.querySelector('link[rel="canonical"]')
+    return {
+      blocked: false,
+      url: (canonical && canonical.href) || location.href,
+      altUrl: location.href,
+      title: (title && title.textContent.trim()) || meta('og:title') || document.title,
+      image: (image && (image.getAttribute('data-old-hires') || image.getAttribute('src'))) || meta('og:image') || null,
+      price: amazonPrice,
+      currency: 'EUR',
+      inStock: /no disponible|agotado|unavailable/i.test(stockText) ? false : /en stock|disponible|in stock|env[ií]o en/i.test(stockText) ? true : null,
+    }
+  }
+
   let product = null
   for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
     try {
