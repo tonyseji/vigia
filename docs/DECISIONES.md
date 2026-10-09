@@ -1157,3 +1157,28 @@ suma»); dejar de leerlo (perdería el aviso de vuelta).
 **Revisitar:** si Cowork quiere un filtro «ocultar vendidos» o archivar
 automáticamente lo vendido tras un tiempo.
 
+
+### 2026-10-09 — Si el servidor no lee un precio, lo lee el Chrome (sesión 37)
+
+**Decidido por Tony en Claude Code** («todo debe funcionar; si algo no va,
+que vaya otra cosa»), para revisar en Cowork.
+**Contexto:** Amazon da la mesa de Tony sin precio al servidor porque la BD
+está en Irlanda y esa mesa no se envía allí. La extensión solo cubría las
+tiendas marcadas como bloqueadas (`itm_is_manual`).
+**Decisión:**
+1. El pase de la extensión lee, además de las tiendas que bloquean,
+   cualquier artículo propio **sin precio** o con **error** en el último
+   pase del servidor (`itm_price is null` o `itm_last_error is not null`).
+   El servidor sigue intentándolo cada día; si un día vuelve a poder, la
+   extensión deja de hacer falta para ese artículo sola.
+2. Lo añadido sin precio se lee una vez en la hora siguiente, sin esperar
+   al pase diario.
+3. Extensión, botón de marcadores y servidor leen Amazon con el mismo
+   criterio; la misma ficha de Amazon es el mismo artículo venga por donde
+   venga (ASIN).
+**Descartado de momento:** cookies con «Enviar a 28001» para que el servidor
+vea Amazon desde España (probado que funciona desde `pg_net`, pero obtener
+y renovar las cookies de forma automática no salió fiable) y dar a la
+extensión permiso para leer cualquier web (`https://*/*`), que haría el
+relevo válido para cualquier tienda: es un permiso amplio y lo decide Tony.
+Hoy el pase puede leer Maisons du Monde, Kave Home y Amazon.es.

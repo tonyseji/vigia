@@ -42,7 +42,9 @@ const KEY_STORAGE_KEY = 'vigia.bookmarkletKey'
 const KEY_RE = /^[0-9a-f]{32}$/
 
 // Corre en la página de la tienda, no en Vigía: autocontenido, sin nada del
-// bundle. Mismo orden que el extractor del servidor (JSON-LD, luego metas).
+// bundle. Mismo orden que el extractor del servidor (JSON-LD, luego metas);
+// Amazon, que no publica JSON-LD, se lee de la ficha como en la extensión
+// (extension/extract.js).
 // `__ORIGEN__` y `__CLAVE__` se sustituyen al construir el enlace. Sin
 // comentarios `//` dentro: el marcador va en una sola línea y comentarían
 // todo lo que sigue. Si Safari (iPhone) bloquea la pestaña nueva, abre Vigía
@@ -73,6 +75,28 @@ const BOOKMARKLET_SOURCE = `
     if (/,\\d{1,2}$/.test(s)) s = s.replace(/\\./g, '').replace(',', '.');
     return Number(s.replace(/[^\\d.]/g, ''));
   }
+  function text(sel) {
+    var el = document.querySelector(sel);
+    return el ? el.textContent.trim() : '';
+  }
+  function amazonPrice() {
+    var zones = ['#corePriceDisplay_desktop_feature_div', '#corePrice_feature_div', '#apex_desktop', '#corePriceDisplay_mobile_feature_div'];
+    for (var z = 0; z < zones.length; z++) {
+      var zone = document.querySelector(zones[z]);
+      if (!zone) continue;
+      var offs = zone.querySelectorAll('.a-price .a-offscreen');
+      for (var o = 0; o < offs.length; o++) {
+        var t = offs[o].textContent.trim();
+        if (/\\d/.test(t)) return t.replace(/[^\\d.,]/g, '');
+      }
+      var whole = zone.querySelector('.a-price-whole');
+      var fraction = zone.querySelector('.a-price-fraction');
+      var w = whole ? whole.textContent.replace(/[^\\d.]/g, '') : '';
+      if (w) return w + ',' + (fraction ? fraction.textContent.trim() : '00');
+    }
+    return null;
+  }
+  var isAmazon = /(^|\\.)amazon\\.[a-z.]+$/i.test(new URL(location.href).hostname);
   var product = null;
   var scripts = document.querySelectorAll('script[type="application/ld+json"]');
   for (var i = 0; i < scripts.length && !product; i++) {
@@ -80,8 +104,8 @@ const BOOKMARKLET_SOURCE = `
   }
   var offer = product && product.offers;
   if (Array.isArray(offer)) offer = offer[0];
-  var rawPrice = offer ? (offer.price != null ? offer.price : offer.lowPrice) : null;
-  if (rawPrice == null) rawPrice = meta('product:price:amount') || meta('og:price:amount') || meta('price');
+  var rawPrice = isAmazon ? amazonPrice() : offer ? (offer.price != null ? offer.price : offer.lowPrice) : null;
+  if (rawPrice == null && !isAmazon) rawPrice = meta('product:price:amount') || meta('og:price:amount') || meta('price');
   var price = toNumber(rawPrice);
   if (!isFinite(price)) {
     alert('Vigía: no encuentro el precio en esta página. Ábrelo desde la ficha de un producto.');
@@ -91,14 +115,16 @@ const BOOKMARKLET_SOURCE = `
   if (Array.isArray(image)) image = image[0];
   if (image && typeof image === 'object') image = image.url || image.contentUrl;
   var availability = String((offer && offer.availability) || '');
+  var amazonImage = document.querySelector('#landingImage');
+  var stockText = isAmazon ? text('#availability') : '';
   var canonical = document.querySelector('link[rel="canonical"]');
   var data = {
     u: (canonical && canonical.href) || location.href,
-    t: (product && product.name) || meta('og:title') || document.title,
-    i: image || meta('og:image') || null,
+    t: (isAmazon && text('#productTitle')) || (product && product.name) || meta('og:title') || document.title,
+    i: (isAmazon && amazonImage && (amazonImage.getAttribute('data-old-hires') || amazonImage.getAttribute('src'))) || image || meta('og:image') || null,
     p: price,
     c: (offer && offer.priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'EUR',
-    s: /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : /InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(availability) ? true : null,
+    s: isAmazon ? (/no disponible|agotado|unavailable/i.test(stockText) ? false : /en stock|disponible|in stock|env[ií]o en/i.test(stockText) ? true : null) : /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : /InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(availability) ? true : null,
     k: '__CLAVE__',
     a: location.href
   };

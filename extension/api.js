@@ -65,7 +65,7 @@ export async function login(email, password) {
 /** También olvida la configuración: al volver a entrar se descarga de nuevo
  * (si algún día cambia la clave pública, basta con salir y entrar). */
 export async function logout() {
-  await chrome.storage.local.remove(['session', 'lastPass', 'config'])
+  await chrome.storage.local.remove(['session', 'lastPass', 'config', 'triedNew'])
 }
 
 let refreshing = null
@@ -108,16 +108,20 @@ async function authedFetch(path, options = {}) {
   })
 }
 
-/** Artículos propios de tiendas que el servidor no puede leer. RLS limita a
- * lo que el usuario ve; el filtro por usuario deja fuera los de carpetas
- * compartidas por otros (esos los actualiza su dueño). */
-export async function listManualItems() {
+/** Lo que lee el pase de este Chrome: lo que el servidor no puede leer.
+ * Las tiendas que bloquean (itm_is_manual) y, de cualquier tienda, lo que
+ * se quedó sin precio o falló en el último pase del servidor (Amazon lo ve
+ * desde Irlanda y no enseña el precio de lo que no se envía allí; sesión
+ * 37). Solo los propios: los de carpetas compartidas los lee su dueño. */
+export function chromeItemsPath(userId) {
+  return `/rest/v1/items?select=itm_id,itm_url,itm_title,itm_price&itm_usr_id=eq.${userId}` +
+    '&or=(itm_is_manual.eq.true,itm_price.is.null,itm_last_error.not.is.null)'
+}
+
+export async function listChromeItems() {
   const session = await getSession()
   if (!session) throw new Error('Inicia sesión en la extensión.')
-  const res = await authedFetch(
-    `/rest/v1/items?select=itm_id,itm_url,itm_title&itm_is_manual=eq.true&itm_usr_id=eq.${session.user.id}`,
-    { headers: { 'Accept-Profile': 'vigia' } },
-  )
+  const res = await authedFetch(chromeItemsPath(session.user.id), { headers: { 'Accept-Profile': 'vigia' } })
   if (!res.ok) throw new Error('No se pudo leer tu lista.')
   return res.json()
 }

@@ -1210,3 +1210,25 @@ con precio (el servidor sigue viéndola desde Irlanda).
 - Tests: 210 en verde. `record-price` y `save-link` redesplegadas.
 - Las tres copias siguen en la lista de Tony (no se permitió borrar por
   SQL): tiene que borrar dos desde la app.
+
+### Quinta parte: que todo funcione igual (decisión de Tony)
+
+Tony: «todo debe funcionar; si algo no va, que vaya otra cosa».
+`DECISIONES.md` 2026-10-09.
+
+- **Botón de marcadores** (`browserImport.js`): lee Amazon igual que la
+  extensión. Probado con el código compactado sobre la ficha real en el
+  navegador integrado: 185 €, en stock, título y foto.
+- **Relevo servidor → Chrome:** el pase de la extensión (`chromeItemsPath`
+  en `api.js`) lee también lo propio sin precio o con error en el servidor.
+  Lo añadido sin precio se lee una vez en la hora siguiente
+  (`readNewWithoutPrice`, ids intentados en `triedNew`). Captcha de Amazon
+  reconocido como bloqueo. `host_permissions` + `www.amazon.es` (pedir
+  `https://*/*` lo paró el sistema de permisos: decisión de Tony).
+  Extensión 1.1.0.
+- Tests: 216 en verde; build en verde.
+
+### Estado final
+
+Hecho y subido. Tony tiene que recargar la extensión (aceptar el permiso de
+Amazon si Chrome lo pide) y borrar dos de las tres mesas.

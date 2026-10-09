@@ -6,10 +6,14 @@ Hace dos cosas:
    en una ficha de producto y se guarda en tu lista, o se apunta el precio
    de hoy si ya lo tenías. Sustituye al botón «Guardar en Vigía» de la barra
    de marcadores, que sigue funcionando para otros navegadores.
-2. **Precio automático para las tiendas que bloquean al servidor**
-   (Maisons du Monde, Kave Home: `docs/TIENDAS.md`). Una vez al día abre esos
+2. **Precio automático para lo que el servidor no puede leer:** las tiendas
+   que lo bloquean (Maisons du Monde, Kave Home: `docs/TIENDAS.md`) y, de
+   cualquier tienda, lo que se quedó sin precio o falló en el último pase del
+   servidor (Amazon, que lo ve desde Irlanda). Una vez al día abre esos
    artículos en una ventana minimizada, lee el precio y lo apunta. Si baja,
-   llega el aviso igual que con el resto.
+   llega el aviso igual que con el resto. Lo que se añade sin precio (por
+   ejemplo desde el móvil) se lee una vez en la hora siguiente, sin esperar
+   al pase.
 
 Solo funciona con el ordenador encendido y Chrome abierto. Si a la hora del
 pase estaba apagado, lo hace en cuanto se abre Chrome (mira cada hora si el
@@ -39,7 +43,7 @@ el botón de recargar de la tarjeta de Vigía.
 | `manifest.json` | Permisos: `activeTab` + `scripting` para leer la pestaña al pulsar el icono; `host_permissions` para las tiendas del pase, Supabase y la web. |
 | `background.js` | Service worker. Pase diario (`chrome.alarms`), guardar la pestaña, sesión. |
 | `api.js` | Login con email y contraseña contra Supabase Auth, renovación del token, lectura de artículos y llamada a `record-price`. |
-| `extract.js` | Lee JSON-LD / Open Graph de la página. Misma lógica que el botón de marcadores (`src/lib/browserImport.js`). |
+| `extract.js` | Lee JSON-LD / Open Graph de la página, y la ficha de Amazon (no tiene JSON-LD). Misma lógica que el botón de marcadores (`src/lib/browserImport.js`). |
 | `popup.*` | La ventana del icono. |
 
 - **Sin claves en el repositorio:** la URL y la clave pública de Supabase se
@@ -58,5 +62,7 @@ el botón de recargar de la tarjeta de Vigía.
   una redirección no cree un artículo duplicado. Entre artículo y artículo
   espera 4–8 s. Si la tienda pide captcha, ese artículo se salta y queda
   anotado en la ventana del icono.
-- **Tienda nueva que bloquee:** añadir su dominio a `host_permissions` en
-  `manifest.json` (sin permiso, el pase no puede leer la pestaña).
+- **Tienda nueva en el pase:** añadir su dominio a `host_permissions` en
+  `manifest.json` (sin permiso, el pase no puede leer la pestaña; guardar
+  con el icono sí funciona en cualquier tienda, con `activeTab`). Hoy:
+  Maisons du Monde, Kave Home y Amazon.es.

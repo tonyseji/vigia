@@ -40,6 +40,8 @@ export function extractProduct() {
   // scrape/extract.ts. El a-offscreen del precio puede venir vacío; entonces
   // vale a-price-whole + a-price-fraction.
   if (/(^|\.)amazon\.[a-z.]+$/i.test(new URL(location.href).hostname)) {
+    // Su captcha («Introduce los caracteres que ves») no lleva ficha.
+    if (document.querySelector('form[action*="validateCaptcha"]')) return { blocked: true }
     let raw = null
     for (const sel of ['#corePriceDisplay_desktop_feature_div', '#corePrice_feature_div', '#apex_desktop', '#corePriceDisplay_mobile_feature_div']) {
       const zone = document.querySelector(sel)

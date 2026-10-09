@@ -261,3 +261,59 @@ describe('manualPriceStatus', () => {
   })
 })
 
+
+// Amazon no publica JSON-LD: el botón lee la ficha igual que la extensión
+// (extension/extract.js), con el a-offscreen del precio a veces vacío.
+describe('botón del navegador en Amazon', () => {
+  function el(text, attrs = {}) {
+    return { textContent: text, getAttribute: (k) => attrs[k] ?? null }
+  }
+  function amazonPage({ offscreen = ' ', whole = '185,', fraction = '00', availability = ' En stock ' } = {}) {
+    const zone = {
+      querySelectorAll: (sel) => (sel.includes('a-offscreen') ? [el(offscreen)] : []),
+      querySelector: (sel) => (sel === '.a-price-whole' ? el(whole) : sel === '.a-price-fraction' ? el(fraction) : null),
+    }
+    const nodes = {
+      '#corePriceDisplay_desktop_feature_div': zone,
+      '#productTitle': el('  Soweiz - Mesa de centro elevable  '),
+      '#landingImage': el('', { 'data-old-hires': 'https://m.media-amazon.com/images/I/919a.jpg' }),
+      '#availability': el(availability),
+      'link[rel="canonical"]': { href: 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG' },
+    }
+    return {
+      document: { title: 'Amazon.es', querySelectorAll: () => [], querySelector: (sel) => nodes[sel] ?? null },
+      location: { href: 'https://www.amazon.es/dp/B0GWHLD5NG?th=1' },
+    }
+  }
+
+  it('lee precio, título, foto y stock de la ficha', () => {
+    const { opened, alerts } = runBookmarklet(amazonPage())
+    expect(alerts).toEqual([])
+    expect(readImport(new URL(opened[0]).hash)).toEqual({
+      url: 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG',
+      title: 'Soweiz - Mesa de centro elevable',
+      image: 'https://m.media-amazon.com/images/I/919a.jpg',
+      price: 185,
+      currency: 'EUR',
+      inStock: true,
+      altUrl: 'https://www.amazon.es/dp/B0GWHLD5NG?th=1',
+      key: KEY,
+    })
+  })
+  it('a-offscreen con euros y miles', () => {
+    const { opened } = runBookmarklet(amazonPage({ offscreen: '1.299,95 €' }))
+    expect(readImport(new URL(opened[0]).hash).price).toBe(1299.95)
+  })
+  it('sin precio en la ficha avisa', () => {
+    const { opened, alerts } = runBookmarklet(amazonPage({ offscreen: ' ', whole: '' }))
+    expect(opened).toEqual([])
+    expect(alerts).toHaveLength(1)
+  })
+  it('el botón compactado en una línea sigue funcionando', () => {
+    const code = decodeURIComponent(buildBookmarklet(ORIGIN, KEY).slice('javascript:'.length))
+    const page = amazonPage()
+    const opened = []
+    new Function('document', 'location', 'window', 'alert', code)(page.document, page.location, { open: (u) => opened.push(u) }, () => {})
+    expect(readImport(new URL(opened[0]).hash).price).toBe(185)
+  })
+})

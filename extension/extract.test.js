@@ -109,6 +109,12 @@ describe('extractProduct en Amazon', () => {
     amazon({ availability: ' Envío en 4 a 5 días ' })
     expect(extractProduct().inStock).toBe(true)
   })
+  it('el captcha de Amazon cuenta como bloqueo', () => {
+    amazon()
+    const plain = globalThis.document.querySelector
+    globalThis.document.querySelector = (sel) => (sel === 'form[action*="validateCaptcha"]' ? {} : plain(sel))
+    expect(extractProduct()).toEqual({ blocked: true })
+  })
   it('«No disponible» es sin stock', () => {
     amazon({ availability: 'No disponible por el momento.' })
     expect(extractProduct().inStock).toBe(false)
