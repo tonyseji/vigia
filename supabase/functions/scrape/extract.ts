@@ -327,7 +327,8 @@ function domainSpecific(html: string, url: string, r: Extracted) {
     if (!r.price) {
       const zone = html.match(/id="corePriceDisplay_desktop_feature_div"[\s\S]{0,8000}|id="corePrice_feature_div"[\s\S]{0,8000}|id="apex_desktop"[\s\S]{0,10000}|id="corePriceDisplay_mobile_feature_div"[\s\S]{0,8000}/);
       const src = zone ? zone[0] : "";
-      const p = src.match(/class="a-offscreen">([^<]+)</) ||
+      // a-offscreen puede venir vacío (el texto pasa a aok-offscreen): solo vale con cifras.
+      const p = src.match(/class="a-offscreen">\s*([^<]*\d[^<]*)</) ||
         src.match(/class="a-price-whole">([\d.,]+)<[\s\S]{0,200}?class="a-price-fraction">(\d+)</) ||
         html.match(/"priceAmount"\s*:\s*([\d.]+)/) ||
         html.match(/id="priceblock_(?:our|deal|sale)price"[^>]*>([^<]+)</);

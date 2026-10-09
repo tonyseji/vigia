@@ -201,3 +201,21 @@ describe('expandShortLink', () => {
     expect(await expandShortLink('https://amzn.to/3abc')).toBe('https://amzn.to/3abc')
   })
 })
+
+// Amazon deja vacio el a-offscreen del precio (el texto va en aok-offscreen)
+// y el importe solo en a-price-whole + a-price-fraction (sesion 37).
+describe('amazon con a-offscreen vacio', () => {
+  const html = '<span id="productTitle">Mesa Soweiz</span>' +
+    '<div id="corePriceDisplay_desktop_feature_div" class="celwidget">' +
+    '<span class="aok-offscreen"> 185,00 € </span>' +
+    '<span class="a-price priceToPay"><span class="a-offscreen"> </span><span aria-hidden="true">' +
+    '<span class="a-price-whole">185<span class="a-price-decimal">,</span></span>' +
+    '<span class="a-price-fraction">00</span><span class="a-price-symbol">€</span></span></span></div>'
+  it('lee el precio de a-price-whole y a-price-fraction', () => {
+    expect(extractFromHtml(html, 'https://www.amazon.es/dp/B0GWHLD5NG').price).toBe(185)
+  })
+  it('con decimales', () => {
+    const h = html.replace('>185<', '>1.299<').replace('>00<', '>95<')
+    expect(extractFromHtml(h, 'https://www.amazon.es/dp/B0GWHLD5NG').price).toBe(1299.95)
+  })
+})
