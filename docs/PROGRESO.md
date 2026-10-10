@@ -1235,3 +1235,34 @@ Tony: «todo debe funcionar; si algo no va, que vaya otra cosa».
 
 Hecho, subido y probado por Tony con la mesa de Amazon. Tiene que recargar
 la extensión para la 1.2.0 (Chrome puede pedir aceptar el permiso nuevo).
+
+## 2026-10-10 (Sesión 38) — Limpieza de CLAUDE.md y WORKFLOW.md
+
+### Contexto
+
+Auditoría de los archivos de instrucciones (`/claude-api prompt-audit`).
+El «Estado actual» de `CLAUDE.md` se había convertido en un log de sesiones
+de ~80 líneas (contra su propia regla anti-deriva) y se contradecía: fase 6
+«en curso» y «cerrada», B10 abierto y cerrado, InstallBanner pendiente y
+arreglado. `WORKFLOW.md` decía en dos sitios cosas distintas sobre quién
+cierra la sesión.
+
+### Cambios
+
+- `CLAUDE.md`: «Estado actual» reducido a fases, producción, última sesión
+  y punteros a `ROADMAP.md` / `DECISIONES.md` / `PROGRESO.md`. Antes se
+  comprobó que todos los pendientes que se quitaban (B17, B22, B23, B24,
+  B29) están en `ROADMAP.md`; el «Ahora no» de InstallBanner ya se vio
+  funcionar en la sesión 32.
+- `CLAUDE.md`: regla del schema `public` actualizada (vacío desde la
+  migración 014); árbol con `AddItemForm` y las seis Edge Functions; prefijos
+  `shr` (`folder_shares`) y `psub` (`push_subscriptions`); RLS por
+  `<prefijo>_usr_id` en vez de `user_id`; el paso 4 de inicio de sesión
+  recoge la excepción de «decide tú».
+- `WORKFLOW.md`: «Al cerrar» dice ahora que Claude Code escribe
+  `PROGRESO.md`, `ROADMAP.md` y la línea de estado y hace commit y push,
+  igual que la excepción de la sesión 32.
+
+### Estado final
+
+Solo documentación; sin cambios de código.

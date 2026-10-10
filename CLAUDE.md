@@ -35,86 +35,16 @@ pero nada del diseño actual debe darlo por supuesto.
 
 ## Estado actual
 
-**Fases 3, 4 y 5 cerradas. Fase 6 en curso, prácticamente cerrada.**
-Repositorio en GitHub (`tonyseji/vigia`, público), Vercel con deploy
-automático en cada push a `main` — producción en
-`https://vigia-list.vercel.app`. Secrets de Supabase (`VAPID_*`,
-`CRON_SECRET`) y Redirect URL de Auth configurados y verificados en
-producción el 2026-09-09: login por enlace mágico y refresco automático
-funcionan de extremo a extremo con datos reales. Miniaturas de artículo
-(68×68, recorte sesgado) mejoradas el 2026-09-07 pero no resueltas del todo
-(backlog B10). Backlog B11 cerrado el 2026-09-09: no era el extractor, era
-que `ItemRow` no tenía breakpoint responsive y el título desaparecía en
-móvil (~375px); arreglado con reflow por debajo de 640px. Pendiente sin
-investigar: `InstallBanner` también se corta en móvil, visto de pasada.
-**Fase 6 cerrada del todo el 2026-09-09.** Edge Function `muebles`
-retirada de Supabase (0 invocaciones en 24h antes de borrar). Limpieza
-completa con la migración `014_limpiar_app_vieja.sql`: cron job inactivo
-`muebles-refresh-precios` (guardaba la clave vieja en texto plano) y las
-tablas `public.items`/`price_history`/`settings` eliminadas. El schema
-`public` queda vacío. Primera sesión de uso real (2026-09-10) sacó cinco
-bugs, todos arreglados y verificados en producción: CORS de
-compartir/push por dominio antiguo en `ALLOWED_ORIGINS`, menú de carpeta
-sin responder en móvil (botón "⋮" invisible + listener de cierre que
-rompía sus propios clicks), artículo nuevo sin heredar la carpeta
-seleccionada, `index.html` sin `Cache-Control` (móvil servía versión
-vieja tras deploy), y el mismo bug de listener de cierre en el picker de
-mover carpeta de `ItemRow`. Auditoría posterior del resto de la app (comparador, ajustes, copiar para
-Claude, verificados en producción) encontró dos más: overlay de
-`InstallBanner` tapando otros modales por z-index, y un `fetch` sin
-try/catch en invitar que dejaba el botón atascado tras un fallo de red.
-Ambos corregidos. `InstallBanner` cortado en viewports bajos (móvil
-horizontal o teclado abierto) arreglado el 2026-09-11 (sesión 12) con
-scroll en el overlay. Backlog B10 (miniaturas mal recortadas en fotos de
-ambiente) cerrado el 2026-09-11 (sesión 13): recorte fijo `object-cover`
-cambiado a `object-contain`, sin recorte nunca. Vista "Fotos" (rejilla,
-conmutador junto a Lista) construida el 2026-09-11 (sesión 14): estaba en
-el prototipo aprobado pero nunca se había implementado. Sesión 15 (mismo
-día): añadido selector de carpeta y aviso de tienda bloqueada a la
-tarjeta de la vista Fotos, que faltaban. Pendiente sin confirmar: si el
-botón "Ahora no" de `InstallBanner` falla con toque real en móvil (solo
-se vio fallar con clics simulados en el entorno de prueba). Cabecera
-móvil rehecha el 2026-09-11 (sesión 16): Actualizar/Comparar/Ajustes
-pasan a icono por debajo de 640px (antes se desbordaban), email y Salir
-se movieron al panel de carpetas móvil. Sesión 17 (2026-09-28): carpetas
-compartidas invisibles para el invitado (recursión RLS en
-`visible_folder_ids`, migraciones 015/016 aplicadas) . 2026-09-29: login con
-email + contraseña (como Bilans) para que la app instalada del iPhone
-guarde la sesión; enlace mágico como alternativa; rama `login-codigo`
-obsoleta.
-compartir pasa a enlace de invitación de un solo uso (7 días), migraciones
-017 (cierra autoinvitación a carpetas ajenas) y 018. Sesión 18: los
-fallos de lectura de BD se avisan en vez de verse como lista vacía (B16). Sesión 19:
-avisos revisados: 0 dispositivos suscritos (B17, pendiente de Tony); arreglados
-cuentas sin ajustes, modos 6h/12h, rebote de precio y texto del aviso. Sesión 20: «Crear cuenta» con un email ya
-registrado lleva a recuperar contraseña (Supabase no manda correo ahí, B20). Sesión 21: Maisons du Monde
-ahora usa DataDome; botón «+ Vigía» para la barra de marcadores lee el precio desde el navegador y guarda directo (B21). Sesión 22: «Sin carpeta» primero,
-vista Lista/Fotos recordada y carpetas plegables en el listado general. Sesión 23: extensión de
-Chrome (`extension/`) con precio diario para tiendas que bloquean, vía Edge Function `record-price`;
-instalada y funcionando en el Chrome de Tony (vigilar captcha, B22). Sesión 24: revisión de todo lo anterior
-(Android, duplicados por URL, pase por id). Sesión 25: Compartir → Vigía en Android
-(`share_target`, probado por Tony) y atajo de iOS a `/compartir` (pendiente de probar). Sesión 26: fotos de
-artículo del mismo tamaño (fondo blanco que se funde con la foto) y filas/tarjetas con precio alineado. Sesión 27: la lista se recarga sola al volver a la app (lo guardado
-desde el navegador no salía). Sesión 28: «Comparar» pasa a **Cesta** (marcas artículos y ves el total, por tienda,
-con cantidades; se guarda en el dispositivo; probada por Tony); cestas guardadas en BD pendientes (B24). Sesión 29: pegar una dirección ya guardada aunque no sea idéntica (barra final,
-`www.`, parámetros de campaña) avisa en vez de duplicar; la extensión sigue con la búsqueda exacta (B25). Sesión 30: el atajo del iPhone
-guarda desde el servidor (Edge Function `save-link`, clave personal, sin abrir Safari) y botón «Pegar» en móvil; falta que Tony lo monte y
-lo publique por iCloud (B23). Sesión 31: Vinted y Wallapop se leen (JSON-LD); Shein (captcha) y AliExpress (sin precio)
-bloqueadas en `store_rules` (migración 022). Probado con cuenta de pruebas propia; arreglada la fila
-de artículo entre 640 y 1000px (título oculto). Sesión 32: prueba completa como usuario; diálogo común
-(Escape, sin `confirm()`), fila móvil más densa, nombre legible para tiendas bloqueadas, campo de añadir más
-tolerante (decisiones de Claude Code a petición de Tony, para revisar en Cowork). Sesión 33: la extensión ya no
-duplica por dirección escrita distinta (B25, `record-price` v3); el IKEA sin precio fue un fallo puntual (B19). Sesión 34: Vinted «fallaba» porque
-el artículo estaba vendido; el extractor lee el precio sin JSON-LD y lo marca sin stock (B26). Sesión 35: la lista,
-las fotos y la cesta enseñan «Vendido»/«Sin stock» y no lo suman (B27, decidido en Claude Code, para revisar en Cowork). Sesión 36: Sklum salía «Sin stock» por publicar `BackOrder` (se puede pedir);
-ahora cuenta como en stock, y sin stock solo si la tienda lo dice (B28). Sesión 37: los enlaces cortos de Amazon
-(`amzn.eu/d/…`) se quedaban sin precio; Amazon da sin precio al servidor (lo ve en Irlanda): extensión y botón de marcadores leen Amazon y
-el pase de la extensión cubre todo lo que el servidor no lee (B29, decidido por Tony). Detalle en `docs/PROGRESO.md` (sesiones 17 a 37) y
-`docs/PROGRESO-ARCHIVO.md` (1 a 16).
+**Fases 3 a 6 cerradas; la app está en uso real.** Producción en
+`https://vigia-list.vercel.app` (repo público `tonyseji/vigia`, deploy
+automático en cada push a `main`). La app vieja ya no existe en Supabase:
+función, cron y tablas retirados el 2026-09-09; su código solo queda en el
+primer commit.
 
-La app antigua ya no existe en Supabase: función, cron y tablas retirados
-el 2026-09-09. Su código sigue en el primer commit de este repo como único
-rastro.
+Última sesión: 38. Pendientes abiertos en `docs/ROADMAP.md`; decisiones
+tomadas en Claude Code que Cowork aún tiene que revisar (sesiones 32 y 35),
+en `docs/DECISIONES.md`. Historial completo en `docs/PROGRESO.md` (17 en
+adelante) y `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 ---
 
@@ -151,7 +81,7 @@ vigia/
 │   └── TIENDAS.md           ← qué tiendas funcionan y cuáles bloquean
 ├── extension/             ← extensión de Chrome (guardar página + pase diario)
 ├── src/
-│   ├── components/          ← UI (ItemRow, AddForm, Sparkline…)
+│   ├── components/          ← UI (ItemRow, AddItemForm, Sparkline…)
 │   ├── hooks/               ← estado React que consume lib/
 │   ├── lib/
 │   │   ├── supabase.js      ← cliente único
@@ -161,7 +91,7 @@ vigia/
 │   └── main.jsx
 └── supabase/
     ├── migrations/          ← SQL versionado, numerado
-    └── functions/           ← scrape, refresh, record-price (precio desde el navegador), save-link (atajo de iOS)
+    └── functions/           ← scrape, refresh, record-price (precio desde el navegador), save-link (atajo de iOS), invite-to-folder, push-subscribe
 ```
 
 ---
@@ -178,6 +108,8 @@ prefijo de tabla. Hace legible cualquier consulta con JOINs.
 | `folders` | `fld` |
 | `store_rules` | `sr` |
 | `user_settings` | `us` |
+| `folder_shares` | `shr` |
+| `push_subscriptions` | `psub` |
 
 Las etiquetas en la interfaz van siempre en español (`itm_price` → «Precio»).
 
@@ -191,12 +123,12 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
   cubre credenciales, volcados de BD, `privado/` y `*.private.md`; el hook de
   `.githooks/pre-commit` bloquea el commit si detecta un secreto. Activarlo una
   vez por máquina: `git config core.hooksPath .githooks`.
-- **El schema `public` de ese proyecto es de la app vieja y NO se toca** hasta
-  la fase 6. Todo lo nuevo va en el schema `vigia`.
+- **Todo va en el schema `vigia`.** El schema `public` quedó vacío con la
+  migración `014_limpiar_app_vieja.sql` (fase 6) y no se vuelve a usar.
 - **Nada se aplica en Supabase que no exista antes como archivo** en
   `supabase/migrations/`. En Bilans hay tablas en producción que no están en
   ninguna migración y ya nadie sabe cómo se crearon.
-- Toda tabla nueva: RLS activado + política `_own` por `user_id` +
+- Toda tabla nueva: RLS activado + política `<tabla>_own` por la columna `<prefijo>_usr_id` +
   `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated` y
   `GRANT ALL ... TO service_role`.
 - Políticas RLS con `(select auth.uid())`, nunca `auth.uid()` directo — sin el
@@ -227,7 +159,9 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
 3. Si toca BD, leer `docs/ARQUITECTURA.md`.
 4. Si hay una decisión de diseño no obvia, **no decidirla aquí**: pararla y
    llevarla a Cowork, que la registra en `docs/DECISIONES.md` antes de
-   implementar. Ver `docs/WORKFLOW.md`.
+   implementar. Excepción: si Tony pide que la decida Claude Code, se decide,
+   se implementa y se anota en `DECISIONES.md` como «(decidido en Claude Code
+   a petición de Tony)» para que Cowork la revise. Ver `docs/WORKFLOW.md`.
 
 ## Regla anti-deriva (OBLIGATORIA al cerrar sesión)
 

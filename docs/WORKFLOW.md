@@ -20,7 +20,8 @@ sitio y sin que nadie las pueda revisar tres meses después.
 
 - **Documenta** — escribe y reorganiza todos los `.md`: `CLAUDE.md`,
   `ARQUITECTURA.md`, `DECISIONES.md`, `PROGRESO.md`, `ROADMAP.md`,
-  `TIENDAS.md`, este mismo.
+  `TIENDAS.md`, este mismo. El cierre de cada tarea (entrada de
+  `PROGRESO.md`, `ROADMAP.md`, línea de estado) lo escribe Claude Code.
 - **Diseña** — esquema de base de datos, contratos entre piezas, estructura de
   componentes, flujos de usuario. Antes de que exista el código.
 - **Decide** — resuelve dilemas («¿tabla nueva o columna extra?», «¿en la
@@ -79,8 +80,7 @@ En la práctica, desde la sesión 32:
   que Cowork la revise después. No es lo normal: es para cosas pequeñas o
   cuando esperar a Cowork no aporta.
 - **Al cerrar una tarea, Claude Code actualiza él mismo los `.md`**
-  (`PROGRESO.md`, `ROADMAP.md`, la línea de estado de `CLAUDE.md` y lo que
-  haya cambiado) y hace commit y push a `main`, sin esperar a Cowork.
+  sin esperar a Cowork (ver «Reglas de sesión → Al cerrar»).
 
 ---
 
@@ -118,8 +118,9 @@ de `PROGRESO.md`. Si la tarea toca la base de datos, leer también
 `ARQUITECTURA.md`.
 
 **Al cerrar:** Claude Code reporta exactamente qué archivos tocó y qué queda
-pendiente. Cowork escribe la entrada en `PROGRESO.md` y actualiza la línea de
-estado del `CLAUDE.md` — solo esa línea (regla anti-deriva).
+pendiente, escribe la entrada en `PROGRESO.md`, actualiza `ROADMAP.md` y la
+línea de estado del `CLAUDE.md` — solo esa línea (regla anti-deriva) — y hace
+commit y push a `main`.
 
 ---
 
