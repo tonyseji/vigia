@@ -190,7 +190,7 @@ de otra. Un trigger impide un tercer nivel.
 | Campo | Tipo | Notas |
 |---|---|---|
 | `fld_id` | uuid PK | |
-| `fld_usr_id` | uuid | FK a `auth.users`. Quien creó la carpeta, no necesariamente único visor si está compartida. |
+| `fld_usr_id` | uuid | FK a `auth.users`. Dueño de la carpeta. Una subcarpeta es siempre del dueño de su padre, aunque la cree un invitado (trigger `trg_folders_guard_tree`, migración 023); no se puede cambiar. |
 | `fld_name` | text | |
 | `fld_order` | int | Orden manual. |
 | `fld_parent_id` | uuid | FK a `folders`. Null = primer nivel. Máximo dos niveles. |
@@ -217,7 +217,9 @@ diseño completo y el razonamiento de seguridad.
 
 Quien acepta una invitación ve y edita la carpeta, sus subcarpetas y los
 items dentro **igual que el dueño** (no hay rol de solo lectura en esta
-versión). La visibilidad se resuelve con la función `vigia.visible_folder_ids()`,
+versión): desde la migración 023 también renombra la carpeta y crea,
+renombra y borra subcarpetas. Solo el dueño borra la carpeta de primer nivel
+(la quitaría a todos), la comparte y mueve carpetas. La visibilidad se resuelve con la función `vigia.visible_folder_ids()`,
 usada en las políticas RLS de `folders`, `items` y `price_history`
 (`SECURITY DEFINER` desde la migración 015, para no recursar en la RLS de
 `folders`).

@@ -111,24 +111,25 @@ export default function FolderSidebar({
             onRenamingNameChange={setRenamingName}
             onRenameSubmit={() => submitRename(folder.fld_id)}
             menu={
-              // Las compartidas solo llevan «Añadir a la cesta»: el resto
-              // de acciones son del dueño.
+              // Quien tiene acceso a una compartida la usa igual que el
+              // dueño (migración 023); compartirla y borrarla, que afecta a
+              // todos, siguen siendo solo del dueño.
               <FolderMenu
                 onAddToBasket={() => {
                   onAddToBasket(folder)
                   setOpenMenuId(null)
                 }}
+                onRename={() => {
+                  setRenamingId(folder.fld_id)
+                  setRenamingName(folder.fld_name)
+                  setOpenMenuId(null)
+                }}
+                onNewSubfolder={() => {
+                  setCreatingSubOf(folder.fld_id)
+                  setExpanded((prev) => new Set(prev).add(folder.fld_id))
+                  setOpenMenuId(null)
+                }}
                 {...(folder.isOwner && {
-                  onRename: () => {
-                    setRenamingId(folder.fld_id)
-                    setRenamingName(folder.fld_name)
-                    setOpenMenuId(null)
-                  },
-                  onNewSubfolder: () => {
-                    setCreatingSubOf(folder.fld_id)
-                    setExpanded((prev) => new Set(prev).add(folder.fld_id))
-                    setOpenMenuId(null)
-                  },
                   onShare: () => {
                     onShare(folder)
                     setOpenMenuId(null)
@@ -165,17 +166,15 @@ export default function FolderSidebar({
                         onAddToBasket(child)
                         setOpenMenuId(null)
                       }}
-                      {...(child.isOwner && {
-                        onRename: () => {
-                          setRenamingId(child.fld_id)
-                          setRenamingName(child.fld_name)
-                          setOpenMenuId(null)
-                        },
-                        onDelete: () => {
-                          setDeletingFolder(child)
-                          setOpenMenuId(null)
-                        },
-                      })}
+                      onRename={() => {
+                        setRenamingId(child.fld_id)
+                        setRenamingName(child.fld_name)
+                        setOpenMenuId(null)
+                      }}
+                      onDelete={() => {
+                        setDeletingFolder(child)
+                        setOpenMenuId(null)
+                      }}
                     />
                   }
                 />

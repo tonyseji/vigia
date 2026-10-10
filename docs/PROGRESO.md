@@ -1263,6 +1263,38 @@ cierra la sesión.
   `PROGRESO.md`, `ROADMAP.md` y la línea de estado y hace commit y push,
   igual que la excepción de la sesión 32.
 
+- Sin Cowork (decisión de Tony): `WORKFLOW.md` reescrito para un solo
+  entorno (Claude Code decide lo técnico, pregunta a Tony lo de producto y
+  lo escribe en `DECISIONES.md`); referencias quitadas de `CLAUDE.md`.
+  Revisadas y mantenidas las tres decisiones que esperaban a Cowork
+  (2026-10-05, 2026-10-06, 2026-10-09). B18 decidido por Tony: avisar a
+  todos los de la carpeta (falta implementarlo).
+- Auditoría periódica: `/claude-api prompt-audit` cada 10 sesiones o con
+  un modelo nuevo; test `claudeMd.test.js` en el CI que falla si el
+  «Estado actual» pasa de 15 líneas o el `CLAUDE.md` de 250.
+
+### Segunda parte: carpetas compartidas editables por el invitado (B30)
+
+Tony vio que solo el dueño podía renombrar o crear subcarpetas en una
+carpeta compartida. Migración `023_carpetas_compartidas_editables.sql`:
+políticas de `folders` abiertas a quien ve la carpeta (insertar
+subcarpeta, renombrar, borrar subcarpeta) y trigger `guard_folder_tree`
+(la subcarpeta es del dueño del padre, el dueño no cambia, solo el dueño
+mueve). Borrar la de primer nivel y compartir siguen siendo del dueño.
+`FolderSidebar` enseña renombrar y «Nueva subcarpeta» en las compartidas, y
+renombrar/borrar en sus subcarpetas.
+
+- Probado en producción dentro de una transacción deshecha, como invitado:
+  crear subcarpeta (queda a nombre del dueño), renombrar raíz y subcarpeta,
+  borrar subcarpeta: sí. Mover una subcarpeta a una carpeta propia,
+  quedársela, crear en una carpeta no compartida, crear una raíz a nombre de
+  otro, renombrar una no compartida, borrar la raíz compartida: no. Sin
+  restos tras deshacerla. Advisors sin avisos nuevos.
+- Tests: 219 en verde; build en verde.
+- No probado en la interfaz con dos cuentas reales: la cuenta de pruebas
+  no tiene una carpeta compartida de otro.
+
 ### Estado final
 
-Solo documentación; sin cambios de código.
+Hecho, desplegado (migración 023 aplicada; la web con el push a `main`).
+Pendiente: B18 (avisos a los invitados), ya decidido.

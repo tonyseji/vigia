@@ -3,10 +3,12 @@ import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 
 /** Carpetas del usuario y las que le han compartido, con jerarquía de dos
- * niveles (fld_parent_id). Crear/renombrar/borrar sigue siendo solo del
- * dueño (RLS); compartir una carpeta de primer nivel se hace desde
- * useFolderShares. Al borrar una carpeta, los artículos quedan "Sin
- * carpeta" por el ON DELETE SET NULL de la migración 001. */
+ * niveles (fld_parent_id). En una compartida, quien tiene acceso renombra y
+ * crea o borra subcarpetas igual que el dueño; borrar la de primer nivel y
+ * compartirla (useFolderShares) son solo del dueño (RLS, migración 023). Una
+ * subcarpeta nueva queda a nombre del dueño del padre (trigger). Al borrar
+ * una carpeta, los artículos quedan "Sin carpeta" por el ON DELETE SET NULL
+ * de la migración 001. */
 export function useFolders() {
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)

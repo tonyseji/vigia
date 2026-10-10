@@ -9,7 +9,7 @@
 > - Decisiones con razonamiento: `docs/DECISIONES.md`
 > - Cómo encaja todo y esquema de BD: `docs/ARQUITECTURA.md`
 > - Qué tiendas dejan leer el precio: `docs/TIENDAS.md`
-> - Quién hace qué (Cowork / Claude Code): `docs/WORKFLOW.md`
+> - Cómo se trabaja (quién decide, reglas de sesión): `docs/WORKFLOW.md`
 > - Cómo tiene que verse: `docs/DISENO.md` + `docs/diseno-referencia.html`
 
 ---
@@ -41,9 +41,8 @@ automático en cada push a `main`). La app vieja ya no existe en Supabase:
 función, cron y tablas retirados el 2026-09-09; su código solo queda en el
 primer commit.
 
-Última sesión: 38. Pendientes abiertos en `docs/ROADMAP.md`; decisiones
-tomadas en Claude Code que Cowork aún tiene que revisar (sesiones 32 y 35),
-en `docs/DECISIONES.md`. Historial completo en `docs/PROGRESO.md` (17 en
+Última sesión: 38. Pendientes abiertos en `docs/ROADMAP.md`; decisiones en
+`docs/DECISIONES.md`. Historial completo en `docs/PROGRESO.md` (17 en
 adelante) y `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
 ---
@@ -74,7 +73,7 @@ vigia/
 │   ├── ARQUITECTURA.md      ← cómo encaja todo + esquema de BD
 │   ├── DECISIONES.md        ← decisiones con razonamiento
 │   ├── PROGRESO.md          ← log de sesiones (las antiguas en PROGRESO-ARCHIVO.md)
-│   ├── WORKFLOW.md          ← Cowork planifica, Claude Code implementa
+│   ├── WORKFLOW.md          ← quién decide qué, reglas de sesión, auditoría
 │   ├── DISENO.md            ← qué se copia de la referencia y qué cambia
 │   └── diseno-referencia.html ← prototipo aprobado, abrible en el navegador
 │   ├── ROADMAP.md           ← fases y pendientes
@@ -157,11 +156,10 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
 1. Leer este `CLAUDE.md`.
 2. Leer las 2 últimas entradas de `docs/PROGRESO.md`.
 3. Si toca BD, leer `docs/ARQUITECTURA.md`.
-4. Si hay una decisión de diseño no obvia, **no decidirla aquí**: pararla y
-   llevarla a Cowork, que la registra en `docs/DECISIONES.md` antes de
-   implementar. Excepción: si Tony pide que la decida Claude Code, se decide,
-   se implementa y se anota en `DECISIONES.md` como «(decidido en Claude Code
-   a petición de Tony)» para que Cowork la revise. Ver `docs/WORKFLOW.md`.
+4. Una decisión técnica no obvia se toma aquí y se escribe en
+   `docs/DECISIONES.md` antes de implementar. Una de producto (qué ve Tony,
+   a quién se avisa, qué entra en la app) se le pregunta a Tony con opciones
+   y recomendación, y también se escribe. Ver `docs/WORKFLOW.md`.
 
 ## Regla anti-deriva (OBLIGATORIA al cerrar sesión)
 
@@ -169,6 +167,8 @@ Todas vienen de haberlas roto en Bilans. Ninguna es teórica.
   (Contexto · Cambios · Estado final).
 - En este `CLAUDE.md` se actualiza **únicamente** la línea de «Estado actual».
   Nunca pegar aquí la entrada completa.
+- Cada 10 sesiones o con un modelo nuevo de Claude: `/claude-api prompt-audit`
+  (ver `docs/WORKFLOW.md`). Un test del CI vigila que este archivo no crezca.
 - Cuando `docs/PROGRESO.md` pase de ~100 KB, mover las entradas antiguas a
   `docs/PROGRESO-ARCHIVO.md`.
 

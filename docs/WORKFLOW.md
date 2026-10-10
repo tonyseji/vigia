@@ -1,138 +1,45 @@
 # Cómo se trabaja en Vigía
 
-> Quién decide, quién escribe código, y qué pasa de uno a otro.
-> Leer antes de empezar cualquier sesión.
+> Todo se hace desde Claude Code: decidir, documentar, escribir código,
+> desplegar. Desde el 2026-10-10 no hay un segundo entorno (antes, Cowork
+> planificaba y Claude Code implementaba; ver `DECISIONES.md`).
 
 ---
 
-## Dos herramientas, dos papeles
+## Quién decide
 
-| Herramienta | Papel |
-|---|---|
-| **Cowork** | Planifica, decide y documenta. Su dominio son los `.md` y las decisiones de diseño. |
-| **Claude Code** | Implementa. Su dominio es todo el código, los comandos y las migraciones. |
+Tony decide el producto; Claude Code decide lo técnico y lo implementa.
 
-La separación no es burocracia: es lo que evita que las decisiones de
-arquitectura se tomen a mitad de un archivo, sin quedar escritas en ningún
-sitio y sin que nadie las pueda revisar tres meses después.
+- **Decisiones técnicas** (tabla nueva o columna, función o trigger, cómo
+  repartir un componente): las toma Claude Code y, si no son obvias, las deja
+  en `DECISIONES.md` antes de implementar, con el razonamiento y lo
+  descartado.
+- **Decisiones de producto o de diseño que cambian lo que ve Tony** (qué se
+  enseña, a quién se avisa, qué entra en la app y qué no): se le preguntan a
+  Tony con las opciones y una recomendación, y la respuesta se registra en
+  `DECISIONES.md` antes de implementar.
+- Si Tony dice «decide tú», Claude Code decide y lo anota igual.
 
-### Qué hace Cowork
-
-- **Documenta** — escribe y reorganiza todos los `.md`: `CLAUDE.md`,
-  `ARQUITECTURA.md`, `DECISIONES.md`, `PROGRESO.md`, `ROADMAP.md`,
-  `TIENDAS.md`, este mismo. El cierre de cada tarea (entrada de
-  `PROGRESO.md`, `ROADMAP.md`, línea de estado) lo escribe Claude Code.
-- **Diseña** — esquema de base de datos, contratos entre piezas, estructura de
-  componentes, flujos de usuario. Antes de que exista el código.
-- **Decide** — resuelve dilemas («¿tabla nueva o columna extra?», «¿en la
-  función o en un trigger?») y **registra la decisión en `DECISIONES.md` antes
-  de implementar**.
-- **Prepara el prompt para Claude Code** cuando hay código que escribir.
-
-**Cowork no toca código** (`.jsx`, `.js`, `.ts`, `.sql`, `.css`, `.html`).
-Si algo requiere editarlo, define la tarea y genera el prompt.
-
-### Qué hace Claude Code
-
-Se abre en terminal, desde la carpeta del proyecto:
-
-```bash
-cd "C:\Users\anton\Desktop\Vigia"
-claude
-```
-
-- Escribe y edita el código.
-- Ejecuta comandos: `npm run dev`, `npm test`, `npm run build`, `git`,
-  `supabase functions deploy`.
-- Genera las migraciones SQL siguiendo el esquema que definió Cowork.
-- Implementa lo especificado **sin rediseñar la arquitectura por su cuenta**.
-  Si aparece un dilema de diseño, para y lo reporta para que se decida en
-  Cowork.
-
----
-
-## El ciclo
-
-```
-1. Tony trae una necesidad a Cowork
-       ↓
-2. Cowork pregunta lo que falte y define la solución
-   (qué se construye, qué archivos se tocan, qué se decide y por qué)
-       ↓
-3. Cowork actualiza los .md que apliquen
-       ↓
-4. Cowork escribe el prompt para Claude Code
-       ↓
-5. Tony lo pega en Claude Code y lo ejecuta
-       ↓
-6. Claude Code implementa y reporta qué tocó
-       ↓
-7. Tony vuelve a Cowork con el resultado: revisar, iterar o planificar lo siguiente
-```
-
-### Excepciones acordadas
-
-En la práctica, desde la sesión 32:
-
-- **Tony puede pedir a Claude Code que decida él** («¿no puedes hacerlo
-  tú?»). Entonces Claude Code decide, implementa y deja la decisión en
-  `DECISIONES.md` con «(decidido en Claude Code a petición de Tony)», para
-  que Cowork la revise después. No es lo normal: es para cosas pequeñas o
-  cuando esperar a Cowork no aporta.
-- **Al cerrar una tarea, Claude Code actualiza él mismo los `.md`**
-  sin esperar a Cowork (ver «Reglas de sesión → Al cerrar»).
-
----
-
-## Formato del prompt para Claude Code
-
-```
-## Contexto
-[Qué está pasando en el proyecto y por qué se hace esto ahora]
-
-## Tarea
-[Qué implementar, en una frase o dos]
-
-## Especificación
-[Nombres de archivos, funciones, campos, tipos, lógica esperada]
-
-## Restricciones
-[Qué NO hacer, qué no romper, qué convenciones respetar]
-
-## Criterio de éxito
-[Cómo se sabe que está bien]
-```
-
-Con esta estructura Claude Code no tiene que adivinar ni tomar decisiones de
-diseño por su cuenta.
+El motivo de escribirlo todo sigue siendo el mismo que con Cowork: que
+ninguna decisión se quede tomada a mitad de un archivo sin que nadie la
+pueda revisar tres meses después.
 
 ---
 
 ## Reglas de sesión
 
-**Al empezar en Cowork:** leer las 2 últimas entradas de `PROGRESO.md` y el
-`ROADMAP.md`. No tocar código.
+**Al empezar:** leer `CLAUDE.md` entero y las 2 últimas entradas de
+`PROGRESO.md`. Si la tarea toca la base de datos, leer también
+`ARQUITECTURA.md`; si toca el aspecto, `DISENO.md`.
 
-**Al empezar en Claude Code:** leer `CLAUDE.md` entero y las 2 últimas entradas
-de `PROGRESO.md`. Si la tarea toca la base de datos, leer también
-`ARQUITECTURA.md`.
+**Al cerrar:** escribir la entrada en `PROGRESO.md` (Contexto · Cambios ·
+Estado final), actualizar `ROADMAP.md` y la línea de estado del `CLAUDE.md`
+— solo esa línea (regla anti-deriva) — y hacer commit y push a `main`.
+Decir a Tony qué archivos se tocaron y qué queda pendiente.
 
-**Al cerrar:** Claude Code reporta exactamente qué archivos tocó y qué queda
-pendiente, escribe la entrada en `PROGRESO.md`, actualiza `ROADMAP.md` y la
-línea de estado del `CLAUDE.md` — solo esa línea (regla anti-deriva) — y hace
-commit y push a `main`.
-
----
-
-## Dónde va cada cosa
-
-| Situación | Va a… |
-|---|---|
-| «¿Cómo estructuramos X?» | Cowork |
-| «¿Qué columnas necesita esta tabla?» | Cowork |
-| «¿Esto en la función o en un trigger?» | Cowork |
-| «Actualiza el roadmap con lo de hoy» | Cowork |
-| «Escribe la migración 001» | Claude Code |
-| «Implementa el componente ItemRow» | Claude Code |
-| «Corre los tests y dime qué falla» | Claude Code |
-| «Haz commit y push» | Claude Code |
+**Auditoría de instrucciones:** cuando el número de la sesión que se cierra
+sea múltiplo de 10 (40, 50…), o cuando salga un modelo nuevo de Claude,
+ejecutar `/claude-api prompt-audit` sobre `CLAUDE.md` y los `docs/` de
+instrucciones, aplicar lo que aguante la revisión y anotarlo en
+`PROGRESO.md`. Un test (`src/lib/__tests__/claudeMd.test.js`) para el CI si
+el «Estado actual» del `CLAUDE.md` vuelve a crecer.

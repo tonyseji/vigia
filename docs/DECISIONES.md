@@ -384,6 +384,8 @@ se puede especificar, es que no está decidida.
 en Claude Code (rápido, pero las decisiones no quedan documentadas y se
 redescubren cada sesión).
 **Revisitar:** No.
+**Sustituida el 2026-10-10:** todo pasa a Claude Code (ver «Todo desde
+Claude Code», más abajo).
 
 ### 2026-09-03 — Guardia anti-secretos en el repositorio, no solo confianza
 **Decisión:** `.gitignore` amplio (claves, certificados, volcados de base de
@@ -1129,8 +1131,10 @@ sin pasar por Cowork. Se dejan escritas aquí para poder revisarlas.
 **Descartado:** guardar el nombre sacado de la dirección (rompería la marca
 de «sin nombre», ver 3); un aviso flotante («toast») para lo guardado (otra
 pieza nueva cuando la línea bajo el campo basta).
-**Revisitar:** si Cowork prefiere otro reparto de la fila móvil o quiere el
+**Revisitar:** si Tony prefiere otro reparto de la fila móvil o quiere el
 minigráfico de vuelta en tablet (hoy solo desde `lg:`).
+**Revisada el 2026-10-10 (sesión 38):** se mantiene. Encaja con «densa» de
+`DISENO.md` y la marca `itm_title = itm_url` sigue intacta.
 
 ### 2026-10-06 — Vendido / sin stock en la lista (decidido en Claude Code a petición de Tony)
 Tony pidió resolver B27 directamente, sin pasar por Cowork. Se deja escrito
@@ -1154,14 +1158,16 @@ aquí para revisarlo.
 histórico de algo que el usuario eligió guardar: se queda donde estaba);
 tachar el precio en la lista (en la cesta sí, porque allí significa «no
 suma»); dejar de leerlo (perdería el aviso de vuelta).
-**Revisitar:** si Cowork quiere un filtro «ocultar vendidos» o archivar
+**Revisitar:** si Tony quiere un filtro «ocultar vendidos» o archivar
 automáticamente lo vendido tras un tiempo.
+**Revisada el 2026-10-10 (sesión 38):** se mantiene. Es coherente con lo que
+Vigía es: el histórico de lo que tú guardas, que no se esconde.
 
 
 ### 2026-10-09 — Si el servidor no lee un precio, lo lee el Chrome (sesión 37)
 
 **Decidido por Tony en Claude Code** («todo debe funcionar; si algo no va,
-que vaya otra cosa»), para revisar en Cowork.
+que vaya otra cosa»). Revisada el 2026-10-10 (sesión 38): se mantiene.
 **Contexto:** Amazon da la mesa de Tony sin precio al servidor porque la BD
 está en Irlanda y esa mesa no se envía allí. La extensión solo cubría las
 tiendas marcadas como bloqueadas (`itm_is_manual`).
@@ -1184,3 +1190,43 @@ ser cómodo»). La extensión (1.2.0) lleva `https://*/*` en
 `host_permissions`, así el relevo vale para cualquier tienda sin añadirlas
 a mano. Solo lee las pestañas que abre el pase, con direcciones de la
 lista de Vigía.
+
+### 2026-10-10 — Todo desde Claude Code (sesión 38)
+**Decisión (de Tony):** se deja de usar Cowork. Claude Code decide lo
+técnico, pregunta a Tony lo de producto, documenta y cierra cada sesión.
+Detalle en `docs/WORKFLOW.md`.
+**Por qué:** las últimas sesiones ya iban así (excepciones desde la 32) y el
+paso por Cowork dejaba decisiones «para revisar» que nadie revisaba.
+**Lo que se conserva:** toda decisión no obvia se escribe aquí antes de
+implementar, con razonamiento y descartado. Las tres que esperaban revisión
+(2026-10-05, 2026-10-06 y 2026-10-09) se revisaron y se mantienen.
+**Auditoría periódica:** `/claude-api prompt-audit` cada 10 sesiones o con
+un modelo nuevo de Claude, y un test en el CI que falla si el «Estado
+actual» del `CLAUDE.md` vuelve a crecer. Se descartó una tarea programada
+en la nube: cuesta uso cada vez y la regla de cierre de sesión ya lo dispara.
+
+### 2026-10-10 — Avisos de precio también para los invitados (B18)
+**Decisión (de Tony):** cuando baja un artículo de una carpeta compartida,
+avisa a todos los que tienen acceso a la carpeta, cada uno con sus propios
+ajustes de aviso, y no solo a quien lo añadió.
+**Por qué:** una carpeta compartida se usa a medias; si el precio baja, le
+interesa igual a los dos.
+**Pendiente:** implementarlo (B18 en `ROADMAP.md`).
+
+### 2026-10-10 — Carpeta compartida: quien tiene acceso la gestiona como el dueño (sesión 38)
+**Decisión (de Tony):** en una carpeta compartida, cualquiera con acceso
+renombra la carpeta y crea, renombra y borra subcarpetas, no solo el dueño.
+«Lo compartes con alguien que quieres que lo use igual que tú.»
+**Cómo (decidido en Claude Code):** migración 023. Las políticas de
+`folders` dejan insertar una subcarpeta dentro de cualquier carpeta visible y
+actualizar cualquier carpeta visible; borrar, cualquier subcarpeta visible.
+Un trigger (`guard_folder_tree`) pone toda subcarpeta a nombre del dueño de
+su padre, impide cambiar el dueño y solo deja mover carpetas a su dueño.
+**Por qué así:** si la subcarpeta del invitado fuera suya, al retirarle la
+invitación se quedaría con una subcarpeta colgando de una carpeta que ya no
+ve, y el dueño perdería parte de su árbol. Con el dueño fijo, el árbol es
+siempre de una sola cuenta.
+**Siguen siendo solo del dueño:** borrar la carpeta de primer nivel (la
+quitaría a todos de golpe) y compartirla con más gente.
+**Revisitar:** si Tony quiere que el invitado también pueda invitar a otros.
+
