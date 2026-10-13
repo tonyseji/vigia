@@ -57,9 +57,11 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
   return (
     <article
       data-item-id={item.itm_id}
-      className={`flex flex-col overflow-hidden rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
+      className={`flex flex-col rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
     >
-      <div className={`relative grid aspect-square place-items-center ${item.itm_image_url ? 'bg-photo' : 'bg-surface-2'}`}>
+      {/* El recorte de las esquinas va en la foto y no en la tarjeta: con
+          overflow-hidden en la tarjeta, el desplegable de carpeta se cortaba. */}
+      <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-t-[7px] ${item.itm_image_url ? 'bg-photo' : 'bg-surface-2'}`}>
         <div className="absolute inset-x-0 top-0 z-1 h-[3px]" style={{ background: stripeColor }} />
         {item.itm_image_url ? (
           // Cuadrada (casi todas las tiendas publican la foto 1:1) y con
@@ -119,7 +121,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           )}
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-1.5 pt-1">
+        <div className="mt-auto flex flex-col gap-1.5 pt-1">
           {item.itm_price == null ? (
             <div className="min-h-[46px]">
               <span className="rounded-md bg-warn-soft px-1.5 py-0.5 text-[10.5px] text-warn">Sin precio</span>
@@ -145,8 +147,8 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
             </div>
           )}
 
-          {/* Se encoge (truncando el nombre) en vez de salirse de la tarjeta
-              cuando el precio lleva la píldora de variación al lado. */}
+          {/* En su propia línea, a todo el ancho: al lado del precio solo
+              cabían unas letras («Sin car…») en las tarjetas estrechas. */}
           <div className="relative min-w-0">
             <button
               type="button"
@@ -156,7 +158,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
                 setPickerOpen((v) => !v)
               }}
               title={currentFolder ? currentFolder.fld_name : 'Sin carpeta'}
-              className="flex max-w-[76px] min-w-0 items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[10.5px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+              className="flex w-full min-w-0 items-center gap-1 rounded-md border border-line px-1.5 py-1 text-[10.5px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
             >
               <IconEtiqueta className="h-3 w-3 flex-none" />
               <span className="truncate">{currentFolder ? currentFolder.fld_name : 'Sin carpeta'}</span>
@@ -166,7 +168,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
               <div
                 ref={pickerRef}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-8 left-1/2 z-10 flex max-h-56 w-40 -translate-x-1/2 flex-col gap-0.5 overflow-y-auto rounded-lg border border-line bg-surface p-1 text-sm shadow-lg"
+                className="absolute inset-x-0 bottom-8 z-10 flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-lg border border-line bg-surface p-1 text-sm shadow-lg"
               >
                 <button
                   type="button"
@@ -182,6 +184,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
                     onClick={() => moveTo(f.fld_id)}
                     className={`truncate rounded-md px-2 py-1.5 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent ${item.itm_fld_id === f.fld_id ? 'bg-accent-soft text-ink' : 'text-ink hover:bg-surface-2'}`}
                     style={{ paddingLeft: f.fld_parent_id ? '1.5rem' : '0.5rem' }}
+                    title={f.fld_name}
                   >
                     {f.fld_name}
                   </button>

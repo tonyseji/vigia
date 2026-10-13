@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { NO_FOLDER, folderGroupName, groupByFolder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal } from '../itemGroups.js'
+import { NO_FOLDER, folderGroupName, groupByFolder, foldersInTreeOrder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal } from '../itemGroups.js'
 
 const foldersById = {
   m: { fld_id: 'm', fld_name: 'Muebles', fld_parent_id: null },
@@ -26,6 +26,21 @@ describe('groupByFolder', () => {
     expect(groups).toHaveLength(1)
     expect(groups[0][0]).toBe(NO_FOLDER)
     expect(groups[0][1].map((i) => i.itm_id)).toEqual([1, 2])
+  })
+})
+
+describe('foldersInTreeOrder', () => {
+  const f = (id, parent = null) => ({ fld_id: id, fld_parent_id: parent })
+
+  it('cada subcarpeta va debajo de su carpeta, aunque se creara después de otra raíz', () => {
+    // Pisito y sus hijas, luego Ordenador, y Cocina (hija de Pisito) la última:
+    // el orden de creación que llega de la BD.
+    const folders = [f('pisito'), f('papel', 'pisito'), f('dormitorio', 'pisito'), f('ordenador'), f('cocina', 'pisito')]
+    expect(foldersInTreeOrder(folders).map((x) => x.fld_id)).toEqual(['pisito', 'papel', 'dormitorio', 'cocina', 'ordenador'])
+  })
+
+  it('una subcarpeta cuya carpeta no está cargada no se pierde: va al final', () => {
+    expect(foldersInTreeOrder([f('hija', 'x'), f('a')]).map((x) => x.fld_id)).toEqual(['a', 'hija'])
   })
 })
 

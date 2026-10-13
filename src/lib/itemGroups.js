@@ -13,6 +13,22 @@ export function folderGroupName(key, foldersById) {
   return parent ? `${parent.fld_name} / ${folder.fld_name}` : folder.fld_name
 }
 
+/** Carpetas en el orden del sidebar: cada carpeta seguida de sus
+ * subcarpetas, y dentro de cada nivel el orden en que llegan (fld_order).
+ * La BD las da en orden de creación, así que una subcarpeta creada después
+ * de otra carpeta raíz salía debajo de esa raíz en los selectores. Una
+ * subcarpeta cuya carpeta no está cargada va al final, no se pierde. */
+export function foldersInTreeOrder(folders) {
+  const ids = new Set(folders.map((f) => f.fld_id))
+  const childrenOf = {}
+  for (const f of folders) {
+    if (f.fld_parent_id != null) (childrenOf[f.fld_parent_id] = childrenOf[f.fld_parent_id] || []).push(f)
+  }
+  const ordered = folders.filter((f) => f.fld_parent_id == null).flatMap((f) => [f, ...(childrenOf[f.fld_id] ?? [])])
+  const orphans = folders.filter((f) => f.fld_parent_id != null && !ids.has(f.fld_parent_id))
+  return [...ordered, ...orphans]
+}
+
 /** [clave, artículos] por carpeta, respetando el orden en que llegan los
  * artículos. «Sin carpeta» va siempre primero (lo recién guardado suele
  * estar ahí); el resto, por nombre. Un artículo de una carpeta que no está

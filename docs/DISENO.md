@@ -62,7 +62,16 @@ sin minigráfico. Es secundaria: se usa para comparar diseños, no precios.
 La foto es cuadrada (1:1, como publican casi todas las tiendas), con el mismo
 fondo `photo` y `multiply`; el nombre reserva siempre dos líneas y el bloque
 de precio tiene alto fijo, así el precio cae a la misma altura en todas las
-tarjetas.
+tarjetas. La etiqueta de carpeta va en su propia línea, a todo el ancho,
+debajo del precio: al lado solo cabían unas letras en las tarjetas
+estrechas. Su desplegable mide lo mismo que la etiqueta y la tarjeta no
+lleva `overflow-hidden` (lo lleva la foto), para que nunca se corte.
+
+**Carpetas en el sidebar y en los selectores:** cada subcarpeta va debajo de
+su carpeta, un escalón (16 px) más adentro que el icono de una carpeta de
+primer nivel, tenga esta subcarpetas o no. Los selectores de carpeta
+(tarjeta, fila, editar) siguen el mismo orden que el sidebar, no el de
+creación.
 
 ---
 

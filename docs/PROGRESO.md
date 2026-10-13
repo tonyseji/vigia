@@ -1370,3 +1370,44 @@ botón) y los dos del navegador eran copias reducidas. Decisión técnica en
 Hecho, desplegado y subido. Tony tiene que recargar la extensión (1.3.0) y
 volver a arrastrar el botón de marcadores desde Ajustes (su código cambia).
 B32 decidido por Tony: se deja el más barato («desde»). Pendiente: B33.
+
+## 2026-10-14 (Sesión 40) — Carpetas: sangría, orden del selector y texto cortado (B34)
+
+### Contexto
+
+Tony, con captura de la vista Fotos: la carpeta nueva «Ordenador» parece
+estar dentro de «Pisito»; al mover un artículo, el selector enseña las
+carpetas por orden de creación y no por carpeta, y el texto se corta.
+
+### Cambios
+
+- **Sidebar.** Causa: una carpeta de primer nivel lleva delante la flecha o
+  su hueco (20 px + 4), así que su icono queda a 32 px, y las subcarpetas
+  tenían una sangría fija de 28 px. Una raíz sin subcarpetas («Ordenador»)
+  quedaba más adentro que las hijas de Pisito. Ahora las subcarpetas van a
+  48 px (también al renombrar y en «Nueva subcarpeta»).
+- **Orden del selector.** Causa: los tres selectores (tarjeta, fila,
+  editar) pintaban `folders` tal cual llega de la BD (`fld_order`, orden de
+  creación); «Cocina», hija de Pisito creada después de Ordenador, salía
+  debajo de Ordenador. `foldersInTreeOrder` (`itemGroups.js`, con test que
+  fallaba antes) los pone como el sidebar, y `useFolders` ya devuelve
+  `folders` en ese orden. Una subcarpeta sin su carpeta cargada va al final.
+- **Texto cortado en Fotos.** Causa: la tarjeta tenía `overflow-hidden` y el
+  desplegable iba centrado sobre la etiqueta, así que se salía por la
+  derecha y la tarjeta lo recortaba; la etiqueta, al lado del precio, tenía
+  76 px como mucho («Sin car…»). Ahora el recorte de las esquinas lo lleva
+  la foto, la etiqueta va en su propia línea a todo el ancho y el
+  desplegable mide lo mismo que la etiqueta. `DISENO.md` actualizado.
+- Comprobado en el navegador integrado con una página de prueba temporal
+  (datos inventados como los de la captura; borrada al acabar), porque en
+  local no hay sesión: sidebar con Pisito y Ordenador a la misma altura y
+  las hijas un escalón dentro; selector en orden de árbol; ningún nombre
+  cortado ni en tarjetas de 144 px (móvil de 330 px) ni en la fila; el
+  desplegable no sale de la tarjeta y no hay scroll horizontal.
+- Tests: 249 en verde; build en verde.
+- `.claude/launch.json` (local, no versionado): el servidor de desarrollo
+  pasa al puerto 5174; el 5173 lo usa Bilans.
+
+### Estado final
+
+Hecho y subido. No visto aún con la cuenta de pruebas en producción.

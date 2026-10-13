@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
+import { foldersInTreeOrder } from '../lib/itemGroups.js'
 
 /** Carpetas del usuario y las que le han compartido, con jerarquía de dos
  * niveles (fld_parent_id). En una compartida, quien tiene acceso renombra y
@@ -88,5 +89,9 @@ export function useFolders() {
     return {}
   }, [reload])
 
-  return { folders, foldersTree, loading, loadError, createFolder, renameFolder, deleteFolder, reload }
+  // Los selectores de carpeta (tarjeta, fila, editar) las pintan en este
+  // orden, el mismo del sidebar.
+  const orderedFolders = useMemo(() => foldersInTreeOrder(folders), [folders])
+
+  return { folders: orderedFolders, foldersTree, loading, loadError, createFolder, renameFolder, deleteFolder, reload }
 }

@@ -181,7 +181,7 @@ export default function FolderSidebar({
               ))}
 
               {creatingSubOf === folder.fld_id && (
-                <div className="flex items-center gap-1 py-0.5 pl-9 pr-2">
+                <div className="flex items-center gap-1 py-0.5 pl-12 pr-2">
                   <input
                     autoFocus
                     value={newName}
@@ -268,7 +268,7 @@ function FolderRow({
 }) {
   if (renaming) {
     return (
-      <div className="flex items-center gap-1 py-0.5 pr-1" style={{ paddingLeft: indent ? '2.25rem' : '0.5rem' }}>
+      <div className="flex items-center gap-1 py-0.5 pr-1" style={{ paddingLeft: indent ? '3rem' : '0.5rem' }}>
         <input
           autoFocus
           value={renamingName}
@@ -284,7 +284,11 @@ function FolderRow({
   return (
     <div
       className={`group flex items-center gap-1 rounded-md pr-1 ${active ? 'bg-accent-soft' : 'hover:bg-surface-2'}`}
-      style={{ paddingLeft: indent ? '1.75rem' : '0.5rem' }}
+      // Una raíz lleva delante la flecha o su hueco (20 px + 4 de separación),
+      // así que su icono queda a 32 px. La subcarpeta va un escalón más
+      // adentro (48 px): con 28 px quedaba por fuera de una raíz sin
+      // subcarpetas y parecía que esa raíz colgaba de la carpeta de arriba.
+      style={{ paddingLeft: indent ? '3rem' : '0.5rem' }}
     >
       {/* Sin subcarpetas, un hueco y no un botón invisible: con el teclado
           era una parada sin nombre que no hacía nada. */}
