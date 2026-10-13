@@ -86,6 +86,18 @@ segundo sitio donde aplicar lo aprendido en Bilans.
 día el proyecto deja de apetecer.
 **Revisitar:** Nunca, salvo que cambie el motivo por el que se construye.
 
+### 2026-10-14 — Artículo con varios acabados y sin acabado en la dirección: el precio más barato (B32, sesión 39)
+**Decisión (de Tony):** si una ficha publica un precio por acabado o talla
+(Sklum) y la dirección guardada no elige ninguno, se vigila el más barato,
+como un precio «desde». Para seguir un acabado concreto, se elige en la
+tienda antes de guardar: la dirección lleva entonces la variante
+(`?id_c=`, `?variant=`) y se vigila esa.
+**Por qué:** la tienda no publica cuál sale por defecto, así que no hay
+forma fiable de saberlo; el más barato es una regla clara y estable.
+**Descartado:** adivinar el acabado por defecto leyendo el precio que se ve
+en la página (frágil, y el servidor no ve la página pintada).
+**Revisitar:** si Tony ve que el «desde» le confunde en algún artículo.
+
 ---
 
 ## Arquitectura

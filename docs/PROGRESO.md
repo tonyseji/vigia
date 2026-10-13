@@ -1369,4 +1369,4 @@ botón) y los dos del navegador eran copias reducidas. Decisión técnica en
 
 Hecho, desplegado y subido. Tony tiene que recargar la extensión (1.3.0) y
 volver a arrastrar el botón de marcadores desde Ajustes (su código cambia).
-Pendiente: B32 (decisión de Tony) y B33.
+B32 decidido por Tony: se deja el más barato («desde»). Pendiente: B33.
