@@ -1,7 +1,7 @@
 // Service worker de la extensión: guarda la página que se está viendo (lo
 // pide el popup) y hace el pase diario por lo que el servidor no puede leer:
 // tiendas que bloquean y lo que se quedó sin precio (docs/TIENDAS.md). Todo lo que toca la sesión pasa por aquí.
-import { extractProduct } from './extract.js'
+import { readOpenPage } from './extract.js'
 import { getSession, listChromeItems, login, logout, recordPrice } from './api.js'
 
 const PASS_EVERY_HOURS = 20 // Como el pase diario del servidor (refresh/notify.ts, cronCutoffHours)
@@ -58,7 +58,8 @@ function navigate(tabId, url) {
 }
 
 async function readTab(tabId) {
-  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId }, func: extractProduct })
+  await chrome.scripting.executeScript({ target: { tabId }, files: ['parse.js'] })
+  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId }, func: readOpenPage })
   return result
 }
 

@@ -235,6 +235,31 @@ quieren funcionar offline, que no es el caso de Vigía.
 **Revisitar:** Si algún día Vigía necesita caché offline de verdad (no solo
 recibir push), ahí sí un plugin dedicado empieza a compensar su coste.
 
+### 2026-10-14 — Un solo lector de precios para servidor, extensión y botón (sesión 39)
+**Decisión:** las funciones puras del lector del servidor salen de
+`scrape/extract.ts` a `scrape/parse.ts` (sin red ni Deno: solo texto HTML
+de entrada). Ese archivo es el único lector. `npm run build:parse` lo
+compila con Vite (ya instalado) a `extension/parse.js`, un script que deja
+`VigiaParse` en la página. La extensión lo inyecta y le pasa
+`document.documentElement.outerHTML` de la pestaña; el botón de marcadores
+lleva el mismo código dentro. Un test compila `parse.ts` y falla si
+`extension/parse.js` no es su copia exacta.
+**Por qué:** había tres lectores. El del servidor prueba en cascada (JSON-LD
+en cualquier forma, variantes, Open Graph, microdatos, datos embebidos
+comprobados contra el texto con €, Amazon, Vinted); la extensión y el botón
+tenían copias reducidas que se rompían con tiendas que el servidor leía bien
+(PcComponentes, «product» en minúscula). Con uno solo, cada arreglo vale
+para los tres caminos y los tests de tiendas reales cubren a los tres.
+**Descartado:** mandar el HTML de la página al servidor para leerlo allí:
+1–2 MB por ficha (Amazon), datos de la sesión del usuario en la tienda
+viajando al servidor, y el botón de marcadores no podría (va por el hash de
+la URL). También descartado seguir parcheando las copias.
+**Coste:** el botón de marcadores pasa de ~3 KB a ~15 KB (cabe de sobra) y
+hay que volver a arrastrarlo; la extensión hay que recargarla.
+**Barrido:** las fichas de las tiendas habituales se prueban con el
+lector en el navegador y se guarda un recorte de cada una como test
+(`scrape/fixtures/`), para que un cambio del lector no rompa ninguna.
+
 ---
 
 ## Seguridad y datos

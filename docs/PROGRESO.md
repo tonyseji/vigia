@@ -1299,7 +1299,7 @@ renombrar/borrar en sus subcarpetas.
 Hecho, desplegado (migración 023 aplicada; la web con el push a `main`).
 Pendiente: B18 (avisos a los invitados), ya decidido.
 
-## 2026-10-14 (Sesión 39) — La extensión no leía el precio de PcComponentes
+## 2026-10-14 (Sesión 39) — PcComponentes en la extensión y un solo lector de precios
 
 ### Contexto
 
@@ -1324,7 +1324,49 @@ lista tienen precio).
   ficha real: 74,99 € (lo que enseña la página), en stock, título y foto.
 - `TIENDAS.md`: fila de PcComponentes.
 
+- Tony recargó la extensión: PcComponentes ya funciona.
+
+### Segunda parte: un solo lector y barrido de tiendas (B31)
+
+Tony: «si cada vez que uso una página nueva voy a tener problemas es
+bastante tedioso». Causa de fondo: tres lectores (servidor, extensión,
+botón) y los dos del navegador eran copias reducidas. Decisión técnica en
+`DECISIONES.md` (2026-10-14); Tony aprobó las dos cosas.
+
+- **Lector único:** `scrape/parse.ts` (sale de `extract.ts`, que ahora solo
+  descarga). `npm run build:parse` (Vite, ya instalado) lo compila a
+  `extension/parse.js` (7,7 KB, una línea, deja `VigiaParse`).
+  `parseBundle.test.js` falla si no está al día. La extensión inyecta
+  `parse.js` y llama a `readPage(outerHTML, href, canónica)`
+  (`extract.js` → `readOpenPage`); el botón de marcadores lo lleva dentro
+  (`?raw`) y avisa también de la página de verificación. Extensión 1.3.0,
+  con la versión al pie de la ventanita.
+- **Barrido** en el navegador integrado: 22 tiendas, 18 leídas, todas con el
+  precio que enseñaba la página. Recorte de cada ficha en
+  `scrape/fixtures/` y una fila en `scrape/stores.test.ts`. Incluye las
+  tiendas de la lista de Tony (consultadas en la BD), Shopify y WooCommerce.
+  Fnac (DataDome), Worten (consentimiento) y Carrefour (503) no dejaron
+  entrar (B33); Maisons du Monde pidió DataDome, y el lector lo reconoce.
+- **Arreglos que salieron del barrido** (valen para los tres caminos):
+  - `AggregateOffer` con ofertas dentro: vale la de dentro. PcComponentes:
+    304,79 € como la página, no el `lowPrice` (304,78) de otro vendedor; y
+    la disponibilidad, que antes el servidor dejaba sin dato.
+  - `priceSpecification` en lista (IKEA): se lee el precio actual y se
+    salta el tachado. Antes salía de rebote por los datos embebidos.
+  - Varios `Product` (Decathlon, uno por color): primero el de la página.
+  - Varias ofertas (Sklum por acabado, Shopify `?variant=`): si la dirección
+    elige una, esa; si no, la más barata. `readPage` guarda entonces la
+    dirección de la variante y no la canónica (Sklum la quita), para que el
+    pase del servidor lea lo mismo.
+- **Pregunta abierta para Tony (B32):** la base Orlena de Sklum está a
+  20,95 € (acabado más barato) y la ficha enseña 32,95 € (el de por defecto).
+- Tests: 247 en verde; build en verde. `scrape` v13, `refresh` v12 y
+  `save-link` v8 desplegadas; las tres arrancan (401 sin sesión). La
+  lógica nueva no se ha visto aún en un pase real del servidor: el de mañana
+  debería dejar PcComponentes en 304,79 €.
+
 ### Estado final
 
-Hecho y subido. Tony tiene que recargar la extensión en
-`chrome://extensions` para la 1.2.1.
+Hecho, desplegado y subido. Tony tiene que recargar la extensión (1.3.0) y
+volver a arrastrar el botón de marcadores desde Ajustes (su código cambia).
+Pendiente: B32 (decisión de Tony) y B33.

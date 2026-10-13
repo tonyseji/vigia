@@ -43,7 +43,8 @@ el botón de recargar de la tarjeta de Vigía.
 | `manifest.json` | Permisos: `activeTab` + `scripting` para leer la pestaña al pulsar el icono; `host_permissions` para el pase (cualquier tienda `https`), Supabase y la web. |
 | `background.js` | Service worker. Pase diario (`chrome.alarms`), guardar la pestaña, sesión. |
 | `api.js` | Login con email y contraseña contra Supabase Auth, renovación del token, lectura de artículos y llamada a `record-price`. |
-| `extract.js` | Lee JSON-LD / Open Graph de la página, y la ficha de Amazon (no tiene JSON-LD). Misma lógica que el botón de marcadores (`src/lib/browserImport.js`). |
+| `parse.js` | **Generado, no se edita a mano.** El lector del servidor (`supabase/functions/scrape/parse.ts`) compilado con `npm run build:parse`; deja `VigiaParse` en la pestaña. Un test falla si no está al día. |
+| `extract.js` | `readOpenPage`: le pasa a `VigiaParse.readPage` el HTML de la pestaña y su canónica. `background.js` inyecta antes `parse.js`. |
 | `popup.*` | La ventana del icono. |
 
 - **Sin claves en el repositorio:** la URL y la clave pública de Supabase se

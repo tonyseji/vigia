@@ -11,10 +11,24 @@
 
 | Tienda | Lectura | Cómo se lee | Notas |
 |---|---|---|---|
-| IKEA | ✅ | JSON-LD | Sin problemas conocidos. |
-| Sklum | ✅ | JSON-LD | Lo que tarda en llegar lo publica como `BackOrder` («entrega estimada…»): cuenta como en stock (B28). |
+| IKEA | ✅ | JSON-LD | El precio va en una lista de `priceSpecification` con el tachado al lado; se lee el que no es `StrikethroughPrice` (antes salía de rebote por los datos embebidos). Sesión 39. |
+| Sklum | ✅ | JSON-LD | Lo que tarda en llegar lo publica como `BackOrder` («entrega estimada…»): cuenta como en stock (B28). Una oferta por acabado, cada una con `?id_c=`: si la dirección lo lleva, vale ese acabado; si no, el más barato, que puede no ser el que enseña la página por defecto (B32). |
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
-| PcComponentes | ✅ | JSON-LD | Escribe el tipo en minúscula (`"@type":"product"`) y el precio en un `AggregateOffer` (`lowPrice`), con la disponibilidad en la oferta de dentro. El servidor siempre lo leyó; la extensión y el botón, desde la 1.2.1 (sesión 39). |
+| PcComponentes | ✅ | JSON-LD | Escribe el tipo en minúscula (`"@type":"product"`) y el precio en un `AggregateOffer`. Vale la oferta de dentro (la que enseña la página); su `lowPrice` puede ser de otro vendedor del marketplace (304,78 frente a 304,79 €). Sesión 39. |
+| MediaMarkt | ✅ | JSON-LD | El `Product` va dentro de una `BuyAction`. Barrido 2026-10-14. |
+| El Corte Inglés | ✅ | JSON-LD | Barrido 2026-10-14. |
+| Coolmod | ✅ | JSON-LD | Barrido 2026-10-14. |
+| Alternate | ✅ | JSON-LD | Barrido 2026-10-14. |
+| Decathlon | ✅ | JSON-LD | Publica un `Product` por color, cada uno con su url: vale el de la página abierta. Barrido 2026-10-14. |
+| Zara Home | ✅ | JSON-LD | Un `Product` por talla. Barrido 2026-10-14. |
+| Conforama | ✅ | JSON-LD | `AggregateOffer` sin disponibilidad: stock sin dato. Barrido 2026-10-14. |
+| JYSK | ✅ | JSON-LD | Barrido 2026-10-14. |
+| Photowall | ✅ | JSON-LD | Precio por m², solo en `priceSpecification`. Barrido 2026-10-14. |
+| Tiendas Shopify (p. ej. arenaa.es) | ✅ | JSON-LD | `ProductGroup` con `hasVariant`; `?variant=` elige variante. Barrido 2026-10-14. |
+| Tiendas WooCommerce (p. ej. papelespintadosdc.com) | ✅ | JSON-LD | `Product` dentro de `@graph`. Barrido 2026-10-14. |
+| Fnac | ❓ | — | En el barrido pidió verificación DataDome al navegador integrado; no probada en un Chrome normal ni desde el servidor. |
+| Worten | ❓ | — | En el barrido no se pasó de su página de consentimiento; sin probar. |
+| Carrefour | ❓ | — | En el barrido respondió «Service Unavailable» al navegador integrado; sin probar. |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. Los enlaces cortos de la app (`amzn.eu/d/…`) se expanden a la ficha `/dp/ASIN` antes de leer (B29). Pero Amazon ve el servidor en **Irlanda** y no da precio de lo que no se envía allí: entonces lo lee la extensión de Chrome (B29). |
 | Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |
 | Maisons du Monde | ⚠️ | Extensión de Chrome (pase diario) o botón «Guardar en Vigía» | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el navegador sí (JSON-LD de la página abierta). Con la extensión, precio diario mientras Chrome esté abierto (`extension/README.md`). Ver «Maisons du Monde: qué se probó». |
@@ -73,8 +87,16 @@ otro servidor gratuito (IP de centro de datos, DataDome lo detecta).
 
 ## Orden de intentos del extractor
 
-1. **JSON-LD** (`<script type="application/ld+json">` con `@type: Product`).
-   Es el camino bueno: dato estructurado y explícito.
+Un solo lector para servidor, extensión y botón de marcadores:
+`supabase/functions/scrape/parse.ts` (sesión 39). Cada tienda probada tiene
+un recorte de su ficha en `scrape/fixtures/` y una fila en
+`scrape/stores.test.ts`: para añadir una tienda, se añaden los dos.
+
+1. **JSON-LD** (`<script type="application/ld+json">` con `@type: Product`,
+   en mayúsculas o no, también dentro de `@graph` o de otro objeto). Es el
+   camino bueno: dato estructurado y explícito. Si hay varios productos o
+   varias ofertas (variantes), vale el de la página abierta o el que elige
+   su dirección (`?id_c=`, `?variant=`); si no, el más barato.
 2. **Open Graph** (`og:price:amount`, `og:title`, `og:image`).
 3. **Microdatos** (`itemprop="price"`).
 4. **Regla propia de la tienda**, si la hay en `store_rules`.

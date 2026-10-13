@@ -36,102 +36,35 @@ export function manualPriceStatus(item, now = Date.now()) {
   return 'manual'
 }
 
+import PARSE_SOURCE from '../../extension/parse.js?raw'
+
 const HASH_KEY = 'importar'
 const STORAGE_KEY = 'vigia.pendingImport'
 const KEY_STORAGE_KEY = 'vigia.bookmarkletKey'
 const KEY_RE = /^[0-9a-f]{32}$/
 
 // Corre en la página de la tienda, no en Vigía: autocontenido, sin nada del
-// bundle. Mismo orden que el extractor del servidor (JSON-LD, luego metas);
-// Amazon, que no publica JSON-LD, se lee de la ficha como en la extensión
-// (extension/extract.js).
-// `__ORIGEN__` y `__CLAVE__` se sustituyen al construir el enlace. Sin
-// comentarios `//` dentro: el marcador va en una sola línea y comentarían
-// todo lo que sigue. Si Safari (iPhone) bloquea la pestaña nueva, abre Vigía
-// en la misma.
+// bundle. Lleva dentro el mismo lector que el servidor y la extensión
+// (extension/parse.js, compilado de supabase/functions/scrape/parse.ts),
+// que deja `VigiaParse` dentro de la función, sin tocar la página.
+// `__ORIGEN__` y `__CLAVE__` se sustituyen al construir el enlace; el lector,
+// en `__LECTOR__`. Sin comentarios `//` dentro: el marcador va en una sola
+// línea y comentarían todo lo que sigue. Si Safari (iPhone) bloquea la
+// pestaña nueva, abre Vigía en la misma.
 const BOOKMARKLET_SOURCE = `
 (function () {
-  function findProduct(node) {
-    if (!node || typeof node !== 'object') return null;
-    if (Array.isArray(node)) {
-      for (var i = 0; i < node.length; i++) {
-        var found = findProduct(node[i]);
-        if (found) return found;
-      }
-      return null;
-    }
-    var types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
-    for (var j = 0; j < types.length; j++) {
-      if (/^product$/i.test(String(types[j]))) return node;
-    }
-    return findProduct(node['@graph']);
+  __LECTOR__
+  var canonical = document.querySelector('link[rel="canonical"]');
+  var read = VigiaParse.readPage(document.documentElement.outerHTML, location.href, canonical && canonical.href);
+  if (read.blocked) {
+    alert('Vigía: la tienda está pidiendo verificación. Resuélvela en la página y vuelve a pulsar el botón.');
+    return;
   }
-  function meta(key) {
-    var el = document.querySelector('meta[property="' + key + '"],meta[name="' + key + '"],meta[itemprop="' + key + '"]');
-    return el ? el.getAttribute('content') : null;
-  }
-  function toNumber(raw) {
-    if (raw == null) return NaN;
-    if (typeof raw === 'number') return raw;
-    var s = String(raw).trim();
-    if (/,\\d{1,2}$/.test(s)) s = s.replace(/\\./g, '').replace(',', '.');
-    return Number(s.replace(/[^\\d.]/g, ''));
-  }
-  function text(sel) {
-    var el = document.querySelector(sel);
-    return el ? el.textContent.trim() : '';
-  }
-  function amazonPrice() {
-    var zones = ['#corePriceDisplay_desktop_feature_div', '#corePrice_feature_div', '#apex_desktop', '#corePriceDisplay_mobile_feature_div'];
-    for (var z = 0; z < zones.length; z++) {
-      var zone = document.querySelector(zones[z]);
-      if (!zone) continue;
-      var offs = zone.querySelectorAll('.a-price .a-offscreen');
-      for (var o = 0; o < offs.length; o++) {
-        var t = offs[o].textContent.trim();
-        if (/\\d/.test(t)) return t.replace(/[^\\d.,]/g, '');
-      }
-      var whole = zone.querySelector('.a-price-whole');
-      var fraction = zone.querySelector('.a-price-fraction');
-      var w = whole ? whole.textContent.replace(/[^\\d.]/g, '') : '';
-      if (w) return w + ',' + (fraction ? fraction.textContent.trim() : '00');
-    }
-    return null;
-  }
-  var isAmazon = /(^|\\.)amazon\\.[a-z.]+$/i.test(new URL(location.href).hostname);
-  var product = null;
-  var scripts = document.querySelectorAll('script[type="application/ld+json"]');
-  for (var i = 0; i < scripts.length && !product; i++) {
-    try { product = findProduct(JSON.parse(scripts[i].textContent)); } catch (e) {}
-  }
-  var offer = product && product.offers;
-  if (Array.isArray(offer)) offer = offer[0];
-  var inner = offer && offer.offers;
-  if (Array.isArray(inner)) inner = inner[0];
-  var rawPrice = isAmazon ? amazonPrice() : offer ? (offer.price != null ? offer.price : offer.lowPrice != null ? offer.lowPrice : inner && inner.price) : null;
-  if (rawPrice == null && !isAmazon) rawPrice = meta('product:price:amount') || meta('og:price:amount') || meta('price');
-  var price = toNumber(rawPrice);
-  if (!isFinite(price)) {
+  if (read.price == null) {
     alert('Vigía: no encuentro el precio en esta página. Ábrelo desde la ficha de un producto.');
     return;
   }
-  var image = product && product.image;
-  if (Array.isArray(image)) image = image[0];
-  if (image && typeof image === 'object') image = image.url || image.contentUrl;
-  var availability = String((offer && offer.availability) || (inner && inner.availability) || '');
-  var amazonImage = document.querySelector('#landingImage');
-  var stockText = isAmazon ? text('#availability') : '';
-  var canonical = document.querySelector('link[rel="canonical"]');
-  var data = {
-    u: (canonical && canonical.href) || location.href,
-    t: (isAmazon && text('#productTitle')) || (product && product.name) || meta('og:title') || document.title,
-    i: (isAmazon && amazonImage && (amazonImage.getAttribute('data-old-hires') || amazonImage.getAttribute('src'))) || image || meta('og:image') || null,
-    p: price,
-    c: (offer && offer.priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'EUR',
-    s: isAmazon ? (/no disponible|agotado|unavailable/i.test(stockText) ? false : /en stock|disponible|in stock|env[ií]o en/i.test(stockText) ? true : null) : /OutOfStock|SoldOut|Discontinued/i.test(availability) ? false : /InStock|LimitedAvailability|PreOrder|PreSale|BackOrder|MadeToOrder|OnlineOnly/i.test(availability) ? true : null,
-    k: '__CLAVE__',
-    a: location.href
-  };
+  var data = { u: read.url, t: read.title, i: read.image, p: read.price, c: read.currency, s: read.inStock, k: '__CLAVE__', a: location.href };
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))))
     .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
   var target = '__ORIGEN__/#${HASH_KEY}=' + encoded;
@@ -139,9 +72,13 @@ const BOOKMARKLET_SOURCE = `
 })();
 `
 
-/** Código JavaScript del botón, sin el prefijo `javascript:` (para tests). */
+/** Código JavaScript del botón, sin el prefijo `javascript:` (para tests).
+ * El lector se pone el último y con función: su código lleva `$` que
+ * replace() con texto interpretaría. */
 export function bookmarkletSource(origin, key = '') {
-  return BOOKMARKLET_SOURCE.replace('__ORIGEN__', origin).replace('__CLAVE__', KEY_RE.test(key) ? key : '')
+  return BOOKMARKLET_SOURCE.replace('__ORIGEN__', origin)
+    .replace('__CLAVE__', KEY_RE.test(key) ? key : '')
+    .replace('__LECTOR__', () => PARSE_SOURCE.trim())
 }
 
 /** Enlace para arrastrar a la barra de marcadores. */

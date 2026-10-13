@@ -16,17 +16,13 @@ import {
 const ORIGIN = 'https://vigia-list.vercel.app'
 const KEY = '0123456789abcdef0123456789abcdef'
 
-/** Página mínima: solo lo que usa el botón (querySelector/All, title). */
+/** Página mínima: solo lo que usa el botón (su HTML y la canónica). */
 function fakePage({ jsonLd = [], metas = {}, canonical = null, title = 'Página', href = 'https://tienda.test/p/1' }) {
-  const scripts = jsonLd.map((j) => ({ textContent: typeof j === 'string' ? j : JSON.stringify(j) }))
+  const scripts = jsonLd.map((j) => `<script type="application/ld+json">${typeof j === 'string' ? j : JSON.stringify(j)}</script>`)
+  const metaTags = Object.entries(metas).map(([k, v]) => `<meta property="${k}" content="${v}">`)
   const document = {
-    title,
-    querySelectorAll: () => scripts,
-    querySelector: (sel) => {
-      if (sel === 'link[rel="canonical"]') return canonical ? { href: canonical } : null
-      const key = /meta\[property="([^"]+)"/.exec(sel)?.[1]
-      return key in metas ? { getAttribute: () => metas[key] } : null
-    },
+    documentElement: { outerHTML: `<html><head><title>${title}</title>${metaTags.join('')}${scripts.join('')}</head></html>` },
+    querySelector: (sel) => (sel === 'link[rel="canonical"]' && canonical ? { href: canonical } : null),
   }
   return { document, location: { href } }
 }
@@ -287,23 +283,18 @@ describe('manualPriceStatus', () => {
 // Amazon no publica JSON-LD: el botón lee la ficha igual que la extensión
 // (extension/extract.js), con el a-offscreen del precio a veces vacío.
 describe('botón del navegador en Amazon', () => {
-  function el(text, attrs = {}) {
-    return { textContent: text, getAttribute: (k) => attrs[k] ?? null }
-  }
-  function amazonPage({ offscreen = ' ', whole = '185,', fraction = '00', availability = ' En stock ' } = {}) {
-    const zone = {
-      querySelectorAll: (sel) => (sel.includes('a-offscreen') ? [el(offscreen)] : []),
-      querySelector: (sel) => (sel === '.a-price-whole' ? el(whole) : sel === '.a-price-fraction' ? el(fraction) : null),
-    }
-    const nodes = {
-      '#corePriceDisplay_desktop_feature_div': zone,
-      '#productTitle': el('  Soweiz - Mesa de centro elevable  '),
-      '#landingImage': el('', { 'data-old-hires': 'https://m.media-amazon.com/images/I/919a.jpg' }),
-      '#availability': el(availability),
-      'link[rel="canonical"]': { href: 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG' },
-    }
+  function amazonPage({ offscreen = ' ', whole = '185', fraction = '00', availability = ' En stock ' } = {}) {
+    const html = `<html><head><title>Amazon.es</title></head><body>
+<span id="productTitle" class="a-size-large">  Soweiz - Mesa de centro elevable  </span>
+<div id="corePriceDisplay_desktop_feature_div"><span class="a-price"><span class="a-offscreen">${offscreen}</span><span aria-hidden="true"><span class="a-price-whole">${whole}<span class="a-price-decimal">,</span></span><span class="a-price-fraction">${fraction}</span></span></span></div>
+<div id="availability"><span class="a-size-medium a-color-success">${availability}</span></div>
+<img id="landingImage" data-old-hires="https://m.media-amazon.com/images/I/919a.jpg">
+</body></html>`
     return {
-      document: { title: 'Amazon.es', querySelectorAll: () => [], querySelector: (sel) => nodes[sel] ?? null },
+      document: {
+        documentElement: { outerHTML: html },
+        querySelector: (sel) => (sel === 'link[rel="canonical"]' ? { href: 'https://www.amazon.es/Soweiz-mesa/dp/B0GWHLD5NG' } : null),
+      },
       location: { href: 'https://www.amazon.es/dp/B0GWHLD5NG?th=1' },
     }
   }

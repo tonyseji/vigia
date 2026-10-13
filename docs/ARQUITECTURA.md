@@ -119,6 +119,15 @@ navegador de verdad, así que:
   aunque la dirección no se escriba igual (`findOwnItem`, misma clave `urlKey`
   que la web y `save-link`, backlog B25); solo entre los del propio usuario.
 
+**Un solo lector para los tres caminos** (desde el 2026-10-14, `DECISIONES.md`).
+`supabase/functions/scrape/parse.ts` lee el HTML de una ficha (JSON-LD,
+Open Graph, microdatos, Amazon, Vinted, datos embebidos). El servidor lo usa
+desde `extract.ts`, que solo descarga. `npm run build:parse` lo compila a
+`extension/parse.js`: la extensión lo inyecta en la pestaña y le pasa su
+`outerHTML`, y el botón de marcadores lo lleva dentro. Un test falla si la
+copia compilada no está al día, y `scrape/stores.test.ts` lo prueba contra
+recortes de fichas reales (`scrape/fixtures/`).
+
 En el móvil, **Compartir → Vigía** (Android, `share_target` del manifiesto)
 abre `/compartir?url=…` (`src/lib/shareTarget.js`): solo llega la dirección,
 y se guarda como si se hubiera pegado (`addItem`, y si la tienda bloquea,

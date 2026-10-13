@@ -25,6 +25,8 @@ function showError(status) {
 }
 
 async function init() {
+  // Para saber de un vistazo si Chrome ya cargó la última versión.
+  $('version').textContent = `v${chrome.runtime.getManifest().version}`
   const status = await send({ type: 'status' })
   if (showError(status)) return
   if (!status.user) {
