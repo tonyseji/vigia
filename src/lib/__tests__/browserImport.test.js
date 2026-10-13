@@ -47,6 +47,22 @@ const MDM = {
   offers: [{ '@type': 'Offer', price: 289, priceCurrency: 'EUR', availability: 'https://schema.org/InStock' }],
 }
 
+// Recortado de una ficha real (2026-10-14): el tipo va en minúscula y el
+// precio en un AggregateOffer; la disponibilidad, en la oferta de dentro.
+const PCCOMPONENTES = {
+  '@type': 'product',
+  name: 'Ratón Logitech Pro X Superlight 2 SE Inalámbrico 44000 DPI 5 Botones 60g Negro',
+  image: ['https://img.pccomponentes.com/articles/1098/10984350/1219-raton.jpg'],
+  offers: {
+    '@type': 'AggregateOffer',
+    highPrice: '123.17',
+    lowPrice: '74.99',
+    offerCount: '5',
+    priceCurrency: 'EUR',
+    offers: { '@type': 'Offer', availability: 'https://schema.org/InStock', priceCurrency: 'EUR', price: '74.99' },
+  },
+}
+
 describe('botón del navegador', () => {
   it('lee el JSON-LD de una ficha de Maisons du Monde y abre Vigía con los datos', () => {
     const page = fakePage({
@@ -78,6 +94,12 @@ describe('botón del navegador', () => {
     expect(data.inStock).toBe(false)
     expect(data.url).toBe('https://tienda.test/p/1')
     expect(data.altUrl).toBeNull() // sin canónica, la de la barra es la misma
+  })
+
+  it('PcComponentes: «product» en minúscula y AggregateOffer con la oferta dentro', () => {
+    const page = fakePage({ jsonLd: [{ '@type': 'BreadcrumbList' }, PCCOMPONENTES] })
+    const data = readImport(new URL(runBookmarklet(page).opened[0]).hash)
+    expect(data).toMatchObject({ title: PCCOMPONENTES.name, image: PCCOMPONENTES.image[0], price: 74.99, currency: 'EUR', inStock: true })
   })
 
   it('BackOrder (Sklum, entrega más tarde) cuenta como en stock', () => {

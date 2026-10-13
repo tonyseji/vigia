@@ -1298,3 +1298,33 @@ renombrar/borrar en sus subcarpetas.
 
 Hecho, desplegado (migración 023 aplicada; la web con el push a `main`).
 Pendiente: B18 (avisos a los invitados), ya decidido.
+
+## 2026-10-14 (Sesión 39) — La extensión no leía el precio de PcComponentes
+
+### Contexto
+
+Tony probó la extensión en una ficha de PcComponentes: «No encuentro el
+precio». El servidor sí la lee (los tres artículos de PcComponentes de la
+lista tienen precio).
+
+### Cambios
+
+- Causa, vista en una ficha real abierta en el navegador integrado:
+  PcComponentes escribe el JSON-LD con `"@type":"product"` en minúscula y la
+  extensión solo aceptaba `Product` exacto (`scrape/extract.ts` ya lo
+  comparaba sin distinguir mayúsculas). Además el precio va en un
+  `AggregateOffer` (`lowPrice`) y la disponibilidad solo en la oferta de
+  dentro.
+- `extension/extract.js` y el botón de marcadores (`browserImport.js`):
+  tipo `product` sin distinguir mayúsculas; si la oferta no trae `price` ni
+  `lowPrice`, el de la oferta de dentro; la disponibilidad, de la de dentro
+  si la de fuera no la trae. Extensión 1.2.1.
+- Tests con la ficha recortada en los dos (fallaban antes del arreglo).
+  221 en verde; build en verde. El extractor nuevo, ejecutado sobre la
+  ficha real: 74,99 € (lo que enseña la página), en stock, título y foto.
+- `TIENDAS.md`: fila de PcComponentes.
+
+### Estado final
+
+Hecho y subido. Tony tiene que recargar la extensión en
+`chrome://extensions` para la 1.2.1.

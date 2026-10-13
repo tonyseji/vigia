@@ -20,8 +20,10 @@ export function extractProduct() {
       }
       return null
     }
-    const type = node['@type']
-    if (type === 'Product' || (Array.isArray(type) && type.includes('Product'))) return node
+    // PcComponentes lo escribe «product»; scrape/extract.ts tampoco
+    // distingue mayúsculas.
+    const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']]
+    if (types.some((t) => /^product$/i.test(String(t)))) return node
     return findProduct(node['@graph'])
   }
   function meta(key) {
@@ -83,7 +85,10 @@ export function extractProduct() {
   }
   let offer = product && product.offers
   if (Array.isArray(offer)) offer = offer[0]
-  let rawPrice = offer ? (offer.price != null ? offer.price : offer.lowPrice) : null
+  // AggregateOffer (PcComponentes): la disponibilidad va en la oferta de dentro.
+  let inner = offer && offer.offers
+  if (Array.isArray(inner)) inner = inner[0]
+  let rawPrice = offer ? (offer.price != null ? offer.price : offer.lowPrice != null ? offer.lowPrice : inner && inner.price) : null
   if (rawPrice == null) rawPrice = meta('product:price:amount') || meta('og:price:amount') || meta('price')
   const price = toNumber(rawPrice)
   if (!Number.isFinite(price)) return { blocked: false, price: null }
@@ -91,7 +96,7 @@ export function extractProduct() {
   let image = product && product.image
   if (Array.isArray(image)) image = image[0]
   if (image && typeof image === 'object') image = image.url || image.contentUrl
-  const availability = String((offer && offer.availability) || '')
+  const availability = String((offer && offer.availability) || (inner && inner.availability) || '')
   const canonical = document.querySelector('link[rel="canonical"]')
   return {
     blocked: false,

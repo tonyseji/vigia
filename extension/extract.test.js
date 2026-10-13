@@ -40,6 +40,30 @@ describe('extractProduct (extensión)', () => {
     })
   })
 
+  // Recortado de una ficha real (2026-10-14): el tipo va en minúscula y el
+  // precio en un AggregateOffer; la disponibilidad, en la oferta de dentro.
+  it('PcComponentes: «product» en minúscula y AggregateOffer con la oferta dentro', () => {
+    page({
+      jsonLd: [
+        { '@type': 'BreadcrumbList' },
+        {
+          '@type': 'product',
+          name: 'Ratón Logitech Pro X Superlight 2 SE',
+          image: ['https://img.pccomponentes.com/a.jpg'],
+          offers: {
+            '@type': 'AggregateOffer',
+            highPrice: '123.17',
+            lowPrice: '74.99',
+            offerCount: '5',
+            priceCurrency: 'EUR',
+            offers: { '@type': 'Offer', availability: 'https://schema.org/InStock', priceCurrency: 'EUR', price: '74.99' },
+          },
+        },
+      ],
+    })
+    expect(extractProduct()).toMatchObject({ title: 'Ratón Logitech Pro X Superlight 2 SE', image: 'https://img.pccomponentes.com/a.jpg', price: 74.99, currency: 'EUR', inStock: true })
+  })
+
   it('BackOrder (Sklum, entrega más tarde) cuenta como en stock', () => {
     page({ jsonLd: [{ '@type': 'Product', name: 'Mesita', offers: { price: 94.95, availability: 'https://schema.org/BackOrder' } }] })
     expect(extractProduct().inStock).toBe(true)

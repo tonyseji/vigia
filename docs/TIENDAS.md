@@ -14,6 +14,7 @@
 | IKEA | ✅ | JSON-LD | Sin problemas conocidos. |
 | Sklum | ✅ | JSON-LD | Lo que tarda en llegar lo publica como `BackOrder` («entrega estimada…»): cuenta como en stock (B28). |
 | Leroy Merlin | ✅ | JSON-LD / Open Graph | |
+| PcComponentes | ✅ | JSON-LD | Escribe el tipo en minúscula (`"@type":"product"`) y el precio en un `AggregateOffer` (`lowPrice`), con la disponibilidad en la oferta de dentro. El servidor siempre lo leyó; la extensión y el botón, desde la 1.2.1 (sesión 39). |
 | Amazon.es | ⚠️ | Datos embebidos, vía `pg_net` | Bloquea la IP de las Edge Functions. Funciona saliendo por la de Postgres. Los enlaces cortos de la app (`amzn.eu/d/…`) se expanden a la ficha `/dp/ASIN` antes de leer (B29). Pero Amazon ve el servidor en **Irlanda** y no da precio de lo que no se envía allí: entonces lo lee la extensión de Chrome (B29). |
 | Kave Home | ⚠️ | Extensión de Chrome (pase diario) o botón | DataDome. El servidor no puede; un navegador real sí (probado el 2026-10-01). |
 | Maisons du Monde | ⚠️ | Extensión de Chrome (pase diario) o botón «Guardar en Vigía» | DataDome desde (al menos) 2026-10-01; antes, checkpoint de Vercel. El servidor no puede leerla; el navegador sí (JSON-LD de la página abierta). Con la extensión, precio diario mientras Chrome esté abierto (`extension/README.md`). Ver «Maisons du Monde: qué se probó». |

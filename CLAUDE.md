@@ -41,7 +41,7 @@ automático en cada push a `main`). La app vieja ya no existe en Supabase:
 función, cron y tablas retirados el 2026-09-09; su código solo queda en el
 primer commit.
 
-Última sesión: 38. Pendientes abiertos en `docs/ROADMAP.md`; decisiones en
+Última sesión: 39. Pendientes abiertos en `docs/ROADMAP.md`; decisiones en
 `docs/DECISIONES.md`. Historial completo en `docs/PROGRESO.md` (17 en
 adelante) y `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 

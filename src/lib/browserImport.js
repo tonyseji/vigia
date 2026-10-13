@@ -60,8 +60,10 @@ const BOOKMARKLET_SOURCE = `
       }
       return null;
     }
-    var type = node['@type'];
-    if (type === 'Product' || (Array.isArray(type) && type.indexOf('Product') >= 0)) return node;
+    var types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+    for (var j = 0; j < types.length; j++) {
+      if (/^product$/i.test(String(types[j]))) return node;
+    }
     return findProduct(node['@graph']);
   }
   function meta(key) {
@@ -104,7 +106,9 @@ const BOOKMARKLET_SOURCE = `
   }
   var offer = product && product.offers;
   if (Array.isArray(offer)) offer = offer[0];
-  var rawPrice = isAmazon ? amazonPrice() : offer ? (offer.price != null ? offer.price : offer.lowPrice) : null;
+  var inner = offer && offer.offers;
+  if (Array.isArray(inner)) inner = inner[0];
+  var rawPrice = isAmazon ? amazonPrice() : offer ? (offer.price != null ? offer.price : offer.lowPrice != null ? offer.lowPrice : inner && inner.price) : null;
   if (rawPrice == null && !isAmazon) rawPrice = meta('product:price:amount') || meta('og:price:amount') || meta('price');
   var price = toNumber(rawPrice);
   if (!isFinite(price)) {
@@ -114,7 +118,7 @@ const BOOKMARKLET_SOURCE = `
   var image = product && product.image;
   if (Array.isArray(image)) image = image[0];
   if (image && typeof image === 'object') image = image.url || image.contentUrl;
-  var availability = String((offer && offer.availability) || '');
+  var availability = String((offer && offer.availability) || (inner && inner.availability) || '');
   var amazonImage = document.querySelector('#landingImage');
   var stockText = isAmazon ? text('#availability') : '';
   var canonical = document.querySelector('link[rel="canonical"]');
