@@ -42,7 +42,7 @@ export default function Dialog({ title, onClose, as: Panel = 'div', className = 
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className={`dialog-panel flex w-full flex-col rounded-lg border border-line bg-surface p-4 shadow-2xl shadow-black/30 ${className}`}
+        className={`dialog-panel flex w-full flex-col *:flex-none rounded-lg border border-line bg-surface p-4 shadow-2xl shadow-black/30 ${className}`}
         {...panelProps}
       >
         <h3 id={titleId} className="font-display text-lg font-bold">

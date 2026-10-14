@@ -217,11 +217,15 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
           <span className="truncate">{currentFolder ? currentFolder.fld_name : 'Sin carpeta'}</span>
         </button>
 
+        {/* *:flex-none: en una columna flex con alto máximo, las filas con
+            truncate (overflow oculto) se encogían en vez de hacer scroll y
+            el texto salía cortado. Igual en la tarjeta, los diálogos y el
+            cajón de carpetas. */}
         {pickerOpen && (
           <div
             ref={pickerRef}
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-0 top-8 z-10 flex max-h-56 w-44 flex-col gap-0.5 overflow-y-auto rounded-lg border border-line bg-surface p-1 shadow-lg"
+            className="absolute right-0 top-8 z-10 flex max-h-56 w-44 flex-col gap-0.5 overflow-y-auto *:flex-none rounded-lg border border-line bg-surface p-1 shadow-lg"
           >
             <button
               type="button"

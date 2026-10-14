@@ -85,7 +85,8 @@ hasta los bordes (`viewport-fit=cover`) con márgenes
 su carpeta, un escalón (16 px) más adentro que el icono de una carpeta de
 primer nivel, tenga esta subcarpetas o no. Los selectores de carpeta
 (tarjeta, fila, editar) siguen el mismo orden que el sidebar, no el de
-creación.
+creación. Si no caben, hacen scroll: las filas no se encogen
+(`*:flex-none`, también en diálogos y cajón).
 
 ---
 

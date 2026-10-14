@@ -1465,3 +1465,15 @@ La casilla de la cesta y el lápiz quedan por encima. Comprobado en el
 navegador integrado a 375 px: tocar la foto da el enlace, tocar el lápiz o
 la casilla da el botón. Tests y build en verde.
 
+### Añadido: nombres de carpeta cortados en el selector
+
+Tony, con captura en el ordenador: en el selector de carpeta de la tarjeta
+los nombres salían cortados por arriba y por abajo. Causa: el desplegable es
+una columna flex con alto máximo, y cada carpeta lleva `truncate`
+(overflow oculto), que deja que flex la encoja; con muchas carpetas las filas
+bajaban de 32 a 18 px en vez de hacer scroll. Pasaba igual en el de la fila.
+Arreglo: `*:flex-none` en los dos desplegables, y por lo mismo en el panel
+de los diálogos (`Dialog.jsx`) y en el cajón de carpetas del móvil.
+Comprobado en el navegador integrado con las carpetas de la captura: filas
+de 32 px, ninguna cortada y la lista hace scroll. Tests y build en verde.
+

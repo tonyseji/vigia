@@ -181,7 +181,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
               <div
                 ref={pickerRef}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute inset-x-0 bottom-8 z-10 flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-lg border border-line bg-surface p-1 text-sm shadow-lg"
+                className="absolute inset-x-0 bottom-8 z-10 flex max-h-56 flex-col gap-0.5 overflow-y-auto *:flex-none rounded-lg border border-line bg-surface p-1 text-sm shadow-lg"
               >
                 <button
                   type="button"

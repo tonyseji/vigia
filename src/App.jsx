@@ -429,7 +429,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
           <div className="absolute inset-0 bg-black/45" />
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex h-full w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto border-r border-line bg-surface p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]"
+            className="relative flex h-full w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto *:flex-none border-r border-line bg-surface p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold">Carpetas</h2>
