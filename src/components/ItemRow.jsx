@@ -80,7 +80,14 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         </label>
       )}
 
-      <div
+      {/* La foto también lleva a la tienda: en el móvil es más fácil de
+          acertar que el nombre. Sin foco de teclado: el nombre ya lo tiene. */}
+      <a
+        href={item.itm_url}
+        target="_blank"
+        rel="noreferrer"
+        tabIndex={-1}
+        aria-hidden="true"
         className={`order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'} ${stock ? 'opacity-55 grayscale' : ''}`}
       >
         {item.itm_image_url ? (
@@ -94,7 +101,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         ) : (
           <ProductIcon kind={item.itm_icon} className="h-7 w-7 text-ink-mut opacity-85" />
         )}
-      </div>
+      </a>
 
       {/* Por debajo de lg: foto y nombre en la primera línea, precio y
           acciones en la segunda. La base deja justo el hueco de la foto (y de

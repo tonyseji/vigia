@@ -1456,3 +1456,12 @@ abrir la app instalada (en el iPhone puede hacer falta cerrarla del todo y
 volver a abrirla, o quitarla y añadirla otra vez para que coja la barra de
 estado nueva) y decir si sigue viendo blanco abajo.
 
+### Añadido: la foto también abre la tienda
+
+Tony: que la foto lleve al enlace, no solo el nombre; en el móvil es más
+cómodo. La miniatura de la fila y toda la foto de la tarjeta de Fotos son
+ahora enlaces a la tienda (sin foco de teclado, que ya lo tiene el nombre).
+La casilla de la cesta y el lápiz quedan por encima. Comprobado en el
+navegador integrado a 375 px: tocar la foto da el enlace, tocar el lápiz o
+la casilla da el botón. Tests y build en verde.
+

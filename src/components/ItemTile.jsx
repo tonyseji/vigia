@@ -65,18 +65,23 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           overflow-hidden en la tarjeta, el desplegable de carpeta se cortaba. */}
       <div className={`relative grid aspect-square place-items-center overflow-hidden rounded-t-[7px] ${item.itm_image_url ? 'bg-photo' : 'bg-surface-2'}`}>
         <div className="absolute inset-x-0 top-0 z-1 h-[3px]" style={{ background: stripeColor }} />
-        {item.itm_image_url ? (
-          // Cuadrada (casi todas las tiendas publican la foto 1:1) y con
-          // multiply para que el fondo blanco de la foto se funda con la caja.
-          // Absoluta: una foto vertical no puede estirar el cuadrado.
-          <img
-            src={item.itm_image_url}
-            alt=""
-            className={`absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply ${stock ? 'opacity-55 grayscale' : ''}`}
-          />
-        ) : (
-          <ProductIcon kind={item.itm_icon} className="h-9 w-9 text-ink-mut opacity-80" />
-        )}
+        {/* Toda la foto lleva a la tienda, como el nombre (en el móvil es
+            más fácil de acertar). La casilla de la cesta y el lápiz van
+            encima. Sin foco de teclado: el nombre ya lo tiene. */}
+        <a href={item.itm_url} target="_blank" rel="noreferrer" tabIndex={-1} aria-hidden="true" className="absolute inset-0 grid place-items-center">
+          {item.itm_image_url ? (
+            // Cuadrada (casi todas las tiendas publican la foto 1:1) y con
+            // multiply para que el fondo blanco de la foto se funda con la caja.
+            // Absoluta: una foto vertical no puede estirar el cuadrado.
+            <img
+              src={item.itm_image_url}
+              alt=""
+              className={`absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply ${stock ? 'opacity-55 grayscale' : ''}`}
+            />
+          ) : (
+            <ProductIcon kind={item.itm_icon} className="h-9 w-9 text-ink-mut opacity-80" />
+          )}
+        </a>
         {picking && (
           <label className="absolute left-1.5 top-1.5 z-1 grid cursor-pointer place-items-center rounded-md border border-line bg-surface/90 p-1.5">
             <input

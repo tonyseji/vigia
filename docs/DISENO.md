@@ -42,7 +42,7 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 |---|---|
 | Franja lateral | Verde si el precio ha bajado, rojo si ha subido, ámbar si no hay precio, gris si está vendido o sin stock. Es lo que permite escanear la lista sin leer. |
 | Miniatura | 68×68, `object-contain` (la imagen completa, sin recortar) sobre fondo `photo` (blanco; gris claro en modo oscuro) con `mix-blend-multiply`, para que el fondo blanco de la foto de la tienda se funda con la caja y todas se vean del mismo tamaño. Si no hay imagen, un icono según el tipo de producto sobre `surface-2`. |
-| Nombre | Máximo dos líneas, y es el enlace a la tienda. |
+| Nombre | Máximo dos líneas, y es el enlace a la tienda. La miniatura también lleva a la tienda (en el móvil es más fácil de acertar); en Fotos, toda la foto, con la casilla de la cesta y el lápiz por encima. |
 | Segunda línea | Dominio de la tienda · nº de registros · en ámbar, «la tienda bloquea la lectura» cuando aplica. |
 | Minigráfico | Solo si hay dos o más registros, pero el hueco (74 px) se reserva siempre para que el precio quede en la misma columna en todas las filas. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |
 | Precio | Mono, `tabular-nums`, el número más grande de la fila. Columna de ancho fijo (132 px), igual que el selector de carpeta (92 px): todas las filas miden lo mismo y alinean en columnas. |
