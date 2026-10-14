@@ -1411,3 +1411,48 @@ carpetas por orden de creación y no por carpeta, y el texto se corta.
 ### Estado final
 
 Hecho y subido. No visto aún con la cuenta de pruebas en producción.
+
+## 2026-10-14 (Sesión 41) — Histórico de precio y bordes del móvil
+
+### Contexto
+
+Tony: «si entró en 200, bajó a 190 y ahora está en 205, saber esto mismo»,
+para ver cuándo fue el mejor momento de comprarlo. Y en el móvil, la franja
+de abajo sale en blanco y la de arriba de otro color que la app (iPhone con
+la app instalada y Android).
+
+### Cambios
+
+- **Histórico (B35).** Tony eligió una ventana al tocar el precio (frente a
+  desplegarlo en la fila). Decisiones en `DECISIONES.md`. Sin cambios en
+  la BD: `price_history` ya llega con cada artículo.
+  - `src/lib/priceHistory.js` (`priceStory`, tests): entrada, hoy, mínimo y
+    máximo (el último tramo a ese precio, con principio y fin), cambios y
+    lecturas. Las lecturas seguidas al mismo precio son un tramo; las sin
+    precio no lo cortan.
+  - `formatDay` en `format.js` (meses a mano: ICU da «sep» o «sept»).
+  - `HistoryChart.jsx`: SVG a mano, en escalera, eje X por fecha, línea
+    discontinua a la entrada, puntos de entrada, mínimo, máximo y hoy;
+    tocar o pasar el ratón enseña fecha y precio.
+  - `HistoryModal.jsx`: gráfico, frase del mejor momento, cuatro cifras y
+    lista de cambios. Se abre desde el precio (fila y tarjeta), el
+    minigráfico y «N registros».
+- **Bordes del móvil (B36).** `theme-color` pasa del añil a `paper` (claro
+  y oscuro, con `media`), también en el manifiesto; barra de estado del
+  iPhone en `default` (con `black-translucent` el texto es blanco y no se
+  leería en modo claro); `viewport-fit=cover`, `color-scheme: light dark` y
+  fondo en `html`; márgenes `env(safe-area-inset-*)` en `main`, el cajón de
+  carpetas y los diálogos (la cesta ya los tenía).
+- Comprobado en el navegador integrado con una página de prueba temporal
+  (datos inventados 200 → 190 → 205; borrada al acabar): textos y cifras
+  correctos, ventana entera en 375 px sin scroll horizontal, modo claro y
+  oscuro con el fondo de `html` bien puesto.
+- Tests: 257 en verde; build en verde.
+
+### Estado final
+
+Hecho y subido. Los bordes no se han visto en un móvil real: Tony tiene que
+abrir la app instalada (en el iPhone puede hacer falta cerrarla del todo y
+volver a abrirla, o quitarla y añadirla otra vez para que coja la barra de
+estado nueva) y decir si sigue viendo blanco abajo.
+

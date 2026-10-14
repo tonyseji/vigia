@@ -67,6 +67,20 @@ debajo del precio: al lado solo cabían unas letras en las tarjetas
 estrechas. Su desplegable mide lo mismo que la etiqueta y la tarjeta no
 lleva `overflow-hidden` (lo lleva la foto), para que nunca se corte.
 
+**Histórico de precio:** tocar el precio (en la fila o en la tarjeta), el
+minigráfico o «N registros» abre una ventana con el gráfico del histórico
+(en escalera, con el tiempo real en el eje X y una línea discontinua al
+precio de entrada; tocarlo o pasar el ratón dice el precio de ese día), una
+frase con el mejor momento, cuatro cifras (entró, hoy, mínimo, máximo; el
+punto de color de cada una es el que la marca en el gráfico) y la lista de
+cambios, el más reciente arriba. Las lecturas sin cambio no salen en la
+lista: solo cuándo cambió.
+
+**Bordes del móvil:** la barra de estado y la franja de abajo son del color
+del fondo de la app (`theme-color` claro y oscuro = `paper`), y la app llega
+hasta los bordes (`viewport-fit=cover`) con márgenes
+`env(safe-area-inset-*)` en `main`, el cajón de carpetas y los diálogos.
+
 **Carpetas en el sidebar y en los selectores:** cada subcarpeta va debajo de
 su carpeta, un escalón (16 px) más adentro que el icono de una carpeta de
 primer nivel, tenga esta subcarpetas o no. Los selectores de carpeta

@@ -6,6 +6,7 @@ import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
 import Sparkline from './Sparkline.jsx'
 import EditItemModal from './EditItemModal.jsx'
+import HistoryModal from './HistoryModal.jsx'
 
 function domainOf(url) {
   try {
@@ -18,9 +19,11 @@ function domainOf(url) {
 /** Fila densa de un artículo (docs/DISENO.md): franja lateral de color,
  * miniatura, nombre + tienda, minigráfico si hay histórico, precio y
  * variación, o la píldora ámbar de "sin precio" cuando corresponde.
- * El botón de editar (✎) abre EditItemModal, que también permite borrar. */
+ * El botón de editar (✎) abre EditItemModal, que también permite borrar;
+ * el precio, el minigráfico y «N registros» abren HistoryModal. */
 export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, justAdded }) {
   const [editing, setEditing] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [copied, setCopied] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -112,7 +115,14 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
               arranca la siguiente en vez de quedarse colgando. */}
           <span className="font-medium">{domainOf(item.itm_url)}</span>
           <span className="whitespace-nowrap">
-            · {item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}
+            ·{' '}
+            <button
+              type="button"
+              onClick={() => setShowHistory(true)}
+              className="underline decoration-dotted underline-offset-2 outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}
+            </button>
           </span>
           {manualStatus === 'browser' && (
             <span className="whitespace-nowrap" title={BROWSER_HINT}>
@@ -130,7 +140,17 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
       {/* El hueco del minigráfico se reserva aunque no haya histórico: si no,
           el precio cambia de columna de una fila a otra. */}
       <div className="order-4 hidden w-[74px] flex-none items-center lg:flex">
-        {history.length > 1 && <Sparkline values={history} direction={pct ?? 0} />}
+        {history.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setShowHistory(true)}
+            aria-label="Ver histórico de precio"
+            title="Ver histórico"
+            className="rounded-md outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <Sparkline values={history} direction={pct ?? 0} />
+          </button>
+        )}
       </div>
 
       <div className="order-3 flex min-w-[104px] flex-1 flex-col items-end justify-center gap-1 lg:w-[132px] lg:flex-none">
@@ -143,14 +163,20 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
             Sin precio · edítalo
           </button>
         ) : (
-          <>
+          // Tocar el precio abre el histórico (docs/DECISIONES.md 2026-10-14).
+          <button
+            type="button"
+            onClick={() => setShowHistory(true)}
+            title="Ver histórico"
+            className="-m-1 flex flex-col items-end gap-1 rounded-md p-1 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
+          >
             <span className={`font-mono text-[17px] font-semibold tabular-nums ${stock ? 'text-ink-mut' : ''}`}>{formatPrice(item.itm_price)}</span>
             {/* Variación y precio anterior en una sola línea: con el tachado
                 debajo, las filas con bajada quedaban más altas que el resto. */}
             {stock ? (
               <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11.5px] font-medium text-ink-mut">{stock}</span>
             ) : showPct(pct) && (
-              <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5">
                 {pct < 0 && reference != null && (
                   <span className="font-mono text-[11px] text-ink-mut line-through">{formatPrice(reference)}</span>
                 )}
@@ -163,9 +189,9 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
                 >
                   {formatPct(pct)}
                 </span>
-              </div>
+              </span>
             )}
-          </>
+          </button>
         )}
       </div>
 
@@ -240,6 +266,8 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       </button>
+
+      {showHistory && <HistoryModal item={item} onClose={() => setShowHistory(false)} />}
 
       {editing && (
         <EditItemModal

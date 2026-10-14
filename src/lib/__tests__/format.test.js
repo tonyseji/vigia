@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPrice, priceChangePct, formatPct, showPct } from '../format.js'
+import { formatPrice, priceChangePct, formatPct, showPct, formatDay } from '../format.js'
 
 // Intl separa el importe del simbolo con un espacio fino (U+202F o U+00A0)
 // segun la version de ICU. Se normaliza para que el test no dependa de eso.
@@ -52,5 +52,18 @@ describe('showPct', () => {
   it('la enseña con bajadas y subidas reales', () => {
     expect(showPct(-12.3)).toBe(true)
     expect(showPct(0.05)).toBe(true)
+  })
+})
+
+describe('formatDay', () => {
+  const now = new Date('2026-10-14T12:00:00Z')
+  it('día y mes corto en español', () => {
+    expect(formatDay('2026-09-03T08:00:00Z', now)).toBe('3 sep')
+  })
+  it('con el año si no es el de ahora', () => {
+    expect(formatDay('2025-12-20T08:00:00Z', now)).toBe('20 dic 2025')
+  })
+  it('guion sin fecha', () => {
+    expect(formatDay(null, now)).toBe('—')
   })
 })

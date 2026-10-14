@@ -1267,3 +1267,32 @@ siempre de una sola cuenta.
 quitaría a todos de golpe) y compartirla con más gente.
 **Revisitar:** si Tony quiere que el invitado también pueda invitar a otros.
 
+
+### 2026-10-14 — Histórico de precio en una ventana (sesión 41)
+**Decisión (de Tony):** al tocar el precio de un artículo (fila o tarjeta)
+se abre una ventana con su histórico: gráfico con fechas, precio de
+entrada, mínimo («mejor momento», con fecha), máximo, precio de hoy y la
+lista de cambios. «Si entró en 200, bajó a 190 y ahora está en 205, saber
+esto mismo.» Descartado: desplegarlo dentro de la fila (mueve la lista al
+abrir y cerrar y en Fotos queda raro).
+**Cómo (decidido en Claude Code):** sin tabla nueva: `price_history` ya
+llega con cada artículo (`useItems`). Un módulo puro
+(`src/lib/priceHistory.js`, con tests) saca entrada, mínimo, máximo, los
+tramos de precio y los cambios; la ventana solo pinta. El gráfico es un
+`<svg>` a mano (sin librería) en escalera y con el tiempo real en el eje X:
+el precio se mantiene hasta la lectura siguiente, y con un punto por
+lectura una semana sin leer parecería un día. El «mejor momento» es el
+último tramo al precio mínimo, con su principio y su fin.
+
+### 2026-10-14 — Bordes del móvil del color de la app (sesión 41)
+**Decisión técnica:** `theme-color` con dos valores (claro y oscuro, el
+`paper` de cada modo) en vez del añil fijo, barra de estado del iPhone en
+`default` (iOS pinta la barra con el `theme-color` y elige el color del
+texto), `viewport-fit=cover` con márgenes `env(safe-area-inset-*)` y
+`color-scheme` declarado. Así la app pinta también la franja de abajo (la
+del indicador de inicio en iPhone, la de navegación en Android), que antes
+salía en blanco.
+**Descartado:** seguir con `black-translucent`: el texto de la barra es
+siempre blanco y en modo claro no se leería sobre el fondo de la app.
+**Pendiente de ver:** en un iPhone y un Android reales (aquí solo se puede
+simular el tamaño).

@@ -31,3 +31,14 @@ export function formatPct(pct) {
 export function showPct(pct) {
   return pct != null && !Number.isNaN(pct) && Math.abs(pct) >= 0.05
 }
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/** "2026-09-03T08:00Z" -> "3 sep" (con el año si no es el de `now`).
+ * Meses a mano: según la versión de ICU, Intl da «sep» o «sept». */
+export function formatDay(iso, now = new Date()) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  const day = `${d.getDate()} ${MONTHS[d.getMonth()]}`
+  return d.getFullYear() === now.getFullYear() ? day : `${day} ${d.getFullYear()}`
+}

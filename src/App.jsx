@@ -240,7 +240,11 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
 
   return (
     // Con la barra de la cesta, hueco abajo para que no tape el último artículo.
-    <main className={`mx-auto max-w-5xl px-5 pt-10 ${showBasketBar ? 'pb-32' : 'pb-10'}`}>
+    // Los env(safe-area-inset-*): con viewport-fit=cover la app llega hasta
+    // los bordes del móvil (barra de estado, muesca, indicador de inicio).
+    <main
+      className={`mx-auto max-w-5xl pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(2.5rem,calc(env(safe-area-inset-top)+1rem))] ${showBasketBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(2.5rem+env(safe-area-inset-bottom))]'}`}
+    >
       <InstallBanner />
 
       <header className="flex items-center justify-between gap-3">
@@ -425,7 +429,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
           <div className="absolute inset-0 bg-black/45" />
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex h-full w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto border-r border-line bg-surface p-4"
+            className="relative flex h-full w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto border-r border-line bg-surface p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold">Carpetas</h2>

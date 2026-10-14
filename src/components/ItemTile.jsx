@@ -4,6 +4,7 @@ import { formatPrice, formatPct, priceChangePct, showPct } from '../lib/format.j
 import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
+import HistoryModal from './HistoryModal.jsx'
 
 function domainOf(url) {
   try {
@@ -21,6 +22,7 @@ function domainOf(url) {
  * Tony tras ver la vista Fotos en producción, sesión 15). */
 export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, justAdded }) {
   const [editing, setEditing] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const pickerRef = useRef(null)
@@ -129,7 +131,13 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           ) : (
             // Alto fijo (precio + píldora) para que el precio quede a la misma
             // altura en todas las tarjetas, tengan variación o no.
-            <div className="flex min-h-[46px] flex-none flex-col gap-1">
+            // Tocar el precio abre el histórico (docs/DECISIONES.md 2026-10-14).
+            <button
+              type="button"
+              onClick={() => setShowHistory(true)}
+              title="Ver histórico"
+              className="-mx-1 flex min-h-[46px] flex-none flex-col items-start gap-1 rounded-md px-1 text-left outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
+            >
               <span className={`font-mono text-[14.5px] font-semibold tabular-nums ${stock ? 'text-ink-mut' : ''}`}>{formatPrice(item.itm_price)}</span>
               {stock ? (
                 <span className="w-fit rounded-md bg-surface-2 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-mut">{stock}</span>
@@ -144,7 +152,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
                   {formatPct(pct)}
                 </span>
               )}
-            </div>
+            </button>
           )}
 
           {/* En su propia línea, a todo el ancho: al lado del precio solo
@@ -194,6 +202,8 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           </div>
         </div>
       </div>
+
+      {showHistory && <HistoryModal item={item} onClose={() => setShowHistory(false)} />}
 
       {editing && (
         <EditItemModal

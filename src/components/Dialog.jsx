@@ -34,7 +34,7 @@ export default function Dialog({ title, onClose, as: Panel = 'div', className = 
 
   return (
     <div
-      className="dialog-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+      className="dialog-backdrop fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-[2px]"
       onClick={onClose}
     >
       <Panel

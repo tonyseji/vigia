@@ -51,6 +51,15 @@
   }
 }
 
+/* color-scheme: la franja de fuera de la página y los controles del sistema
+   siguen el modo. html también lleva el fondo: con viewport-fit=cover la app
+   pinta bajo la barra de estado y el indicador de inicio, y nada debe salir
+   en blanco (DECISIONES.md 2026-10-14). */
+:root {
+  color-scheme: light dark;
+  background: var(--color-paper);
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
