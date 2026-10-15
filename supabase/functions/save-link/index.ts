@@ -105,8 +105,10 @@ Deno.serve(async (req) => {
     });
     try {
       extracted = await extractFromUrl(url);
-    } catch {
-      return text(`No se pudo leer la ficha de ${domain}. Inténtalo otra vez o pega la dirección en Vigía.`, 502);
+    } catch (err) {
+      // El motivo (p. ej. «esa página no existe») dice si merece la pena reintentar.
+      const reason = err instanceof Error ? ` ${err.message}` : "";
+      return text(`No se pudo leer la ficha de ${domain}.${reason} Inténtalo otra vez o pega la dirección en Vigía.`, 502);
     }
   }
 

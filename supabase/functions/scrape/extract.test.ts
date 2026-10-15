@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parsePrice, extractFromHtml, isBotPage, expandShortLink } from './extract.ts'
+import { parsePrice, extractFromHtml, isBotPage, expandShortLink, statusMessage } from './extract.ts'
 
 // extract.ts no usa ninguna API especifica de Deno mas alla de
 // fetch/URL/AbortController globales, ya estandar tambien en Vitest/Node.
@@ -217,5 +217,22 @@ describe('amazon con a-offscreen vacio', () => {
   it('con decimales', () => {
     const h = html.replace('>185<', '>1.299<').replace('>00<', '>95<')
     expect(extractFromHtml(h, 'https://www.amazon.es/dp/B0GWHLD5NG').price).toBe(1299.95)
+  })
+})
+
+// Wallapop contesta 404 a un anuncio retirado o a un enlace a medias: no es
+// un bloqueo y reintentar no sirve (sesion 42, intento desde el iPhone).
+describe('statusMessage', () => {
+  it('404 y 410: la pagina no existe, no «bloquea»', () => {
+    expect(statusMessage(404)).toMatch(/no existe/)
+    expect(statusMessage(404)).not.toMatch(/bloquea/)
+    expect(statusMessage(410)).toMatch(/no existe/)
+  })
+  it('403 y 429 siguen siendo bloqueo', () => {
+    expect(statusMessage(403)).toMatch(/bloquea/)
+    expect(statusMessage(429)).toMatch(/bloquea/)
+  })
+  it('otro estado: error de la tienda con su numero', () => {
+    expect(statusMessage(400)).toBe('La tienda respondió con un error (HTTP 400).')
   })
 })

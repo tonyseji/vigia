@@ -1477,3 +1477,46 @@ de los diálogos (`Dialog.jsx`) y en el cajón de carpetas del móvil.
 Comprobado en el navegador integrado con las carpetas de la captura: filas
 de 32 px, ninguna cortada y la lista hace scroll. Tests y build en verde.
 
+
+## 2026-10-15 (Sesión 42) — Intento fallido de añadir un artículo desde el iPhone
+
+### Contexto
+
+Tony: «Revisa el intento de meter un nuevo producto desde iPhone». En los
+logs de Supabase: a las 22:00 UTC una cuenta invitada, desde la app web en
+el iPhone (Safari, iOS 18.7), intentó añadir un enlace de **Wallapop**. Pasó
+la comprobación de duplicados y la de `store_rules`, llamó a `scrape` y no
+llegó a guardar nada (ningún `POST items`). No hubo petición por pg_net, así
+que Wallapop no contestó con bloqueo (403/429…) sino con un estado que no se
+reintenta: casi seguro **404**. La dirección exacta no queda en ningún log.
+
+### Cambios
+
+- Lector de Wallapop comprobado en vivo: las fichas normales (con o sin
+  `www.`/`es.`) dan título, foto, precio y stock. Responde **404** a un
+  anuncio retirado y a un enlace sin el título (`/item/<número>`).
+- Dos fallos de mensaje que dejaban a la usuaria sin saber qué pasaba:
+  - `scrape/extract.ts`: cualquier estado acababa en «HTTP 404 (la tienda
+    bloquea la lectura automática)». Nuevo `statusMessage`: 404/410 → «La
+    tienda dice que esa página no existe… Puede que el anuncio ya no esté o
+    que el enlace esté incompleto»; bloqueo sigue igual; otro → «La tienda
+    respondió con un error (HTTP n)».
+  - La web nunca enseñaba ese motivo: con 502, supabase-js deja el cuerpo
+    en `error.context` y `useItems` contestaba siempre «No se pudo leer el
+    precio. Inténtalo de nuevo.». Nuevo `scrapeErrorMessage`
+    (`src/lib/loadErrors.js`) lee el motivo del 502; el resto de fallos
+    sigue con el texto genérico.
+  - `save-link` (atajo de iOS) añade el motivo a su aviso.
+- Tests: 264 en verde (nuevos de `statusMessage` y `scrapeErrorMessage`);
+  build en verde. `scrape` v14 y `save-link` v9 desplegadas y arrancan
+  (401 sin sesión/clave). `refresh` no se ha redesplegado: solo cambiaría
+  el texto de `itm_last_error`, que la app no enseña; entra con su próximo
+  despliegue.
+
+### Estado final
+
+Hecho y subido. No probado de punta a punta con sesión: la de la cuenta de
+pruebas había caducado en el navegador integrado. Si la usuaria vuelve a
+pegar el mismo enlace verá el motivo real. Falta saber qué enlace era: si
+el anuncio sigue en Wallapop y aun así da «no existe», es que la app de
+Wallapop comparte otro formato de enlace y hay que tratarlo.

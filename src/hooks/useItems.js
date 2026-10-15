@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 import { cleanUrl, findSameItem } from '../lib/urlKey.js'
+import { scrapeErrorMessage } from '../lib/loadErrors.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
@@ -92,7 +93,7 @@ export function useItems() {
     const { data: fnData, error: fnError } = await supabase.functions.invoke('scrape', {
       body: { url },
     })
-    if (fnError) return { error: 'No se pudo leer el precio. Inténtalo de nuevo.' }
+    if (fnError) return { error: await scrapeErrorMessage(fnError) }
     if (fnData?.blocked) return { blocked: true }
     if (fnData?.error) return { error: fnData.error }
 

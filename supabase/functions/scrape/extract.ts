@@ -67,6 +67,18 @@ export function setAltFetcher(fn: AltFetcher) {
 
 const BLOCK_STATUSES = [401, 403, 429, 500, 502, 503];
 
+/** El motivo en palabras llanas: la web y el atajo de iOS lo enseñan tal
+ * cual. Un 404 no es un bloqueo: la página no existe (anuncio de segunda
+ * mano ya retirado, o enlace copiado a medias). Antes decía «la tienda
+ * bloquea» y la web lo tapaba con «Inténtalo de nuevo» (sesión 42). */
+export function statusMessage(status: number): string {
+  if (status === 404 || status === 410) {
+    return `La tienda dice que esa página no existe (HTTP ${status}). Puede que el anuncio ya no esté o que el enlace esté incompleto.`;
+  }
+  if (BLOCK_STATUSES.includes(status)) return `HTTP ${status} (la tienda bloquea la lectura automática)`;
+  return `La tienda respondió con un error (HTTP ${status}).`;
+}
+
 // Enlaces cortos de compartir (la app de Amazon da amzn.eu/d/...). Sin
 // expandirlos el host no es amazon.* y no se aplica nada de lo específico de
 // Amazon: ni pg_net, ni el control del interstitial, ni la lectura del precio.
@@ -135,7 +147,7 @@ export async function fetchHtml(url: string, timeoutMs = 15000, profile?: number
       lastErr = lastErr ?? e;
     }
   }
-  if (lastStatus) throw new Error(`HTTP ${lastStatus} (la tienda bloquea la lectura automática)`);
+  if (lastStatus) throw new Error(statusMessage(lastStatus));
   throw new Error((lastErr as Error)?.name === "AbortError" ? "Tiempo de espera agotado" : (lastErr as Error)?.message || "Error de red");
 }
 
