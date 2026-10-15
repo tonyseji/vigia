@@ -246,6 +246,23 @@ El cliente no puede escribir en `folder_shares` directamente (migración
 invitaciones por email ya existentes siguen funcionando con el aviso de
 invitaciones pendientes.
 
+### `favorites`
+
+La estrella de cada persona en un artículo (migración 024, sesión 43). Tabla
+propia y no una columna en `items`: en una carpeta compartida cada uno tiene
+sus favoritos.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `fav_usr_id` | uuid | FK a `auth.users`, `ON DELETE CASCADE`. Quien marca. |
+| `fav_itm_id` | uuid | FK a `items`, `ON DELETE CASCADE`. |
+| `fav_created_at` | timestamptz | |
+
+Clave primaria `(fav_usr_id, fav_itm_id)`. RLS `favorites_own`: solo las
+propias, y al marcar el artículo tiene que ser uno que ves (tuyo o de una
+carpeta compartida contigo). `useItems` las trae embebidas en la consulta de
+`items` (`favorites(fav_usr_id)`) y las convierte en `isFavorite`.
+
 ### `user_settings`
 
 Una fila por usuario. Preferencias, no datos. La crea un trigger en

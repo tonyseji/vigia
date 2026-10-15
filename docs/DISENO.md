@@ -47,6 +47,7 @@ el nombre y la tienda, el minigráfico, y el precio con su variación.
 | Minigráfico | Solo si hay dos o más registros, pero el hueco (74 px) se reserva siempre para que el precio quede en la misma columna en todas las filas. 74×26, línea con relleno tenue y punto en el último valor, del color de la dirección. |
 | Precio | Mono, `tabular-nums`, el número más grande de la fila. Columna de ancho fijo (132 px), igual que el selector de carpeta (92 px): todas las filas miden lo mismo y alinean en columnas. |
 | Variación | Debajo del precio, en una sola línea: el precio anterior tachado (cuando ha bajado) y la píldora con el porcentaje. Sin cambio (o uno que redondea a «0,0 %») no hay píldora. |
+| Favorito | Una ★ en la esquina de abajo a la derecha de la miniatura (y de la foto en Fotos): gris y vacía; marcada, rellena en `fav` (dorado). La fila o tarjeta marcada lleva el borde en `fav` al 60 %. Los favoritos van primero dentro de su grupo con cualquier orden, y el chip «Solo favoritos» va antes de «Solo bajadas». |
 | Sin precio | En vez del precio, la píldora ámbar «Sin precio · edítalo». |
 | Vendido / sin stock | Foto en gris y apagada (`opacity-55 grayscale`), precio en `ink-mut` y, en el sitio de la variación, una píldora neutra (`surface-2`): «Vendido» en segunda mano (Vinted, Wallapop), «Sin stock» en el resto. Igual en la tarjeta de Fotos y en la cesta, donde además el precio va tachado porque no suma. |
 

@@ -27,12 +27,15 @@ export function useItems() {
   const reload = useCallback(async () => {
     const { data, error } = await supabase
       .from('items')
-      .select('*, price_history(ph_price, ph_checked_at, ph_source)')
+      .select('*, price_history(ph_price, ph_checked_at, ph_source), favorites(fav_usr_id)')
       .order('itm_created_at', { ascending: false })
     if (!error) {
       setItems(
-        (data ?? []).map((item) => ({
+        // La RLS de favorites solo devuelve las estrellas propias: en una
+        // carpeta compartida, la de otro no cuenta (migración 024).
+        (data ?? []).map(({ favorites, ...item }) => ({
           ...item,
+          isFavorite: (favorites ?? []).length > 0,
           price_history: [...item.price_history].sort(
             (a, b) => new Date(a.ph_checked_at) - new Date(b.ph_checked_at),
           ),
@@ -301,5 +304,29 @@ export function useItems() {
     return {}
   }, [reload])
 
-  return { items, loading, loadError, refreshing, addItem, addManualItem, addUnreadItem, saveFromBrowser, updateItem, deleteItem, refreshAll, reload }
+  /** Pone o quita la estrella del usuario (docs/DECISIONES.md 2026-10-16).
+   * Se ve al instante; si la BD falla, vuelve a como estaba. Sin recargar:
+   * la estrella no cambia nada más del artículo. */
+  const toggleFavorite = useCallback(async (itemId, favorite) => {
+    const setFavorite = (value) =>
+      setItems((prev) => prev.map((i) => (i.itm_id === itemId ? { ...i, isFavorite: value } : i)))
+    setFavorite(favorite)
+    const { data: userData } = await supabase.auth.getUser()
+    const userId = userData?.user?.id
+    let error = !userId
+    if (userId && favorite) {
+      ;({ error } = await supabase.from('favorites').insert({ fav_usr_id: userId, fav_itm_id: itemId }))
+      // Ya estaba (otra pestaña, doble toque): lo que se quería.
+      if (error?.code === '23505') error = null
+    } else if (userId) {
+      ;({ error } = await supabase.from('favorites').delete().eq('fav_usr_id', userId).eq('fav_itm_id', itemId))
+    }
+    if (error) {
+      setFavorite(!favorite)
+      return { error: 'No se pudo guardar el favorito.' }
+    }
+    return {}
+  }, [])
+
+  return { items, loading, loadError, refreshing, addItem, addManualItem, addUnreadItem, saveFromBrowser, updateItem, deleteItem, refreshAll, toggleFavorite, reload }
 }

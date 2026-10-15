@@ -6,6 +6,7 @@ import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconCopiar, IconCheck, IconEtiqueta } from './icons/index.jsx'
 import Sparkline from './Sparkline.jsx'
 import EditItemModal from './EditItemModal.jsx'
+import FavoriteButton from './FavoriteButton.jsx'
 import HistoryModal from './HistoryModal.jsx'
 
 function domainOf(url) {
@@ -20,8 +21,10 @@ function domainOf(url) {
  * miniatura, nombre + tienda, minigráfico si hay histórico, precio y
  * variación, o la píldora ámbar de "sin precio" cuando corresponde.
  * El botón de editar (✎) abre EditItemModal, que también permite borrar;
- * el precio, el minigráfico y «N registros» abren HistoryModal. */
-export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, justAdded }) {
+ * el precio, el minigráfico y «N registros» abren HistoryModal. La
+ * estrella de favorito va en la esquina de la foto: en la segunda línea de
+ * la fila móvil no cabe otro botón. */
+export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded }) {
   const [editing, setEditing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -64,7 +67,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
   return (
     <article
       data-item-id={item.itm_id}
-      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
@@ -82,26 +85,35 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
 
       {/* La foto también lleva a la tienda: en el móvil es más fácil de
           acertar que el nombre. Sin foco de teclado: el nombre ya lo tiene. */}
-      <a
-        href={item.itm_url}
-        target="_blank"
-        rel="noreferrer"
-        tabIndex={-1}
-        aria-hidden="true"
-        className={`order-1 grid h-17 w-17 flex-none place-items-center self-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'} ${stock ? 'opacity-55 grayscale' : ''}`}
-      >
-        {item.itm_image_url ? (
-          // multiply: el fondo blanco de la foto de la tienda se funde con la
-          // caja, así todas las miniaturas se ven del mismo tamaño.
-          <img
-            src={item.itm_image_url}
-            alt=""
-            className="h-full w-full object-contain mix-blend-multiply"
-          />
-        ) : (
-          <ProductIcon kind={item.itm_icon} className="h-7 w-7 text-ink-mut opacity-85" />
-        )}
-      </a>
+      <div className="relative order-1 flex-none self-center">
+        <a
+          href={item.itm_url}
+          target="_blank"
+          rel="noreferrer"
+          tabIndex={-1}
+          aria-hidden="true"
+          className={`grid h-17 w-17 place-items-center overflow-hidden rounded-md border border-line ${item.itm_image_url ? 'bg-photo p-1' : 'bg-surface-2'} ${stock ? 'opacity-55 grayscale' : ''}`}
+        >
+          {item.itm_image_url ? (
+            // multiply: el fondo blanco de la foto de la tienda se funde con la
+            // caja, así todas las miniaturas se ven del mismo tamaño.
+            <img
+              src={item.itm_image_url}
+              alt=""
+              className="h-full w-full object-contain mix-blend-multiply"
+            />
+          ) : (
+            <ProductIcon kind={item.itm_icon} className="h-7 w-7 text-ink-mut opacity-85" />
+          )}
+        </a>
+        <FavoriteButton
+          item={item}
+          title={title}
+          onToggle={onToggleFavorite}
+          className="absolute -bottom-1.5 -right-1.5 h-6 w-6"
+          iconClassName="h-3.5 w-3.5"
+        />
+      </div>
 
       {/* Por debajo de lg: foto y nombre en la primera línea, precio y
           acciones en la segunda. La base deja justo el hueco de la foto (y de

@@ -47,6 +47,13 @@ export function itemsTotal(items) {
   return Math.round(total * 100) / 100
 }
 
+/** Los favoritos delante, sin cambiar el orden elegido dentro de cada parte
+ * (docs/DECISIONES.md 2026-10-16). Como groupByFolder respeta el orden en
+ * que llegan, también quedan delante dentro de cada carpeta. */
+export function favoritesFirst(items) {
+  return [...items.filter((i) => i.isFavorite), ...items.filter((i) => !i.isFavorite)]
+}
+
 export function groupByFolder(items, foldersById) {
   const groups = {}
   for (const item of items) {

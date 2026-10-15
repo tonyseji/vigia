@@ -41,7 +41,7 @@ automático en cada push a `main`). La app vieja ya no existe en Supabase:
 función, cron y tablas retirados el 2026-09-09; su código solo queda en el
 primer commit.
 
-Última sesión: 42. Pendientes abiertos en `docs/ROADMAP.md`; decisiones en
+Última sesión: 43. Pendientes abiertos en `docs/ROADMAP.md`; decisiones en
 `docs/DECISIONES.md`. Historial completo en `docs/PROGRESO.md` (17 en
 adelante) y `docs/PROGRESO-ARCHIVO.md` (1 a 16).
 
@@ -109,6 +109,7 @@ prefijo de tabla. Hace legible cualquier consulta con JOINs.
 | `user_settings` | `us` |
 | `folder_shares` | `shr` |
 | `push_subscriptions` | `psub` |
+| `favorites` | `fav` |
 
 Las etiquetas en la interfaz van siempre en español (`itm_price` → «Precio»).
 

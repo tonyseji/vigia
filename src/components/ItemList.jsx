@@ -11,8 +11,9 @@ import {
   saveCollapsed,
   groupKeyOf,
   itemsTotal,
+  favoritesFirst,
 } from '../lib/itemGroups.js'
-import { IconCopiar, IconCheck, IconChevronRight, IconCarpeta } from './icons/index.jsx'
+import { IconCopiar, IconCheck, IconChevronRight, IconCarpeta, IconEstrella } from './icons/index.jsx'
 import ItemRow from './ItemRow.jsx'
 import ItemTile from './ItemTile.jsx'
 
@@ -41,7 +42,9 @@ function sortItems(items, sort) {
   return withPct.map((x) => x.item)
 }
 
-/** Lista de artículos, con búsqueda, orden y el chip "Solo bajadas". Cuando
+/** Lista de artículos, con búsqueda, orden y los chips «Solo favoritos» y
+ * «Solo bajadas». Los favoritos van primero con cualquier orden, también
+ * dentro de cada carpeta (docs/DECISIONES.md 2026-10-16). Cuando
  * no hay una carpeta seleccionada en el sidebar (`groupByFolder`), agrupa
  * visualmente por carpeta (docs/DISENO.md); si ya viene filtrada a una
  * carpeta concreta, se pinta como lista plana sin repetir el título del
@@ -49,7 +52,7 @@ function sortItems(items, sort) {
  * el sidebar está escondido y no se veía en qué carpeta estabas.
  *
  * `justAdded` ({ id }) es el artículo recién guardado: se quita lo que lo
- * esconda (búsqueda, «Solo bajadas», grupo plegado), se lleva a la vista y
+ * esconda (búsqueda, «Solo favoritos», «Solo bajadas», grupo plegado), se lleva a la vista y
  * se ilumina un momento.
  *
  * `picking`/`basket`/`onToggleBasket` vienen de useBasket (App.jsx): con
@@ -66,6 +69,7 @@ export default function ItemList({
   picking = false,
   basket,
   onToggleBasket,
+  onToggleFavorite,
   folderName = null,
   onShowAll,
   justAdded = null,
@@ -73,6 +77,7 @@ export default function ItemList({
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
   const [onlyDrops, setOnlyDrops] = useState(false)
+  const [onlyFavs, setOnlyFavs] = useState(false)
   const [view, setViewState] = useState(loadView)
 
   function setView(next) {
@@ -99,6 +104,7 @@ export default function ItemList({
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
+      if (onlyFavs && !item.isFavorite) return false
       if (onlyDrops) {
         const pct = pctOf(item)
         if (!(pct != null && pct < 0)) return false
@@ -108,9 +114,9 @@ export default function ItemList({
       const itemFolder = foldersById[item.itm_fld_id]?.fld_name ?? ''
       return normalizeSearch(`${displayTitle(item)} ${item.itm_url} ${itemFolder}`).includes(q)
     })
-  }, [items, query, onlyDrops, foldersById])
+  }, [items, query, onlyFavs, onlyDrops, foldersById])
 
-  const sorted = useMemo(() => sortItems(filtered, sort), [filtered, sort])
+  const sorted = useMemo(() => favoritesFirst(sortItems(filtered, sort)), [filtered, sort])
 
   // «Sin carpeta» primero, el resto por nombre (src/lib/itemGroups.js).
   const groups = useMemo(() => groupItemsByFolder(sorted, foldersById), [sorted, foldersById])
@@ -122,6 +128,7 @@ export default function ItemList({
   useEffect(() => {
     if (!justAddedId) return
     setQuery('')
+    setOnlyFavs(false)
     setOnlyDrops(false)
     if (justAddedKey) {
       setCollapsed((prev) => {
@@ -140,6 +147,16 @@ export default function ItemList({
     // Solo al llegar un guardado nuevo (justAdded cambia de objeto).
   }, [justAdded])
 
+  // Marcar o quitar mueve la fila (los favoritos van primero): la pantalla
+  // la sigue, para que no se vaya de debajo del dedo sin ver adónde.
+  async function toggleFavorite(itemId, favorite) {
+    const done = onToggleFavorite?.(itemId, favorite)
+    requestAnimationFrame(() => {
+      document.querySelector(`[data-item-id="${itemId}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+    return done
+  }
+
   function row(item) {
     return (
       <ItemRow
@@ -152,6 +169,7 @@ export default function ItemList({
         picking={picking}
         inBasket={Boolean(basket?.[item.itm_id])}
         onToggleBasket={onToggleBasket}
+        onToggleFavorite={toggleFavorite}
       />
     )
   }
@@ -168,6 +186,7 @@ export default function ItemList({
         picking={picking}
         inBasket={Boolean(basket?.[item.itm_id])}
         onToggleBasket={onToggleBasket}
+        onToggleFavorite={toggleFavorite}
       />
     )
   }
@@ -225,6 +244,15 @@ export default function ItemList({
         </select>
         <button
           type="button"
+          aria-pressed={onlyFavs}
+          onClick={() => setOnlyFavs((v) => !v)}
+          className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-fav aria-pressed:text-fav"
+        >
+          <IconEstrella filled={onlyFavs} className="h-3.5 w-3.5" />
+          Solo favoritos
+        </button>
+        <button
+          type="button"
           aria-pressed={onlyDrops}
           onClick={() => setOnlyDrops((v) => !v)}
           className="rounded-full border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-ok aria-pressed:bg-ok-soft aria-pressed:text-ok"
@@ -252,7 +280,11 @@ export default function ItemList({
       </div>
 
       {sorted.length === 0 ? (
-        <p className="mt-4 text-center text-ink-mut">Nada que coincida.</p>
+        <p className="mt-4 text-center text-ink-mut">
+          {onlyFavs && !searching && !onlyDrops
+            ? 'Aún no hay favoritos aquí. Toca la ★ de la foto de un artículo para marcarlo.'
+            : 'Nada que coincida.'}
+        </p>
       ) : groupByFolder ? (
         groups.map(([key, groupItems]) => {
           const name = folderGroupName(key, foldersById)

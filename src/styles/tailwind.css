@@ -20,6 +20,8 @@
   --color-warn-soft: #f7ecd8;
   --color-bad: #a5301f;
   --color-bad-soft: #f8e3df;
+  /* Favorito (la estrella): dorado, distinto del ámbar de «sin precio». */
+  --color-fav: #b07a00;
 
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -48,6 +50,7 @@
     --color-warn-soft: #3a2c12;
     --color-bad: #ff8a7a;
     --color-bad-soft: #3a1c17;
+    --color-fav: #f2c14e;
   }
 }
 

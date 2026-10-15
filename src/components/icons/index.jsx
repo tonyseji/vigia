@@ -189,3 +189,12 @@ export function IconCesta(props) {
     </svg>
   )
 }
+
+/** Estrella de favorito. `filled` la rellena (marcado). */
+export function IconEstrella({ filled = false, ...props }) {
+  return (
+    <svg {...common} fill={filled ? 'currentColor' : 'none'} {...props}>
+      <path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z" />
+    </svg>
+  )
+}

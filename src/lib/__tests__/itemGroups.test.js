@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { NO_FOLDER, folderGroupName, groupByFolder, foldersInTreeOrder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal } from '../itemGroups.js'
+import { NO_FOLDER, folderGroupName, groupByFolder, foldersInTreeOrder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal, favoritesFirst } from '../itemGroups.js'
 
 const foldersById = {
   m: { fld_id: 'm', fld_name: 'Muebles', fld_parent_id: null },
@@ -112,5 +112,23 @@ describe('itemsTotal', () => {
 
   it('redondea a céntimos', () => {
     expect(itemsTotal([{ itm_price: 0.1 }, { itm_price: 0.2 }])).toBe(0.3)
+  })
+})
+
+describe('favoritesFirst', () => {
+  const fav = (id, fld) => ({ ...item(id, fld), isFavorite: true })
+
+  it('pone los favoritos delante sin cambiar el orden de cada parte', () => {
+    const sorted = favoritesFirst([item(1), fav(2), item(3), fav(4)])
+    expect(sorted.map((i) => i.itm_id)).toEqual([2, 4, 1, 3])
+  })
+
+  it('agrupado por carpeta, cada grupo empieza por sus favoritos', () => {
+    const groups = groupByFolder(favoritesFirst([item(1, 'a'), item(2, 'm'), fav(3, 'a'), fav(4, null), item(5, null)]), foldersById)
+    expect(groups.map(([, list]) => list.map((i) => i.itm_id))).toEqual([[4, 5], [3, 1], [2]])
+  })
+
+  it('sin favoritos no cambia nada', () => {
+    expect(favoritesFirst([item(1), item(2)]).map((i) => i.itm_id)).toEqual([1, 2])
   })
 })

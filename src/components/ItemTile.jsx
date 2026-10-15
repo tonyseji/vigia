@@ -5,6 +5,7 @@ import { displayTitle, stockLabel } from '../lib/itemText.js'
 import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
 import HistoryModal from './HistoryModal.jsx'
+import FavoriteButton from './FavoriteButton.jsx'
 
 function domainOf(url) {
   try {
@@ -19,8 +20,9 @@ function domainOf(url) {
  * variación. Vista secundaria para comparar diseños, no precios: sin
  * minigráfico ni copiar para Claude, pero sí carpeta y editar — sin ellos
  * un artículo añadido en esta vista no se podía organizar (feedback de
- * Tony tras ver la vista Fotos en producción, sesión 15). */
-export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, justAdded }) {
+ * Tony tras ver la vista Fotos en producción, sesión 15). La estrella de
+ * favorito va abajo a la derecha de la foto, como en la fila. */
+export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded }) {
   const [editing, setEditing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
@@ -59,7 +61,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
   return (
     <article
       data-item-id={item.itm_id}
-      className={`flex flex-col rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
+      className={`flex flex-col rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
     >
       {/* El recorte de las esquinas va en la foto y no en la tarjeta: con
           overflow-hidden en la tarjeta, el desplegable de carpeta se cortaba. */}
@@ -105,6 +107,12 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </svg>
         </button>
+        <FavoriteButton
+          item={item}
+          title={title}
+          onToggle={onToggleFavorite}
+          className="absolute bottom-1.5 right-1.5 z-1 h-7 w-7"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-0.5 p-2.5">

@@ -1568,3 +1568,44 @@ guardarlo sin precio y que el pase diario lo vuelva a intentar. Decisión en
 - Tests: 275 en verde; build en verde. `scrape` v15, `save-link` v11 y
   `refresh` v13 desplegadas; arrancan (401 sin credenciales). El pase de
   `refresh` con lo nuevo se verá en el próximo cron.
+
+
+## 2026-10-16 (Sesión 43) — Investigación de competidores y favoritos
+
+### Contexto
+
+Tony pidió mirar apps parecidas para sacar ideas, y una forma de destacar el
+artículo que más te gusta cuando guardas varios parecidos. Se miraron Keepa,
+CamelCamelCamel, Google Shopping (seguir precio con precio objetivo), idealo
+(lista con colores, alarma, comparar características), listas de deseos
+universales (WishUpon, Giftful, GiftList, Moonsift), Houzz y Spoak (votar
+entre alternativas). Se propusieron tres formas de hacer favoritos y Tony
+eligió la A. Decisión en `DECISIONES.md`; las demás ideas, en el backlog
+(B38 a B41).
+
+### Cambios
+
+- Migración `024_favoritos.sql`: tabla `vigia.favorites` (`fav_usr_id`,
+  `fav_itm_id`), una estrella por persona y artículo, RLS `favorites_own`
+  (solo las propias; solo artículos que ves). Aplicada. Probada en BD con
+  transacciones deshechas: propio sí; ajeno no visible, no; a nombre de otro,
+  no; cada uno ve solo las suyas; el invitado de una carpeta compartida
+  marca los artículos del dueño y el dueño no ve esa estrella. Asesores sin
+  avisos nuevos.
+- `useItems`: la estrella llega embebida en la consulta de `items`
+  (`isFavorite`) y `toggleFavorite` la pone o quita al instante; si la BD
+  falla vuelve atrás y `App` lo avisa.
+- `FavoriteButton` en la esquina de la foto de la fila y de la tarjeta,
+  borde dorado (token `fav` en `@theme`, claro y oscuro), favoritos primero
+  dentro de cada grupo (`favoritesFirst`, con tests), chip «Solo favoritos»
+  y la pantalla sigue a la fila al marcarla.
+- Comprobado en el navegador integrado con una página de prueba temporal
+  (la lista de verdad con datos inventados; borrada al acabar): marcar,
+  orden, filtro, Fotos, móvil en claro y escritorio en oscuro. La API
+  resuelve el embebido `favorites(...)` (sin sesión da el error de permiso,
+  no el de relación inexistente).
+- Tests: 278 en verde; build en verde.
+
+### Estado final
+
+Hecho y subido. Falta verlo con una sesión real en producción.

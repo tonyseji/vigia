@@ -1320,3 +1320,29 @@ salía en blanco.
 siempre blanco y en modo claro no se leería sobre el fondo de la app.
 **Pendiente de ver:** en un iPhone y un Android reales (aquí solo se puede
 simular el tamaño).
+
+### 2026-10-16 — Favoritos: una estrella por artículo, de cada persona (sesión 43)
+**Contexto:** Tony pidió ideas de apps parecidas (Keepa, Google Shopping,
+idealo, listas de deseos universales, Spoak) y una forma de destacar el
+artículo que más te gusta cuando guardas varios parecidos.
+**Decisión (de Tony, opción A de tres):** una ★ en cada artículo. Los
+favoritos salen **primero dentro de su grupo** con cualquier orden (y el
+orden elegido sigue mandando entre ellos), llevan la estrella rellena y el
+borde dorado, y hay un chip «Solo favoritos» al lado de «Solo bajadas».
+**Cómo (decidido en Claude Code):** tabla propia `vigia.favorites`
+(`fav_usr_id`, `fav_itm_id`, clave primaria compuesta), no una columna en
+`items`. Con una columna, en una carpeta compartida la estrella sería la
+misma para todos y quitarla se la quitaría también al otro. La tabla deja
+cada estrella en su dueño y prepara los votos de la opción C (ver también
+las estrellas de los demás en una carpeta compartida) sin migrar nada.
+Llega embebida en la misma consulta de `useItems` (la RLS solo devuelve
+las propias). Solo se puede marcar un artículo que ves (el `WITH CHECK`
+mira `items` con su RLS). La estrella va en la esquina de la foto, en la
+fila y en la tarjeta: en la segunda línea de la fila móvil no cabe otro
+botón. Color propio `fav` en `@theme` (dorado), distinto del ámbar de
+«sin precio».
+**Descartado:** B, un solo «elegido» por carpeta (más rígido, no sirve sin
+carpeta); C, votos, por ahora. Meter solo los favoritos en la cesta o en
+los totales: se puede añadir encima.
+**Revisitar:** si Tony quiere ver las estrellas de los demás en una
+carpeta compartida (C), o un botón «meter los favoritos en la cesta».

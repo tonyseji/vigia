@@ -104,6 +104,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     updateItem,
     deleteItem,
     refreshAll,
+    toggleFavorite,
     reload: reloadItems,
   } = useItems()
   const {
@@ -155,6 +156,11 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   }, [justAdded])
   const handleAdd = async (url, folderId) => markAdded(await addItem(url, folderId))
   const handleAddManual = async (url, price, folderId) => markAdded(await addManualItem(url, price, folderId))
+  // La estrella vuelve sola a como estaba si falla; el aviso dice por qué.
+  const handleToggleFavorite = async (itemId, favorite) => {
+    const result = await toggleFavorite(itemId, favorite)
+    if (result.error) setJoinResult({ ok: false, text: result.error })
+  }
   const handleAddUnread = async (url, folderId, reason) => markAdded(await addUnreadItem(url, folderId, reason))
   const selectedFolder = folders.find((f) => f.fld_id === selectedFolderId)
 
@@ -405,6 +411,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             picking={cesta.picking}
             basket={cesta.basket}
             onToggleBasket={cesta.toggle}
+            onToggleFavorite={handleToggleFavorite}
           />
         </div>
       </div>
