@@ -32,6 +32,8 @@ export default function SharedLinkBanner({ url, onSave, onUndo, onClose }) {
   else if (status === 'undone') text = 'Deshecho: no se ha guardado nada.'
   else if (result.manual)
     text = `Guardado sin precio: ${host} no deja leerlo desde aquí. El Chrome de tu ordenador se lo pondrá en el próximo pase.`
+  else if (result.unread)
+    text = `Guardado sin precio: ahora no he podido leer la ficha de ${host}. Lo vuelvo a intentar en el próximo pase.`
   else text = `Guardado: ${result.item.itm_title} · ${formatPrice(result.item.itm_price)}`
 
   return (

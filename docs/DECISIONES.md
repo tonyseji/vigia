@@ -86,6 +86,30 @@ segundo sitio donde aplicar lo aprendido en Bilans.
 día el proyecto deja de apetecer.
 **Revisitar:** Nunca, salvo que cambie el motivo por el que se construye.
 
+### 2026-10-15 — Si la lectura falla, se puede guardar sin precio y el pase lo reintenta (sesión 42, decisión de Tony)
+
+**Decisión:** cuando Vigía no consigue leer la ficha al añadir, el formulario
+enseña el motivo y un botón «Guardar sin precio». El artículo se guarda sin
+precio y **no** en modo manual (`itm_last_checked_at` a null, el motivo en
+`itm_last_error`), así que el siguiente pase del servidor lo lee el primero,
+y al leerlo le pone también el nombre y la foto que faltaban
+(`missingDetails`, `refresh/notify.ts`). En Compartir de Android y en el
+atajo de iOS no hay formulario: se guarda así directamente y el aviso lo
+dice (Android tiene «Deshacer»).
+
+**Excepción:** si la tienda dice que la página no existe (404/410,
+`isNotFound` en `scrape/extract.ts`), no se ofrece: el pase volvería a
+fallar siempre.
+
+**Por qué:** Tony, tras el fallo de Wallapop desde el iPhone: que nunca se
+quede la persona sin poder guardar algo que existe (memoria «todo con
+relevo»). Antes, salvo en tiendas bloqueadas, un fallo de lectura no dejaba
+ninguna salida.
+
+**Descartado:** guardarlo en modo manual (el pase del servidor se lo
+saltaría) y guardarlo siempre sin preguntar en la web (se llenaría la lista
+de enlaces rotos sin que nadie lo decidiera).
+
 ### 2026-10-14 — Artículo con varios acabados y sin acabado en la dirección: el precio más barato (B32, sesión 39)
 **Decisión (de Tony):** si una ficha publica un precio por acabado o talla
 (Sklum) y la dirección guardada no elige ninguno, se vigila el más barato,

@@ -79,6 +79,22 @@ export function statusMessage(status: number): string {
   return `La tienda respondió con un error (HTTP ${status}).`;
 }
 
+/** Fallo de lectura con el estado HTTP de la tienda. */
+export class ReadError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** La tienda dice que la página no existe: guardarla sin precio no sirve,
+ * el pase diario volvería a fallar. Cualquier otro fallo (bloqueo, tiempo
+ * de espera, error de la tienda) puede salir bien más tarde (sesión 42). */
+export function isNotFound(err: unknown): boolean {
+  return err instanceof ReadError && (err.status === 404 || err.status === 410);
+}
+
 // Enlaces cortos de compartir (la app de Amazon da amzn.eu/d/...). Sin
 // expandirlos el host no es amazon.* y no se aplica nada de lo específico de
 // Amazon: ni pg_net, ni el control del interstitial, ni la lectura del precio.
@@ -147,7 +163,7 @@ export async function fetchHtml(url: string, timeoutMs = 15000, profile?: number
       lastErr = lastErr ?? e;
     }
   }
-  if (lastStatus) throw new Error(statusMessage(lastStatus));
+  if (lastStatus) throw new ReadError(statusMessage(lastStatus), lastStatus);
   throw new Error((lastErr as Error)?.name === "AbortError" ? "Tiempo de espera agotado" : (lastErr as Error)?.message || "Error de red");
 }
 

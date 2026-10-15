@@ -106,3 +106,17 @@ export function buildPushBody(alerts: Alert[]): string {
   const rest = alerts.length > 3 ? ` y ${alerts.length - 3} más` : "";
   return `${alerts.length} artículos con novedades: ${shown}${rest}`;
 }
+
+/** Titulo y foto que faltaban: un articulo guardado sin leer su ficha
+ * («Guardar sin precio», sesion 42) tiene la direccion de titulo y no tiene
+ * foto. Lo que el usuario haya editado no se pisa. Mismo criterio que
+ * itemUpdate (record-price/record.ts). */
+export function missingDetails(
+  item: { itm_url: string; itm_title: string | null; itm_image_url: string | null },
+  read: { title?: string; image?: string },
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (read.title && (!item.itm_title || item.itm_title === item.itm_url)) out.itm_title = read.title;
+  if (read.image && !item.itm_image_url) out.itm_image_url = read.image;
+  return out;
+}

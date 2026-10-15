@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { alertReasons, buildPushBody, cronCutoffHours, resetsNotified } from './notify.ts'
+import { alertReasons, buildPushBody, cronCutoffHours, missingDetails, resetsNotified } from './notify.ts'
 
 // Mismo criterio que scrape/extract.test.ts: notify.ts no usa nada de Deno y
 // se testea con el runner del repo.
@@ -126,5 +126,17 @@ describe('buildPushBody', () => {
     ])
     expect(body).toContain(`${'x'.repeat(39)}…`)
     expect(body).not.toContain('x'.repeat(40))
+  })
+})
+
+describe('missingDetails', () => {
+  const url = 'https://wallapop.com/item/mesa-1'
+  it('guardado sin leer: pone titulo y foto', () => {
+    expect(missingDetails({ itm_url: url, itm_title: url, itm_image_url: null }, { title: 'Mesa', image: 'https://x.test/a.jpg' }))
+      .toEqual({ itm_title: 'Mesa', itm_image_url: 'https://x.test/a.jpg' })
+  })
+  it('no pisa lo que ya tenia', () => {
+    expect(missingDetails({ itm_url: url, itm_title: 'Mi mesa', itm_image_url: 'https://x.test/b.jpg' }, { title: 'Mesa', image: 'https://x.test/a.jpg' }))
+      .toEqual({})
   })
 })

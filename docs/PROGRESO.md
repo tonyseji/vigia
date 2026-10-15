@@ -1540,3 +1540,31 @@ el 404 no era del anuncio, sino de la dirección que se pedía.
   frase delante y detrás); build en verde. `save-link` v10 desplegada.
 
 Queda: que la usuaria del iPhone vuelva a probarlo con la app recargada.
+
+### Añadido: «Guardar sin precio» cuando la lectura falla
+
+Tony: que cuando la lectura falle (salvo si la página no existe) se ofrezca
+guardarlo sin precio y que el pase diario lo vuelva a intentar. Decisión en
+`DECISIONES.md`.
+
+- `scrape/extract.ts`: `ReadError` (con el estado HTTP) e `isNotFound`
+  (404/410). `scrape` manda `notFound` en el cuerpo del 502.
+- Web: `scrapeFailure` (`loadErrors.js`) da el motivo y si se puede
+  reintentar; `addItem` devuelve `canSaveWithoutPrice`. `AddItemForm`
+  enseña «Guardar sin precio», que llama a `addUnreadItem` (`useItems`):
+  sin precio, no manual, `itm_last_checked_at` a null y el motivo en
+  `itm_last_error`. `addManualItem` y `addUnreadItem` comparten
+  `insertUnread`. Compartir de Android (`saveShared`) lo hace solo y el
+  aviso lo dice.
+- `save-link` (atajo de iOS): igual, sin preguntar, con su frase en
+  `savedMessage`; con «no existe» sigue sin guardar.
+- `refresh`: al leer por fin un artículo así, rellena título y foto si
+  faltaban (`missingDetails`, lo editado no se pisa).
+- Comprobado en el navegador integrado con una página de prueba temporal
+  (el formulario de verdad con la lectura simulada; borrada al acabar):
+  fallo de bloqueo → botón → «Guardado sin precio: wallapop.com. Lo vuelvo
+  a leer en el próximo pase.» con el motivo pasado; «no existe» → sin botón.
+  Contra Wallapop real: un 404 da `isNotFound` y la ficha buena se lee.
+- Tests: 275 en verde; build en verde. `scrape` v15, `save-link` v11 y
+  `refresh` v13 desplegadas; arrancan (401 sin credenciales). El pase de
+  `refresh` con lo nuevo se verá en el próximo cron.

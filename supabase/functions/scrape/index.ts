@@ -6,7 +6,7 @@
 // No escribe en items/price_history: eso lo hace el frontend con su propio
 // cliente de sesion, para que RLS decida quien puede insertar que.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { expandShortLink, extractFromUrl, setAltFetcher } from "./extract.ts";
+import { expandShortLink, extractFromUrl, isNotFound, setAltFetcher } from "./extract.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -114,8 +114,9 @@ Deno.serve(async (req) => {
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
   } catch (err) {
+    // notFound: la web no ofrece «Guardar sin precio» (no hay nada que leer luego).
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Error desconocido" }),
+      JSON.stringify({ error: err instanceof Error ? err.message : "Error desconocido", notFound: isNotFound(err) }),
       { status: 502, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }

@@ -13,7 +13,7 @@
 // hace de token y se valida a mano. Escribe con service_role, siempre como
 // el usuario de la clave.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { expandShortLink, type Extracted, extractFromUrl, setAltFetcher } from "../scrape/extract.ts";
+import { expandShortLink, type Extracted, extractFromUrl, isNotFound, setAltFetcher } from "../scrape/extract.ts";
 import { cleanUrl } from "../record-price/record.ts";
 import { duplicateMessage, findSameItem, findUrl, hashKey, parseKey, savedMessage, type VisibleItem } from "./link.ts";
 
@@ -90,6 +90,10 @@ Deno.serve(async (req) => {
   // Tienda que bloquea: se guarda sin precio y en modo manual, como
   // addManualItem en la web; la extension de Chrome se lo pondra.
   let extracted: Extracted | null = null;
+  // La lectura fallo por algo que puede salir bien mas tarde (bloqueo,
+  // tiempo de espera): se guarda sin precio y el pase diario lo reintenta,
+  // como «Guardar sin precio» en la web (sesion 42).
+  let readError: string | null = null;
   if (!manual) {
     // Mismo camino alternativo para Amazon que scrape/index.ts (backlog B9).
     setAltFetcher(async (fetchUrl, headers) => {
@@ -106,9 +110,10 @@ Deno.serve(async (req) => {
     try {
       extracted = await extractFromUrl(url);
     } catch (err) {
-      // El motivo (p. ej. «esa página no existe») dice si merece la pena reintentar.
-      const reason = err instanceof Error ? ` ${err.message}` : "";
-      return text(`No se pudo leer la ficha de ${domain}.${reason} Inténtalo otra vez o pega la dirección en Vigía.`, 502);
+      const reason = err instanceof Error ? err.message : "Error desconocido";
+      // La pagina no existe: guardarla no sirve, el pase volveria a fallar.
+      if (isNotFound(err)) return text(`No se pudo guardar: ${reason}`, 502);
+      readError = reason.slice(0, 200);
     }
   }
 
@@ -124,7 +129,8 @@ Deno.serve(async (req) => {
       itm_currency: extracted?.currency ?? "EUR",
       itm_in_stock: extracted?.inStock ?? null,
       itm_is_manual: manual,
-      itm_last_checked_at: manual ? null : now,
+      itm_last_checked_at: manual || readError ? null : now,
+      itm_last_error: readError,
     })
     .select("itm_id, itm_title, itm_price")
     .single();
@@ -140,5 +146,5 @@ Deno.serve(async (req) => {
     });
   }
 
-  return text(savedMessage({ url, title: item.itm_title, price: item.itm_price, manual }));
+  return text(savedMessage({ url, title: item.itm_title, price: item.itm_price, manual, unread: readError != null }));
 });

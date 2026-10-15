@@ -99,6 +99,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     refreshing,
     addItem,
     addManualItem,
+    addUnreadItem,
     saveFromBrowser,
     updateItem,
     deleteItem,
@@ -154,18 +155,26 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
   }, [justAdded])
   const handleAdd = async (url, folderId) => markAdded(await addItem(url, folderId))
   const handleAddManual = async (url, price, folderId) => markAdded(await addManualItem(url, price, folderId))
+  const handleAddUnread = async (url, folderId, reason) => markAdded(await addUnreadItem(url, folderId, reason))
   const selectedFolder = folders.find((f) => f.fld_id === selectedFolderId)
 
   /** Guarda lo compartido: con precio si la tienda deja leerlo; si bloquea,
-   * sin precio y en modo manual (la extensión de Chrome se lo pondrá). */
+   * sin precio y en modo manual (la extensión de Chrome se lo pondrá). Si la
+   * lectura falla por otra cosa que puede salir bien más tarde, sin precio
+   * para que lo lea el pase diario: aquí no hay formulario donde ofrecerlo y
+   * el aviso ya trae «Deshacer» (sesión 42). */
   const saveShared = useCallback(
     async (url) => {
       const result = await addItem(url, selectedFolderId)
+      if (result.canSaveWithoutPrice) {
+        const unread = await addUnreadItem(url, selectedFolderId, result.error)
+        return unread.error ? unread : { item: unread.item, unread: true }
+      }
       if (!result.blocked) return result
       const manual = await addManualItem(url, null, selectedFolderId)
       return manual.error ? manual : { item: manual.item, manual: true }
     },
-    [addItem, addManualItem, selectedFolderId],
+    [addItem, addManualItem, addUnreadItem, selectedFolderId],
   )
 
   // Enlace de invitación pendiente (abierto antes o durante el login): se
@@ -361,7 +370,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
       </div>
 
       <div className="mt-6">
-        <AddItemForm onAdd={handleAdd} onAddManual={handleAddManual} folderId={selectedFolderId} />
+        <AddItemForm onAdd={handleAdd} onAddManual={handleAddManual} onAddUnread={handleAddUnread} folderId={selectedFolderId} />
       </div>
 
       <div className="mt-6 flex items-start gap-6">

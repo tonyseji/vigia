@@ -118,7 +118,7 @@ La referencia se hizo antes de cerrar varias decisiones. Al implementarla:
 | Lista vacía | Un texto que invita a pegar la primera URL, no una pantalla en blanco. |
 | Cargando la lista | Esqueletos con la forma de las filas, no un spinner centrado. |
 | Añadiendo una URL | El botón deshabilitado mientras se lee la ficha; puede tardar varios segundos. |
-| Error al añadir | El motivo en palabras llanas, junto al campo, y la URL sin perderse. |
+| Error al añadir | El motivo en palabras llanas, junto al campo, y la URL sin perderse. Si la lectura puede salir bien más tarde (todo menos «la página no existe»), debajo un botón «Guardar sin precio» (borde y fondo `accent`) con «y lo vuelvo a intentar en el próximo pase». |
 | Artículo sin histórico | Sin minigráfico y sin variación: solo el precio. Es lo normal el primer día. |
 | Búsqueda sin resultados | «Nada que coincida», como en la referencia. |
 

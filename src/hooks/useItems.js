@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 import { cleanUrl, findSameItem } from '../lib/urlKey.js'
-import { scrapeErrorMessage } from '../lib/loadErrors.js'
+import { scrapeFailure } from '../lib/loadErrors.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
@@ -93,7 +93,10 @@ export function useItems() {
     const { data: fnData, error: fnError } = await supabase.functions.invoke('scrape', {
       body: { url },
     })
-    if (fnError) return { error: await scrapeErrorMessage(fnError) }
+    if (fnError) {
+      const failure = await scrapeFailure(fnError)
+      return { error: failure.error, canSaveWithoutPrice: failure.retryable }
+    }
     if (fnData?.blocked) return { blocked: true }
     if (fnData?.error) return { error: fnData.error }
 
@@ -140,8 +143,12 @@ export function useItems() {
     return { item }
   }, [checkBlocked, findExisting, reload])
 
-  /** Guarda un artículo bloqueado en modo manual, con el precio que teclee el usuario. */
-  const addManualItem = useCallback(async (rawUrl, price, folderId = null) => {
+  /** Guarda un artículo sin leer su ficha: el título es la dirección (la
+   * lista enseña uno sacado de ella, displayTitle). `manual`: tienda que
+   * bloquea, el precio lo pone el usuario. Si no, el pase diario lo lee en
+   * cuanto pueda (itm_last_checked_at a null va primero) y rellena título y
+   * foto (refresh/index.ts). */
+  const insertUnread = useCallback(async (rawUrl, { price = null, manual, lastError = null, folderId = null }) => {
     const url = cleanUrl(rawUrl)
     const found = await findExisting([url])
     if (found.error) return { error: found.error }
@@ -154,8 +161,9 @@ export function useItems() {
         itm_url: url,
         itm_title: url,
         itm_price: price ?? null,
-        itm_is_manual: true,
+        itm_is_manual: manual,
         itm_last_checked_at: price != null ? new Date().toISOString() : null,
+        itm_last_error: lastError,
       })
       .select()
       .single()
@@ -174,6 +182,20 @@ export function useItems() {
     await reload()
     return { item }
   }, [findExisting, reload])
+
+  /** Guarda un artículo bloqueado en modo manual, con el precio que teclee el usuario. */
+  const addManualItem = useCallback(
+    (rawUrl, price, folderId = null) => insertUnread(rawUrl, { price, manual: true, folderId }),
+    [insertUnread],
+  )
+
+  /** «Guardar sin precio» cuando la lectura falló por algo que puede salir
+   * bien más tarde (sesión 42). No es manual: el pase diario lo reintenta. */
+  const addUnreadItem = useCallback(
+    (rawUrl, folderId = null, reason = null) =>
+      insertUnread(rawUrl, { manual: false, lastError: reason?.slice(0, 200) ?? null, folderId }),
+    [insertUnread],
+  )
 
   /** Guarda lo que manda el botón del navegador (src/lib/browserImport.js).
    * Si el artículo ya está en la lista, solo apunta el precio nuevo (y
@@ -279,5 +301,5 @@ export function useItems() {
     return {}
   }, [reload])
 
-  return { items, loading, loadError, refreshing, addItem, addManualItem, saveFromBrowser, updateItem, deleteItem, refreshAll, reload }
+  return { items, loading, loadError, refreshing, addItem, addManualItem, addUnreadItem, saveFromBrowser, updateItem, deleteItem, refreshAll, reload }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parsePrice, extractFromHtml, isBotPage, expandShortLink, statusMessage } from './extract.ts'
+import { parsePrice, extractFromHtml, isBotPage, expandShortLink, statusMessage, fetchHtml, isNotFound } from './extract.ts'
 
 // extract.ts no usa ninguna API especifica de Deno mas alla de
 // fetch/URL/AbortController globales, ya estandar tambien en Vitest/Node.
@@ -234,5 +234,29 @@ describe('statusMessage', () => {
   })
   it('otro estado: error de la tienda con su numero', () => {
     expect(statusMessage(400)).toBe('La tienda respondió con un error (HTTP 400).')
+  })
+})
+
+describe('isNotFound', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  const answer = (status: number) => vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status })))
+  const failure = async (url: string) => {
+    try {
+      await fetchHtml(url, 1000)
+    } catch (e) {
+      return e
+    }
+    throw new Error('no fallo')
+  }
+
+  it('404 de la tienda: no existe', async () => {
+    answer(404)
+    expect(isNotFound(await failure('https://wallapop.com/item/x-1'))).toBe(true)
+  })
+  it('400 o red caida: puede salir bien mas tarde', async () => {
+    answer(400)
+    expect(isNotFound(await failure('https://tienda.test/a'))).toBe(false)
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('red') }))
+    expect(isNotFound(await failure('https://tienda.test/a'))).toBe(false)
   })
 })

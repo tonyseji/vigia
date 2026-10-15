@@ -11,7 +11,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { extractFromUrl, setAltFetcher } from "../scrape/extract.ts";
 import { sendPush, type PushSubscriptionRow } from "./push.ts";
-import { type Alert, alertReasons, buildPushBody, cronCutoffHours, type NotifySettings, resetsNotified } from "./notify.ts";
+import { type Alert, alertReasons, buildPushBody, cronCutoffHours, missingDetails, type NotifySettings, resetsNotified } from "./notify.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -68,6 +68,7 @@ interface ItemRow {
   itm_usr_id: string;
   itm_url: string;
   itm_title: string | null;
+  itm_image_url: string | null;
   itm_price: number | null;
   itm_min_price: number | null;
   itm_in_stock: boolean | null;
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
     const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
     const { data, error: itemsError } = await admin
       .from("items")
-      .select("itm_id, itm_usr_id, itm_url, itm_title, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
+      .select("itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
       .eq("itm_usr_id", userId)
       .eq("itm_is_manual", false)
       .or(`itm_last_checked_at.is.null,itm_last_checked_at.lt.${cutoff}`)
@@ -179,6 +180,7 @@ Deno.serve(async (req) => {
           await admin.from("items").update({
             itm_last_checked_at: new Date().toISOString(),
             itm_last_error: "No se encontro el precio en la pagina",
+            ...missingDetails(item, extracted),
           }).eq("itm_id", item.itm_id);
           failed++;
           return;
@@ -193,6 +195,7 @@ Deno.serve(async (req) => {
           itm_in_stock: extracted.inStock ?? null,
           itm_last_checked_at: new Date().toISOString(),
           itm_last_error: null,
+          ...missingDetails(item, extracted),
           // El precio ha vuelto a subir por encima del ultimo aviso: la
           // proxima bajada tiene que volver a avisar (notify.ts).
           ...(resetsNotified(item.itm_notified_price, next) ? { itm_notified_price: null, itm_notified_at: null } : {}),

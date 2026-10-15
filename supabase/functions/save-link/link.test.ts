@@ -77,6 +77,9 @@ describe('mensajes', () => {
     expect(savedMessage({ url: 'https://www.maisonsdumonde.com/p', title: null, price: null, manual: true })).toMatch(
       /^Guardado en Vigía sin precio: maisonsdumonde\.com/,
     )
+    expect(savedMessage({ url: 'https://wallapop.com/item/m-1', title: null, price: null, manual: false, unread: true })).toMatch(
+      /^Guardado en Vigía sin precio: ahora no he podido leer la ficha de wallapop\.com\. Lo vuelvo a intentar/,
+    )
   })
 
   it('duplicado', () => {

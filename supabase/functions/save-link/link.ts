@@ -96,8 +96,10 @@ function hostOf(url: string): string {
 }
 
 /** Texto corto: lo ensena iOS en la notificacion del atajo. */
-export function savedMessage(saved: { url: string; title: string | null; price: number | null; manual: boolean }): string {
+export function savedMessage(saved: { url: string; title: string | null; price: number | null; manual: boolean; unread?: boolean }): string {
   if (saved.manual) return `Guardado en Vigía sin precio: ${hostOf(saved.url)} no deja leerlo desde el servidor.`;
+  // La lectura fallo por algo que puede salir bien mas tarde (sesion 42).
+  if (saved.unread) return `Guardado en Vigía sin precio: ahora no he podido leer la ficha de ${hostOf(saved.url)}. Lo vuelvo a intentar en el próximo pase.`;
   const title = saved.title && saved.title !== saved.url ? saved.title : hostOf(saved.url);
   return saved.price != null ? `Guardado en Vigía: ${title} · ${eur.format(saved.price)}` : `Guardado en Vigía: ${title}`;
 }

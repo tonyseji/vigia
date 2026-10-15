@@ -10,12 +10,16 @@ import { displayTitle } from '../lib/itemText.js'
 const canPaste = typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function'
 
 /** Barra de añadir URL, con los tres estados de docs/DISENO.md: añadiendo,
- * error en palabras llanas sin perder la URL, y el aviso de tienda
- * bloqueada con la opción de guardar en modo manual. */
-export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
+ * error en palabras llanas sin perder la URL (con «Guardar sin precio» si
+ * la lectura puede salir bien más tarde), y el aviso de tienda bloqueada con
+ * la opción de guardar en modo manual. */
+export default function AddItemForm({ onAdd, onAddManual, onAddUnread, folderId = null }) {
   const [url, setUrl] = useState('')
   const [status, setStatus] = useState('idle') // idle | adding | error | blocked
   const [errorMsg, setErrorMsg] = useState('')
+  // La lectura falló pero no porque la página no exista: se puede guardar
+  // sin precio y el pase diario lo vuelve a intentar (sesión 42).
+  const [canSaveUnread, setCanSaveUnread] = useState(false)
   const [manualPrice, setManualPrice] = useState('')
   // Lo último guardado: confirma qué ha entrado y avisa si no se encontró
   // el precio (antes se guardaba en silencio). Se queda hasta que se vuelve
@@ -40,12 +44,28 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
   async function add(value) {
     setStatus('adding')
     setErrorMsg('')
+    setCanSaveUnread(false)
     setSaved(null)
     const result = await onAdd(value, folderId)
     if (result.blocked) {
       setStatus('blocked')
       return
     }
+    if (result.error) {
+      setStatus('error')
+      setErrorMsg(result.error)
+      setCanSaveUnread(Boolean(result.canSaveWithoutPrice))
+      return
+    }
+    setUrl('')
+    setStatus('idle')
+    if (result.item) setSaved(result.item)
+  }
+
+  async function handleUnreadSave() {
+    setStatus('adding')
+    const result = await onAddUnread(url.trim(), folderId, errorMsg)
+    setCanSaveUnread(false)
     if (result.error) {
       setStatus('error')
       setErrorMsg(result.error)
@@ -145,6 +165,8 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           onChange={(e) => {
             setUrl(e.target.value)
             setSaved(null)
+            // «Guardar sin precio» era para la dirección que falló, no para otra.
+            setCanSaveUnread(false)
             // Campo vaciado: el error era de la dirección que había, ya no aplica.
             if (!e.target.value && status === 'error') setStatus('idle')
           }}
@@ -173,6 +195,18 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           {errorMsg}
         </p>
       )}
+      {status === 'error' && canSaveUnread && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleUnreadSave}
+            className="rounded-lg border border-accent bg-accent-soft px-3 py-1.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            Guardar sin precio
+          </button>
+          <span className="text-sm text-ink-mut">y lo vuelvo a intentar en el próximo pase.</span>
+        </div>
+      )}
       {saved && status === 'idle' && (
         <p className="text-sm text-ink-mut" role="status">
           {saved.itm_price != null ? (
@@ -183,6 +217,11 @@ export default function AddItemForm({ onAdd, onAddManual, folderId = null }) {
           ) : saved.itm_is_manual ? (
             <>
               <span className="text-ok">Guardado:</span> {displayTitle(saved)}. Pon el precio con ✎ cuando lo mires.
+            </>
+          ) : saved.itm_last_checked_at == null ? (
+            <>
+              <span className="text-warn">Guardado sin precio:</span> {displayTitle(saved)}. Lo vuelvo a leer en el
+              próximo pase.
             </>
           ) : (
             <>

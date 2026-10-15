@@ -16,21 +16,23 @@ export function loadErrorMessage(failed) {
   return `No se han podido cargar tus ${list}.`
 }
 
-const READ_FAILED = 'No se pudo leer el precio. Inténtalo de nuevo.'
+const READ_FAILED = 'No se pudo leer el precio ahora mismo.'
 
-/** Texto para cuando la función `scrape` contesta con error. supabase-js
- * no da el cuerpo en `data` si el estado no es 2xx: lo deja en
- * `error.context` (la Response). Con 502 el cuerpo trae el motivo en
- * palabras llanas (scrape/extract.ts, statusMessage); antes se tapaba
- * siempre con «Inténtalo de nuevo», también cuando el anuncio ya no
- * existía y reintentar no servía de nada (sesión 42). */
-export async function scrapeErrorMessage(error) {
+/** Qué decir cuando la función `scrape` contesta con error, y si tiene
+ * sentido ofrecer «Guardar sin precio» (que el pase diario lo vuelva a
+ * intentar). supabase-js no da el cuerpo en `data` si el estado no es 2xx:
+ * lo deja en `error.context` (la Response). Con 502 el cuerpo trae el motivo
+ * en palabras llanas (scrape/extract.ts, statusMessage) y `notFound` si la
+ * tienda dice que la página no existe: entonces no se ofrece guardar, porque
+ * el pase volvería a fallar (sesión 42). */
+export async function scrapeFailure(error) {
   const res = error?.context
-  if (!res || res.status !== 502 || typeof res.json !== 'function') return READ_FAILED
+  if (!res || res.status !== 502 || typeof res.json !== 'function') return { error: READ_FAILED, retryable: true }
   try {
     const body = await res.json()
-    return typeof body?.error === 'string' && body.error ? body.error : READ_FAILED
+    const message = typeof body?.error === 'string' && body.error ? body.error : READ_FAILED
+    return { error: message, retryable: body?.notFound !== true }
   } catch {
-    return READ_FAILED
+    return { error: READ_FAILED, retryable: true }
   }
 }
