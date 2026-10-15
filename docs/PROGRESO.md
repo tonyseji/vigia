@@ -1516,7 +1516,27 @@ reintenta: casi seguro **404**. La dirección exacta no queda en ningún log.
 ### Estado final
 
 Hecho y subido. No probado de punta a punta con sesión: la de la cuenta de
-pruebas había caducado en el navegador integrado. Si la usuaria vuelve a
-pegar el mismo enlace verá el motivo real. Falta saber qué enlace era: si
-el anuncio sigue en Wallapop y aun así da «no existe», es que la app de
-Wallapop comparte otro formato de enlace y hay que tratarlo.
+pruebas había caducado en el navegador integrado.
+
+### Añadido: la causa real era Vigía, no Wallapop
+
+Tony: el anuncio sí existe, y desde Android se guardó bien
+(`wallapop.com/item/pack-2-mesitas-de-noche-madera-vingli-1313155796`,
+79,80 €). El pase del servidor también leía los Wallapop de siempre. Así que
+el 404 no era del anuncio, sino de la dirección que se pedía.
+
+- **Causa:** `findUrlInText` (web: «Pegar», campo y Compartir de Android) y
+  `findUrl` (`save-link`, atajo de iOS) probaban primero `new URL(texto)`.
+  Si lo pegado *empieza* por el enlace y sigue con una frase
+  («https://…-1313155796 ¡Mira lo que he encontrado en Wallapop!»), `new URL`
+  lo acepta entero: codifica los espacios y se come los saltos de línea. Se
+  pedía `…-1313155796%20%C2%A1Mira…` y Wallapop contestaba 404. En Android
+  la app de Wallapop manda la dirección limpia en `url`, y por eso allí iba.
+- **Arreglo:** el texto solo se toma tal cual si no lleva espacios ni saltos
+  de línea; si no, se saca la primera dirección con la expresión de siempre.
+  Igual en los dos sitios. Reproducido con el anuncio real: antes 404,
+  ahora título y 79,80 €.
+- Tests: 270 en verde (enlace con frase detrás, con salto de línea, con
+  frase delante y detrás); build en verde. `save-link` v10 desplegada.
+
+Queda: que la usuaria del iPhone vuelva a probarlo con la app recargada.

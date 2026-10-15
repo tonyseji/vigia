@@ -24,7 +24,11 @@ function httpUrl(value) {
  * aparezca en una frase. También para el botón «Pegar» (AddItemForm). */
 export function findUrlInText(value) {
   if (!value) return null
-  const direct = httpUrl(value)
+  // Tal cual solo si no hay nada más: new URL() acepta «enlace + frase»
+  // entera (codifica los espacios y se come los saltos de línea) y se pedía
+  // una dirección con la frase pegada, que la tienda contesta con 404
+  // (sesión 42, enlace de Wallapop desde el iPhone).
+  const direct = /\s/.test(value.trim()) ? null : httpUrl(value)
   if (direct) return direct
   const found = URL_IN_TEXT.exec(value)
   // Quita la puntuación que suele pegarse al final de una frase.

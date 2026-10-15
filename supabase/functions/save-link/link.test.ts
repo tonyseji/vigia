@@ -6,6 +6,12 @@ import { hashShortcutKey, newShortcutKey } from '../../../src/lib/shortcutKey.js
 // Mismo criterio que record-price/record.test.ts: link.ts no usa nada de Deno.
 
 describe('findUrl', () => {
+  // Sesión 42: el enlace delante y la frase detrás; antes se pegaba al enlace
+  // y la tienda contestaba 404.
+  it('corta el enlace donde empieza el texto de detrás', () => {
+    expect(findUrl('https://wallapop.com/item/mesa-123 ¡Mira esto en Wallapop!')).toBe('https://wallapop.com/item/mesa-123')
+    expect(findUrl('https://wallapop.com/item/mesa-123' + String.fromCharCode(10) + 'Descarga Wallapop')).toBe('https://wallapop.com/item/mesa-123')
+  })
   it('acepta la URL de Safari y la saca de una frase', () => {
     expect(findUrl('https://www.ikea.com/es/es/p/kivik-sofa-123/')).toBe('https://www.ikea.com/es/es/p/kivik-sofa-123/')
     expect(findUrl('Mira esto: https://tienda.test/mesa?id=4.')).toBe('https://tienda.test/mesa?id=4')

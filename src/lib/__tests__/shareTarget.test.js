@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readSharedUrl, readTypedUrl, savePendingShare, loadPendingShare, clearPendingShare } from '../shareTarget.js'
+import { findUrlInText, readSharedUrl, readTypedUrl, savePendingShare, loadPendingShare, clearPendingShare } from '../shareTarget.js'
 
 const MDM = 'https://www.maisonsdumonde.com/ES/es/p/mesita-jill-M21044867.htm'
 
@@ -79,5 +79,29 @@ describe('readTypedUrl', () => {
     expect(readTypedUrl('mesa de comedor ikea')).toBe(null)
     expect(readTypedUrl('')).toBe(null)
     expect(readTypedUrl('hola.')).toBe(null)
+  })
+})
+
+// Sesión 42: lo pegado o compartido empezaba por el enlace y seguía con texto
+// («https://wallapop.com/item/mesa-123 ¡Mira esto!»). new URL() lo aceptaba
+// entero (codifica los espacios y se come los saltos de línea), así que se
+// pedía una dirección con la frase pegada y la tienda contestaba 404.
+describe('findUrlInText con texto detrás del enlace', () => {
+  const url = 'https://wallapop.com/item/juego-de-dos-mesitas-1309312092'
+  it('espacio y frase detrás', () => {
+    expect(findUrlInText(`${url} ¡Mira lo que he encontrado en Wallapop!`)).toBe(url)
+  })
+  it('salto de línea y frase detrás', () => {
+    expect(findUrlInText(`${url}\nDescarga Wallapop`)).toBe(url)
+    expect(findUrlInText(`${url}\r\n\r\nDescarga Wallapop`)).toBe(url)
+  })
+  it('frase delante y detrás', () => {
+    expect(findUrlInText(`Mira esto: ${url} ¿te gusta?`)).toBe(url)
+  })
+  it('el enlace solo, con espacios alrededor, sigue igual', () => {
+    expect(findUrlInText(`  ${url}?utm_medium=AppShare  `)).toBe(`${url}?utm_medium=AppShare`)
+  })
+  it('también al escribirlo o pegarlo en el campo', () => {
+    expect(readTypedUrl(`${url} ¡Mira esto!`)).toBe(url)
   })
 })

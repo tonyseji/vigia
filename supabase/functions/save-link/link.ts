@@ -18,7 +18,9 @@ function httpUrl(value: string): string | null {
  * Mismo criterio que readSharedUrl (src/lib/shareTarget.js). */
 export function findUrl(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 4000) return null;
-  const direct = httpUrl(value);
+  // Tal cual solo si no hay nada mas: new URL() acepta «enlace + frase»
+  // entera y la tienda contestaba 404 (sesion 42). Igual que findUrlInText.
+  const direct = /\s/.test(value.trim()) ? null : httpUrl(value);
   if (direct) return direct;
   const found = URL_IN_TEXT.exec(value);
   if (!found) return null;
