@@ -1664,10 +1664,12 @@ otro.
   mismo `itm_id` con foto, título, precio y una fila `auto` en el histórico.
   Compartido otra vez → «Ya lo tenías en Vigía: …». Clave de prueba y
   artículo borrados al acabar.
-- Web en producción: **sin probar** con sesión (la de la cuenta de pruebas
-  había caducado en el navegador integrado). El JS desplegado ya lleva el
-  cambio. Queda en la cuenta de pruebas un IKEA (SKANSNÄS) guardado sin
-  precio, foto ni nombre para esa prueba; borrarlo después.
+- Web en producción con la cuenta de pruebas (Tony volvió a entrar en el
+  navegador integrado): un IKEA (SKANSNÄS) guardado a propósito sin precio,
+  foto ni nombre, pegado con `?utm_source=prueba` → «Completado: SKANSNÄS
+  Mesa extensible… · 599,00 €» con foto en la lista; en la BD el mismo
+  `itm_id`, un solo IKEA y una fila `auto`. Pegado otra vez → «Ese artículo
+  ya está en tu lista: «SKANSNÄS…»». Artículo de prueba borrado al acabar.
 - `record-price` con un artículo de carpeta compartida: sin probar en vivo
   (haría falta la extensión con sesión de una cuenta invitada).
 
