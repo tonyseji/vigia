@@ -1699,6 +1699,41 @@ leía nadie.
   histórico (1). Después, el ManoMano sigue intacto (913 €, sin nombre ni
   foto, una fila en el histórico).
 
+### Añadido: el atajo de iOS lee la página abierta en Safari
+
+Tony preguntó si completar H&M o ManoMano solo pasaría con la extensión.
+Sí: hasta ahora solo un Chrome de ordenador. Tony eligió que el atajo de
+iOS lea la página. Decisión en `DECISIONES.md`.
+
+- `src/lib/shortcutKey.js`: `SHORTCUT_PAGE_SCRIPT`, el código de «Ejecutar
+  JavaScript en página web»: devuelve `{ href, canonical, html }` (HTML hasta
+  3 MB) como texto JSON.
+- `save-link` v13: campo `page` (`parsePage` en `link.ts`). Si no es un
+  captcha (`isBotPage`), lo lee `extractFromHtml`, el mismo lector que la
+  extensión. Con precio: guarda la dirección canónica o la de la variante,
+  histórico `browser` y, en tienda bloqueada, sigue en modo manual (con
+  precio; `savedMessage` ya no dice «sin precio» en ese caso). Sin precio en
+  la página: lee desde el servidor como antes y, si falla, usa al menos el
+  nombre y la foto de Safari. Busca el que ya estaba por la canónica, la de
+  Safari y la compartida.
+- Ajustes (`IosShortcutSection`): pasos nuevos (Obtener tipo → Si contiene
+  «Safari» → Ejecutar JavaScript, campo `page` con la salida del Si), botón
+  «Copiar código» y nota para quien ya lo tenía montado.
+- Tests: 294 en verde (uno ejecuta el código del atajo sobre la ficha de
+  Kave Home guardada en `fixtures/` y comprueba que llega entero y que el
+  lector saca el precio). Build en verde.
+- Probado contra producción con la cuenta de pruebas, simulando el atajo
+  (el código real sobre la ficha de Kave Home, tienda que bloquea): sin
+  página → «Ya lo tenías… Le falta el precio, la foto y el nombre… no deja
+  leerlo desde el servidor»; con página → «Completado en Vigía: Mesa
+  extensible Erisia… · 999,00 €» (mismo artículo, manual, histórico
+  `browser`); otra vez → «Ya lo tenías». Nuevo desde Safari → «Guardado en
+  Vigía: … · 999,00 €», dirección canónica sin `utm_`. Clave y artículos de
+  prueba borrados. Ajustes enseña los pasos nuevos en producción (móvil).
+- **Sin probar en un iPhone real:** los nombres de las acciones de Atajos
+  y que «Tipo contiene Safari» distinga la página de Safari. Tony tiene que
+  actualizar su atajo con los pasos nuevos.
+
 ### Estado final
 
 Hecho y subido. Los dos ejemplos de Tony no se arreglan solos: H&M y

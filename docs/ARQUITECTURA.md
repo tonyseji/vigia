@@ -150,7 +150,11 @@ Vigía» (app Atajos) manda `{ url, key }` a la Edge Function **`save-link`**,
 que hace lo mismo en el servidor: busca al usuario por el hash de la clave
 (`us_shortcut_key_hash`), mira duplicados con `urlKey` entre lo visible
 (propios y carpetas compartidas), lee la ficha con `scrape/extract.ts` y
-guarda «Sin carpeta». Contesta texto plano, que el atajo enseña como
+guarda «Sin carpeta». Desde Safari el atajo manda además `page`: la página
+abierta (`SHORTCUT_PAGE_SCRIPT`, «Ejecutar JavaScript en página web»), que
+`save-link` lee con `parse.ts` como la extensión; así guarda o completa
+también tiendas que bloquean al servidor (si la página no sirve, lee desde
+el servidor). Contesta texto plano, que el atajo enseña como
 notificación. No abre nada: el artículo aparece al volver a la app. Sin
 atajo, el botón «Pegar» del formulario (solo móvil) lee el portapapeles.
 
