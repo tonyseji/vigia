@@ -1365,7 +1365,9 @@ aviso dice qué le falta y por qué no se pudo leer; no ofrece «Guardar sin
 precio» (ya está guardado). Igual en los tres caminos de añadir:
 - Web (campo, «Pegar» y Compartir de Android): `useItems.addItem`. En
   Compartir no sale «Deshacer» al completar: borraría el que ya estaba.
-- Atajo de iOS (`save-link`).
+- Atajo de iOS (`save-link`). Escribe con `service_role`, pero solo en un
+  artículo de la lista que ya calcula como visible para el usuario (la misma
+  que replica su RLS para los duplicados): nada que no pudiera editar él.
 - Extensión de Chrome al guardar la página (`record-price`): ya completaba
   los propios, pero solo buscaba entre los del usuario y con un artículo de
   una carpeta compartida creaba otro en su lista (así nació el H&M doble).

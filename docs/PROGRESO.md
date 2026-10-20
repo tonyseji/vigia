@@ -1609,3 +1609,72 @@ eligió la A. Decisión en `DECISIONES.md`; las demás ideas, en el backlog
 ### Estado final
 
 Hecho y subido. Probado por Tony en su móvil, en producción, el 2026-10-20: funciona.
+
+## 2026-10-21 (Sesión 44) — Volver a añadir un artículo incompleto lo completa
+
+### Contexto
+
+Tony: al volver a meter un artículo que ya está, Vigía dice que ya lo
+tienes aunque se guardara sin precio o sin foto; que en ese caso deje
+meterlo. Ejemplos en su carpeta «Pisito» (compartida con Elena): un H&M
+(`www2.hm.com/es_es/productpage.1360669012.html`) sin precio, foto ni nombre
+y un ManoMano (aparador Tobias) con precio a mano pero sin foto ni nombre,
+los dos guardados por Elena el 2026-10-15/16. El H&M además estaba **dos
+veces**: Tony lo guardó el 2026-10-20 con la extensión, que solo buscaba
+entre sus propios artículos y creó otro «Sin carpeta» en su lista.
+
+Ni H&M ni ManoMano dejan leer la ficha desde fuera (403 desde aquí; en el
+pase del servidor H&M daba «No se encontró el precio»). Para esas dos el
+camino que completa es el navegador (extensión o botón de marcadores).
+
+### Cambios
+
+Decisión técnica en `DECISIONES.md`: completar ese mismo artículo, no crear
+otro.
+
+- `src/lib/itemGaps.js` (nuevo, con tests): `missingParts` (precio, foto,
+  nombre = título que es la dirección), `missingText` y `fillUpdate` (solo
+  rellena lo que faltaba; un precio leído entra al histórico y quita el modo
+  manual; reinicia el último aviso si sube por encima).
+- Web, `useItems.addItem` (campo, «Pegar» y Compartir de Android): si el
+  que ya está está incompleto, lee la ficha y lo completa (`fillExisting`);
+  si la tienda bloquea o la lectura falla, «Ese artículo ya está en tu
+  lista: «…». Le falta X, pero ahora tampoco he podido leerlo: motivo», sin
+  «Guardar sin precio». También tras expandir un enlace corto. El
+  formulario y el aviso de Compartir dicen «Completado:»; el de Compartir no
+  ofrece «Deshacer» en ese caso (borraría el artículo que ya estaba).
+- `save-link` (atajo de iOS): lo mismo, con copia de las reglas en
+  `link.ts` (un test comprueba que dan lo mismo que las de la web) y
+  mensajes «Completado en Vigía: …» / «Ya lo tenías… Le falta…».
+- `record-price` (extensión): si no hay uno propio, busca entre los de
+  carpetas compartidas que el usuario ve con el cliente de su token y
+  completa ese (escribe con ese mismo cliente: decide la RLS); sin avisos de
+  bajada en ese caso.
+- `ARQUITECTURA.md` y `extension/README.md` al día.
+
+### Verificación
+
+- Tests: 290 en verde (nuevos de `itemGaps` y de la copia de `save-link`);
+  build en verde.
+- `record-price` v5 y `save-link` v12 desplegadas (con los módulos que
+  importan); arrancan (401 sin credenciales).
+- `save-link` de punta a punta con la cuenta de pruebas: un JYSK guardado a
+  propósito sin precio, foto ni nombre, compartido con frase delante →
+  «Completado en Vigía: Cómoda 4 cajones MARKSKEL… · 200,00 €»; en la BD el
+  mismo `itm_id` con foto, título, precio y una fila `auto` en el histórico.
+  Compartido otra vez → «Ya lo tenías en Vigía: …». Clave de prueba y
+  artículo borrados al acabar.
+- Web en producción: **sin probar** con sesión (la de la cuenta de pruebas
+  había caducado en el navegador integrado). El JS desplegado ya lleva el
+  cambio. Queda en la cuenta de pruebas un IKEA (SKANSNÄS) guardado sin
+  precio, foto ni nombre para esa prueba; borrarlo después.
+- `record-price` con un artículo de carpeta compartida: sin probar en vivo
+  (haría falta la extensión con sesión de una cuenta invitada).
+
+### Estado final
+
+Hecho y subido. Los dos ejemplos de Tony no se arreglan solos: H&M y
+ManoMano bloquean al servidor, así que volver a pegarlos dirá qué falta y
+por qué; con la extensión (o el botón de marcadores) en la ficha abierta se
+completan. El H&M doble sigue ahí: el de Elena en «Decoración» (vacío) y el
+de Tony «Sin carpeta» (completo); cuál borrar lo decide Tony.

@@ -58,7 +58,9 @@ el botón de recargar de la tarjeta de Vigía.
   `ph_source = 'browser'` y manda el aviso de bajada. Al guardar una página
   reconoce el artículo aunque la dirección no se escriba igual (barra final,
   `www.`, parámetros de campaña): misma comparación que la web (`urlKey`,
-  backlog B25), así no se duplica.
+  backlog B25), así no se duplica. Si no es suyo pero está en una carpeta
+  compartida que ve, completa ese (con su token, decide la RLS) en vez de
+  crear otro en su lista (sesión 44).
 - **Pase:** manda la URL guardada del artículo, no la de la página, para que
   una redirección no cree un artículo duplicado. Entre artículo y artículo
   espera 4–8 s. Si la tienda pide captcha, ese artículo se salta y queda

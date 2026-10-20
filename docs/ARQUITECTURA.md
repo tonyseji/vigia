@@ -117,7 +117,17 @@ navegador de verdad, así que:
   `record-price`, que lo apunta y avisa de bajadas con las mismas reglas que
   `refresh` (`refresh/notify.ts`). Al guardar una página reconoce el artículo
   aunque la dirección no se escriba igual (`findOwnItem`, misma clave `urlKey`
-  que la web y `save-link`, backlog B25); solo entre los del propio usuario.
+  que la web y `save-link`, backlog B25). Primero entre los del propio
+  usuario (con `service_role`); si no hay, entre los de carpetas compartidas
+  que ve, con el cliente de su propio token para que decida la RLS: así no
+  crea otro en su lista (sesión 44).
+
+**Volver a añadir uno incompleto lo completa** (sesión 44, `DECISIONES.md`).
+Si al artículo que ya está le falta el precio, la foto o el nombre
+(`src/lib/itemGaps.js`, copia en `save-link/link.ts`), la web (`addItem`) y
+`save-link` vuelven a leer la ficha y rellenan solo lo que faltaba en ese
+mismo artículo; si la lectura vuelve a fallar, el aviso dice qué falta y por
+qué. Con todo lo principal, siguen diciendo que ya está.
 
 **Un solo lector para los tres caminos** (desde el 2026-10-14, `DECISIONES.md`).
 `supabase/functions/scrape/parse.ts` lee el HTML de una ficha (JSON-LD,
