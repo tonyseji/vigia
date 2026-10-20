@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { formatPrice } from '../lib/format.js'
+import { displayTitle } from '../lib/itemText.js'
 
 /** Resultado de compartir un enlace a Vigía desde Android (src/lib/shareTarget.js).
  * Se guarda solo, sin preguntar, y se ofrece «Deshacer»: la dirección llega
@@ -34,6 +35,8 @@ export default function SharedLinkBanner({ url, onSave, onUndo, onClose }) {
     text = `Guardado sin precio: ${host} no deja leerlo desde aquí. El Chrome de tu ordenador se lo pondrá en el próximo pase.`
   else if (result.unread)
     text = `Guardado sin precio: ahora no he podido leer la ficha de ${host}. Lo vuelvo a intentar en el próximo pase.`
+  else if (result.completed)
+    text = `Completado: ${displayTitle(result.item)}${result.item.itm_price != null ? ` · ${formatPrice(result.item.itm_price)}` : ''}`
   else text = `Guardado: ${result.item.itm_title} · ${formatPrice(result.item.itm_price)}`
 
   return (
@@ -45,7 +48,8 @@ export default function SharedLinkBanner({ url, onSave, onUndo, onClose }) {
     >
       <span className="min-w-0">{text}</span>
       <div className="flex flex-none gap-1.5">
-        {status === 'done' && (
+        {/* Completar uno que ya estaba no se deshace: borraría el artículo. */}
+        {status === 'done' && !result.completed && (
           <button
             type="button"
             onClick={undo}

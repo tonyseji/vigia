@@ -1346,3 +1346,33 @@ carpeta); C, votos, por ahora. Meter solo los favoritos en la cesta o en
 los totales: se puede añadir encima.
 **Revisitar:** si Tony quiere ver las estrellas de los demás en una
 carpeta compartida (C), o un botón «meter los favoritos en la cesta».
+
+### 2026-10-21 — Volver a añadir un artículo incompleto lo completa (sesión 44)
+**Contexto:** Tony: al volver a meter un artículo que ya está, Vigía dice
+«ya está en tu lista» aunque se guardara sin precio, sin foto o sin nombre
+(ejemplos en su carpeta «Pisito»: un H&M sin nada de eso y un ManoMano sin
+foto ni nombre, los dos guardados por Elena desde el iPhone). Quiere que en
+ese caso le deje meterlo.
+**Decisión técnica:** si al artículo que ya está le falta el precio, la foto
+o el nombre (título = dirección, `itemText.js`), volver a añadirlo **lee la
+ficha otra vez y completa ese mismo artículo**, no crea otro: conserva
+carpeta, histórico, notas y estrellas, y el índice único por usuario no
+deja duplicarlo de todas formas. Solo rellena lo que faltaba (título y foto
+editados no se pisan, como `itemUpdate` y `missingDetails`); el precio leído
+entra como uno más del histórico (`auto`) y quita el modo manual (la tienda
+no está bloqueada, o no se habría leído). Si la lectura vuelve a fallar, el
+aviso dice qué le falta y por qué no se pudo leer; no ofrece «Guardar sin
+precio» (ya está guardado). Igual en los tres caminos de añadir:
+- Web (campo, «Pegar» y Compartir de Android): `useItems.addItem`. En
+  Compartir no sale «Deshacer» al completar: borraría el que ya estaba.
+- Atajo de iOS (`save-link`).
+- Extensión de Chrome al guardar la página (`record-price`): ya completaba
+  los propios, pero solo buscaba entre los del usuario y con un artículo de
+  una carpeta compartida creaba otro en su lista (así nació el H&M doble).
+  Ahora, si no hay uno propio, busca entre los que el usuario ve **con su
+  propio token** (la RLS decide) y escribe con ese mismo cliente: el
+  `service_role` sigue sin tocar nunca un artículo ajeno. Sin avisos de
+  bajada en ese caso (son del dueño, y los manda su pase).
+**Descartado:** dejar crear un segundo artículo (queda el roto al lado y en
+una carpeta compartida se ven los dos); completar también un artículo que
+ya tiene todo (sería un «actualizar precio» escondido: para eso está ↻).

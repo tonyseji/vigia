@@ -15,7 +15,20 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { expandShortLink, type Extracted, extractFromUrl, isNotFound, setAltFetcher } from "../scrape/extract.ts";
 import { cleanUrl } from "../record-price/record.ts";
-import { duplicateMessage, findSameItem, findUrl, hashKey, parseKey, savedMessage, type VisibleItem } from "./link.ts";
+import {
+  completedMessage,
+  duplicateMessage,
+  fillUpdate,
+  findSameItem,
+  findUrl,
+  type GapItem,
+  hashKey,
+  missingParts,
+  parseKey,
+  savedMessage,
+  stillMissingMessage,
+  type VisibleItem,
+} from "./link.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -74,18 +87,23 @@ Deno.serve(async (req) => {
   }
   const { data: ownFolders } = await admin.from("folders").select("fld_id").eq("fld_usr_id", userId);
   const folderIds = [...sharedFolderIds, ...(ownFolders ?? []).map((f) => f.fld_id as string)];
-  let visible = admin.from("items").select("itm_usr_id, itm_url, itm_title");
+  let visible = admin.from("items").select("itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price, itm_notified_price");
   visible = folderIds.length > 0
     ? visible.or(`itm_usr_id.eq.${userId},itm_fld_id.in.(${folderIds.join(",")})`)
     : visible.eq("itm_usr_id", userId);
   const { data: items, error: listError } = await visible;
   if (listError) return text("No se pudo comprobar tu lista. Inténtalo otra vez.", 500);
-  const existing = findSameItem((items ?? []) as VisibleItem[], userId, url);
-  if (existing) return text(duplicateMessage(existing));
+  const existing = findSameItem((items ?? []) as (VisibleItem & GapItem & { itm_id: string })[], userId, url);
+  // Ya estaba: si tiene lo principal, nada que hacer; si le falta algo, se
+  // vuelve a leer y se completa ese mismo (docs/DECISIONES.md 2026-10-21).
+  // Solo entre los que el usuario ve (lo de arriba replica su RLS), asi que
+  // no escribe en nada que el no pudiera editar desde la app.
+  if (existing && missingParts(existing).length === 0) return text(duplicateMessage(existing));
 
   const domain = new URL(url).hostname.replace(/^www\./, "");
   const { data: rule } = await admin.from("store_rules").select("sr_blocked").eq("sr_domain", domain).maybeSingle();
   const manual = Boolean(rule?.sr_blocked);
+  if (existing && manual) return text(stillMissingMessage(existing, `${domain} no deja leerlo desde el servidor.`));
 
   // Tienda que bloquea: se guarda sin precio y en modo manual, como
   // addManualItem en la web; la extension de Chrome se lo pondra.
@@ -111,6 +129,7 @@ Deno.serve(async (req) => {
       extracted = await extractFromUrl(url);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "Error desconocido";
+      if (existing) return text(stillMissingMessage(existing, reason));
       // La pagina no existe: guardarla no sirve, el pase volveria a fallar.
       if (isNotFound(err)) return text(`No se pudo guardar: ${reason}`, 502);
       readError = reason.slice(0, 200);
@@ -118,6 +137,27 @@ Deno.serve(async (req) => {
   }
 
   const now = new Date().toISOString();
+
+  if (existing && extracted) {
+    const update = fillUpdate(existing, extracted, now);
+    if (Object.keys(update).length === 0) return text(stillMissingMessage(existing, "la ficha no lo trae."));
+    const { data: filled, error: fillError } = await admin
+      .from("items")
+      .update(update)
+      .eq("itm_id", existing.itm_id)
+      .select("itm_id, itm_url, itm_title, itm_price")
+      .single();
+    if (fillError || !filled) return text("No se pudo completar el artículo. Inténtalo otra vez.", 500);
+    if (extracted.price != null) {
+      await admin.from("price_history").insert({
+        ph_itm_id: filled.itm_id,
+        ph_price: extracted.price,
+        ph_in_stock: extracted.inStock ?? null,
+        ph_source: "auto",
+      });
+    }
+    return text(completedMessage(filled));
+  }
   const { data: item, error: insertError } = await admin
     .from("items")
     .insert({

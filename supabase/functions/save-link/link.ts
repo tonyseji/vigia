@@ -108,3 +108,61 @@ export function duplicateMessage(item: VisibleItem): string {
   const title = item.itm_title && item.itm_title !== item.itm_url ? item.itm_title : hostOf(item.itm_url);
   return `Ya lo tenías en Vigía: ${title}`;
 }
+
+// Copia de src/lib/itemGaps.js: volver a guardar un articulo al que le
+// falta lo principal lo completa (docs/DECISIONES.md 2026-10-21). Si se
+// cambia alli, aqui tambien.
+export interface GapItem {
+  itm_url: string;
+  itm_title: string | null;
+  itm_image_url: string | null;
+  itm_price: number | null;
+  itm_notified_price: number | null;
+}
+
+const PART_LABELS: Record<string, string> = { precio: "el precio", foto: "la foto", nombre: "el nombre" };
+
+export function missingParts(item: GapItem): string[] {
+  const parts: string[] = [];
+  if (item.itm_price == null) parts.push("precio");
+  if (!item.itm_image_url) parts.push("foto");
+  if (!item.itm_title || item.itm_title === item.itm_url) parts.push("nombre");
+  return parts;
+}
+
+export function missingText(parts: string[]): string {
+  const words = parts.map((p) => PART_LABELS[p]);
+  return words.length > 1 ? `${words.slice(0, -1).join(", ")} y ${words[words.length - 1]}` : (words[0] ?? "");
+}
+
+export function fillUpdate(
+  existing: GapItem,
+  read: { title?: string; image?: string; price?: number | null; inStock?: boolean | null },
+  now: string,
+): Record<string, unknown> {
+  const update: Record<string, unknown> = {};
+  if (read.price != null) {
+    update.itm_price = read.price;
+    update.itm_in_stock = read.inStock ?? null;
+    update.itm_is_manual = false;
+    update.itm_last_checked_at = now;
+    update.itm_last_error = null;
+    if (existing.itm_notified_price != null && read.price > existing.itm_notified_price) {
+      update.itm_notified_price = null;
+      update.itm_notified_at = null;
+    }
+  }
+  if (read.title && (!existing.itm_title || existing.itm_title === existing.itm_url)) update.itm_title = read.title;
+  if (read.image && !existing.itm_image_url) update.itm_image_url = read.image;
+  return update;
+}
+
+/** Ya estaba, le faltaba algo y la lectura nueva tampoco lo ha traido. */
+export function stillMissingMessage(item: GapItem & VisibleItem, reason: string): string {
+  return `${duplicateMessage(item)}. Le falta ${missingText(missingParts(item))}, pero ahora tampoco he podido leerlo: ${reason}`;
+}
+
+export function completedMessage(item: { itm_url: string; itm_title: string | null; itm_price: number | null }): string {
+  const title = item.itm_title && item.itm_title !== item.itm_url ? item.itm_title : hostOf(item.itm_url);
+  return item.itm_price != null ? `Completado en Vigía: ${title} · ${eur.format(item.itm_price)}` : `Completado en Vigía: ${title}`;
+}

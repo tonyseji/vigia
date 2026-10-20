@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 import { cleanUrl, findSameItem } from '../lib/urlKey.js'
 import { scrapeFailure } from '../lib/loadErrors.js'
+import { fillUpdate, missingParts, missingText } from '../lib/itemGaps.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
@@ -13,6 +14,12 @@ function domainOf(url) {
 function duplicateMessage(item) {
   const title = item.itm_title && item.itm_title !== item.itm_url ? `: «${item.itm_title}»` : ''
   return `Ese artículo ya está en tu lista${title}.`
+}
+
+/** Ya estaba, le faltaba algo y la lectura nueva tampoco lo ha traído. */
+function stillMissingMessage(item, reason) {
+  const missing = missingText(missingParts(item))
+  return `${duplicateMessage(item)} Le falta ${missing}, pero ahora tampoco he podido leerlo: ${reason}`
 }
 
 /** Items del usuario con su histórico de precios, y las acciones para
@@ -76,7 +83,7 @@ export function useItems() {
     const userId = userData.user.id
     const { data, error } = await supabase
       .from('items')
-      .select('itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price')
+      .select('itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price, itm_notified_price')
     if (error) return { error: 'No se pudo comprobar tu lista. Inténtalo de nuevo.' }
     const visible = data ?? []
     const existing =
@@ -84,24 +91,64 @@ export function useItems() {
     return { userId, existing }
   }, [])
 
+  /** Rellena lo que le faltaba a un artículo que ya estaba con lo que acaba
+   * de leer scrape (docs/DECISIONES.md 2026-10-21). { item, completed } o
+   * { error } si la lectura no trae nada de lo que faltaba. */
+  const fillExisting = useCallback(async (existing, read) => {
+    const update = fillUpdate(existing, read, new Date().toISOString())
+    if (Object.keys(update).length === 0) {
+      return { error: stillMissingMessage(existing, 'la ficha no lo trae.') }
+    }
+    const { data: item, error } = await supabase
+      .from('items')
+      .update(update)
+      .eq('itm_id', existing.itm_id)
+      .select()
+      .single()
+    if (error) return { error: 'No se pudo completar el artículo.' }
+    if (read.price != null) {
+      await supabase.from('price_history').insert({
+        ph_itm_id: item.itm_id,
+        ph_price: read.price,
+        ph_in_stock: read.inStock ?? null,
+        ph_source: 'auto',
+      })
+    }
+    await reload()
+    return { item, completed: true }
+  }, [reload])
+
   const addItem = useCallback(async (rawUrl, folderId = null) => {
     let url = cleanUrl(rawUrl)
-    // Antes de leer el precio: si ya está, no se gasta una lectura.
+    // Antes de leer el precio: si ya está y tiene lo principal, no se gasta
+    // una lectura. Si le falta algo, la lectura de abajo lo completa.
     const found = await findExisting([url])
     if (found.error) return { error: found.error }
-    if (found.existing) return { error: duplicateMessage(found.existing) }
+    const incomplete = found.existing && missingParts(found.existing).length > 0
+    if (found.existing && !incomplete) return { error: duplicateMessage(found.existing) }
     const blocked = await checkBlocked(url)
-    if (blocked) return { blocked: true }
+    if (blocked) {
+      return incomplete
+        ? { error: stillMissingMessage(found.existing, 'la tienda no deja leer el precio automáticamente.') }
+        : { blocked: true }
+    }
 
     const { data: fnData, error: fnError } = await supabase.functions.invoke('scrape', {
       body: { url },
     })
     if (fnError) {
       const failure = await scrapeFailure(fnError)
+      // Ya guardado: «Guardar sin precio» no tiene sentido.
+      if (incomplete) return { error: stillMissingMessage(found.existing, failure.error) }
       return { error: failure.error, canSaveWithoutPrice: failure.retryable }
     }
-    if (fnData?.blocked) return { blocked: true }
-    if (fnData?.error) return { error: fnData.error }
+    if (fnData?.blocked) {
+      return incomplete
+        ? { error: stillMissingMessage(found.existing, 'la tienda no deja leer el precio automáticamente.') }
+        : { blocked: true }
+    }
+    if (fnData?.error) return { error: incomplete ? stillMissingMessage(found.existing, fnData.error) : fnData.error }
+    if (incomplete) return fillExisting(found.existing, fnData)
 
     // Enlace corto (amzn.eu/d/... de la app de Amazon): scrape devuelve la
     // ficha a la que lleva, y es esa la que se guarda y se compara.
@@ -109,7 +156,11 @@ export function useItems() {
       url = cleanUrl(fnData.url)
       const again = await findExisting([url])
       if (again.error) return { error: again.error }
-      if (again.existing) return { error: duplicateMessage(again.existing) }
+      if (again.existing) {
+        return missingParts(again.existing).length > 0
+          ? fillExisting(again.existing, fnData)
+          : { error: duplicateMessage(again.existing) }
+      }
     }
 
     const { data: item, error: insertError } = await supabase
@@ -144,7 +195,7 @@ export function useItems() {
 
     await reload()
     return { item }
-  }, [checkBlocked, findExisting, reload])
+  }, [checkBlocked, fillExisting, findExisting, reload])
 
   /** Guarda un artículo sin leer su ficha: el título es la dirección (la
    * lista enseña uno sacado de ella, displayTitle). `manual`: tienda que

@@ -59,7 +59,8 @@ export default function AddItemForm({ onAdd, onAddManual, onAddUnread, folderId 
     }
     setUrl('')
     setStatus('idle')
-    if (result.item) setSaved(result.item)
+    // Ya estaba y le faltaba algo: se ha completado ese (useItems.addItem).
+    if (result.item) setSaved(result.completed ? { ...result.item, completed: true } : result.item)
   }
 
   async function handleUnreadSave() {
@@ -108,6 +109,8 @@ export default function AddItemForm({ onAdd, onAddManual, onAddUnread, folderId 
     setStatus('idle')
     if (result.item) setSaved(result.item)
   }
+
+  const savedLabel = saved?.completed ? 'Completado' : 'Guardado'
 
   if (status === 'blocked') {
     return (
@@ -211,21 +214,21 @@ export default function AddItemForm({ onAdd, onAddManual, onAddUnread, folderId 
         <p className="text-sm text-ink-mut" role="status">
           {saved.itm_price != null ? (
             <>
-              <span className="text-ok">Guardado:</span> {displayTitle(saved)} ·{' '}
+              <span className="text-ok">{savedLabel}:</span> {displayTitle(saved)} ·{' '}
               <span className="font-mono tabular-nums text-ink">{formatPrice(saved.itm_price)}</span>
             </>
           ) : saved.itm_is_manual ? (
             <>
-              <span className="text-ok">Guardado:</span> {displayTitle(saved)}. Pon el precio con ✎ cuando lo mires.
+              <span className="text-ok">{savedLabel}:</span> {displayTitle(saved)}. Pon el precio con ✎ cuando lo mires.
             </>
           ) : saved.itm_last_checked_at == null ? (
             <>
-              <span className="text-warn">Guardado sin precio:</span> {displayTitle(saved)}. Lo vuelvo a leer en el
+              <span className="text-warn">{savedLabel} sin precio:</span> {displayTitle(saved)}. Lo vuelvo a leer en el
               próximo pase.
             </>
           ) : (
             <>
-              <span className="text-warn">Guardado sin precio:</span> {displayTitle(saved)}. No lo encontré en la
+              <span className="text-warn">{savedLabel} sin precio:</span> {displayTitle(saved)}. No lo encontré en la
               página; ponlo con ✎ cuando quieras.
             </>
           )}

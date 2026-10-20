@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { duplicateMessage, findSameItem, findUrl, hashKey, parseKey, savedMessage, urlKey } from './link.ts'
+import {
+  completedMessage,
+  duplicateMessage,
+  fillUpdate,
+  findSameItem,
+  findUrl,
+  hashKey,
+  missingParts,
+  missingText,
+  parseKey,
+  savedMessage,
+  stillMissingMessage,
+  urlKey,
+} from './link.ts'
+import * as webGaps from '../../../src/lib/itemGaps.js'
 import { urlKey as webUrlKey } from '../../../src/lib/urlKey.js'
 import { hashShortcutKey, newShortcutKey } from '../../../src/lib/shortcutKey.js'
 
@@ -86,5 +100,34 @@ describe('mensajes', () => {
     expect(duplicateMessage({ itm_usr_id: 'yo', itm_url: 'https://tienda.test/m', itm_title: 'Mesa' })).toBe(
       'Ya lo tenías en Vigía: Mesa',
     )
+  })
+})
+
+describe('artículo incompleto (copia de src/lib/itemGaps.js)', () => {
+  const url = 'https://www.manomano.es/p/aparador-24847236'
+  const cases = [
+    { itm_url: url, itm_title: url, itm_image_url: null, itm_price: null, itm_notified_price: null },
+    { itm_url: url, itm_title: url, itm_image_url: null, itm_price: 913, itm_notified_price: null },
+    { itm_url: url, itm_title: 'Aparador', itm_image_url: 'https://img/a.jpg', itm_price: 913, itm_notified_price: 900 },
+  ]
+  const reads = [{ title: 'Aparador Tobias', image: 'https://img/t.jpg', price: 950, inStock: true }, { title: 'Aparador' }, {}]
+
+  it('da lo mismo que la de la web', () => {
+    for (const item of cases) {
+      expect(missingParts(item)).toEqual(webGaps.missingParts(item))
+      expect(missingText(missingParts(item))).toBe(webGaps.missingText(webGaps.missingParts(item)))
+      for (const read of reads) expect(fillUpdate(item, read, 'ahora')).toEqual(webGaps.fillUpdate(item, read, 'ahora'))
+    }
+  })
+
+  it('mensajes de completado y de seguir sin poder leerlo', () => {
+    const item = { itm_usr_id: 'ella', ...cases[1] }
+    expect(stillMissingMessage(item, 'HTTP 403 (la tienda bloquea la lectura automática)')).toBe(
+      'Ya lo tenías en Vigía: manomano.es. Le falta la foto y el nombre, pero ahora tampoco he podido leerlo: HTTP 403 (la tienda bloquea la lectura automática)',
+    )
+    expect(completedMessage({ itm_url: url, itm_title: 'Aparador Tobias', itm_price: 950 })).toMatch(
+      /^Completado en Vigía: Aparador Tobias · 950,00\s€$/,
+    )
+    expect(completedMessage({ itm_url: url, itm_title: url, itm_price: null })).toBe('Completado en Vigía: manomano.es')
   })
 })

@@ -10,7 +10,9 @@
 //
 // Desplegada con --no-verify-jwt (CLAUDE.md): valida el token a mano, como
 // scrape y refresh. Escribe con service_role, siempre filtrando por el
-// usuario del token: nunca toca articulos de otro.
+// usuario del token: nunca toca articulos de otro. El de otro en una carpeta
+// compartida con el usuario se completa con el cliente de su token, y lo
+// decide la RLS (docs/DECISIONES.md 2026-10-21).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendPush, type PushSubscriptionRow } from "../refresh/push.ts";
 import { alertReasons, buildPushBody, type NotifySettings } from "../refresh/notify.ts";
@@ -37,19 +39,22 @@ async function getUserFromRequest(req: Request) {
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!token) return null;
   const client = createClient(SUPABASE_URL, ANON_KEY, {
+    db: { schema: "vigia" },
     global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false },
   });
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) return null;
-  return data.user;
+  return { user: data.user, client };
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== "POST") return json({ error: "Metodo no soportado" }, 405);
 
-  const user = await getUserFromRequest(req);
-  if (!user) return json({ error: "No autorizado" }, 401);
+  const auth = await getUserFromRequest(req);
+  if (!auth) return json({ error: "No autorizado" }, 401);
+  const { user, client: userClient } = auth;
 
   let body: unknown;
   try {
@@ -86,15 +91,28 @@ Deno.serve(async (req) => {
   if (data.itemId) lookup = lookup.eq("itm_id", data.itemId);
   const { data: found, error: findError } = await lookup;
   if (findError) return json({ error: "No se pudo leer la lista" }, 500);
-  const existing = data.itemId
-    ? found?.[0] ?? null
-    : findOwnItem(found ?? [], [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null));
+  const urls = [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null);
+  let existing = data.itemId ? found?.[0] ?? null : findOwnItem(found ?? [], urls);
   // Borrado mientras el pase lo leia: no se vuelve a crear.
   if (data.itemId && !existing) return json({ error: "El articulo ya no esta en la lista" }, 404);
 
+  // No es suyo pero lo ve: otro lo guardo en una carpeta compartida con el.
+  // Se completa ese en vez de crear otro en su lista (asi nacio el H&M
+  // doble de la sesion 44). Con su token: la RLS dice que puede tocar.
+  let shared = false;
+  if (!existing && !data.itemId) {
+    const { data: visible } = await userClient
+      .from("items")
+      .select("itm_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
+      .neq("itm_usr_id", user.id);
+    existing = findOwnItem(visible ?? [], urls);
+    shared = existing != null;
+  }
+  const writer = shared ? userClient : admin;
+
   let itemId: string;
   if (existing) {
-    const { error } = await admin.from("items").update(itemUpdate(existing, data, manual, now)).eq("itm_id", existing.itm_id);
+    const { error } = await writer.from("items").update(itemUpdate(existing, data, manual, now)).eq("itm_id", existing.itm_id);
     if (error) return json({ error: "No se pudo guardar el precio" }, 500);
     itemId = existing.itm_id;
   } else {
@@ -117,7 +135,7 @@ Deno.serve(async (req) => {
     itemId = item.itm_id;
   }
 
-  const { error: historyError } = await admin.from("price_history").insert({
+  const { error: historyError } = await writer.from("price_history").insert({
     ph_itm_id: itemId,
     ph_price: data.price,
     ph_in_stock: data.inStock,
@@ -125,10 +143,11 @@ Deno.serve(async (req) => {
   });
   if (historyError) return json({ error: "No se pudo guardar el historico" }, 500);
 
-  // Avisos: solo si ya estaba (un articulo nuevo no "baja" de nada). Mismas
-  // reglas y mismo envio que el bucle de refresh/index.ts.
+  // Avisos: solo si ya estaba (un articulo nuevo no "baja" de nada) y es
+  // suyo (los del dueno los manda su pase). Mismas reglas y mismo envio que
+  // el bucle de refresh/index.ts.
   let notified = false;
-  if (existing) {
+  if (existing && !shared) {
     const { data: settings } = await admin
       .from("user_settings")
       .select("us_refresh_mode, us_notify_enabled, us_notify_kind, us_notify_pct, us_notify_eur, us_notify_min_hist, us_notify_back_in_stock")
