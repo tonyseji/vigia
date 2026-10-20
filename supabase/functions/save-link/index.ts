@@ -3,17 +3,19 @@
 // mismo que Compartir -> Vigia en Android (App.jsx, saveShared), pero en el
 // servidor: el atajo no puede abrir la app instalada.
 //
-// Body: { url, key }. `url` es la entrada del atajo (una URL o una frase que
-// la lleva); `key` es la clave del atajo que se crea en Ajustes
+// Body: { url, key, page? }. `url` es la entrada del atajo (una URL o una
+// frase que la lleva); `key` es la clave del atajo que se crea en Ajustes
 // (src/lib/shortcutKey.js), de la que la BD solo guarda el hash
-// (us_shortcut_key_hash, migracion 021).
+// (us_shortcut_key_hash, migracion 021). `page`, si se compartio desde
+// Safari: la pagina abierta (SHORTCUT_PAGE_SCRIPT), que se lee con el mismo
+// lector que la extension y pasa por donde el servidor no (sesion 44).
 // Respuesta: texto plano, que el atajo ensena tal cual en una notificacion.
 //
 // Desplegada con --no-verify-jwt (CLAUDE.md): aqui no hay sesion, la clave
 // hace de token y se valida a mano. Escribe con service_role, siempre como
 // el usuario de la clave.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { expandShortLink, type Extracted, extractFromUrl, isNotFound, setAltFetcher } from "../scrape/extract.ts";
+import { expandShortLink, type Extracted, extractFromHtml, extractFromUrl, isBotPage, isNotFound, setAltFetcher } from "../scrape/extract.ts";
 import { cleanUrl } from "../record-price/record.ts";
 import {
   completedMessage,
@@ -25,6 +27,7 @@ import {
   hashKey,
   missingParts,
   parseKey,
+  parsePage,
   savedMessage,
   stillMissingMessage,
   type VisibleItem,
@@ -66,10 +69,18 @@ Deno.serve(async (req) => {
   const userId: string = owner.us_usr_id;
 
   const found = findUrl(body.url);
-  if (!found) return text("No he encontrado ninguna dirección web en lo compartido.", 400);
-  // Enlace corto (amzn.eu/d/... desde la app de Amazon): se guarda la ficha
-  // de verdad, para que se compare y se lea como cualquier otra de la tienda.
-  const url = cleanUrl(await expandShortLink(found));
+  const page = parsePage(body.page);
+  if (!found && !page) return text("No he encontrado ninguna dirección web en lo compartido.", 400);
+  // Lo que se ve en Safari, con el lector de siempre. Un captcha no cuenta.
+  const pageRead = page && !isBotPage(page.href, page.html) ? extractFromHtml(page.html, page.href) : null;
+  const priceFromPage = pageRead?.price != null;
+  // Con precio de la pagina se guarda su direccion como la extension: la de
+  // la variante o la canonica. Si no, la compartida; un enlace corto
+  // (amzn.eu/d/... desde la app de Amazon) se expande a la ficha de verdad.
+  const url = priceFromPage
+    ? cleanUrl(pageRead!.variantUrl || page!.canonical || page!.href)
+    : cleanUrl(await expandShortLink(found ?? page!.href));
+  const candidates = [url, page && cleanUrl(page.href), found && cleanUrl(found)].filter((u): u is string => u != null);
 
   // Lo que el usuario ve en su lista (RLS, migracion 016): lo suyo y lo de
   // las carpetas compartidas con el, subcarpetas incluidas.
@@ -93,7 +104,9 @@ Deno.serve(async (req) => {
     : visible.eq("itm_usr_id", userId);
   const { data: items, error: listError } = await visible;
   if (listError) return text("No se pudo comprobar tu lista. Inténtalo otra vez.", 500);
-  const existing = findSameItem((items ?? []) as (VisibleItem & GapItem & { itm_id: string })[], userId, url);
+  const visibleItems = (items ?? []) as (VisibleItem & GapItem & { itm_id: string })[];
+  // El articulo pudo guardarse con la direccion compartida o con la canonica.
+  const existing = candidates.map((u) => findSameItem(visibleItems, userId, u)).find((i) => i != null) ?? null;
   // Ya estaba: si tiene lo principal, nada que hacer; si le falta algo, se
   // vuelve a leer y se completa ese mismo (docs/DECISIONES.md 2026-10-21).
   // Solo entre los que el usuario ve (lo de arriba replica su RLS), asi que
@@ -102,17 +115,19 @@ Deno.serve(async (req) => {
 
   const domain = new URL(url).hostname.replace(/^www\./, "");
   const { data: rule } = await admin.from("store_rules").select("sr_blocked").eq("sr_domain", domain).maybeSingle();
+  // Tienda que bloquea al servidor: queda en modo manual (la lee el
+  // navegador), con el precio de Safari si lo trajo; si no, sin precio, como
+  // addManualItem en la web, y la extension de Chrome se lo pondra.
   const manual = Boolean(rule?.sr_blocked);
-  if (existing && manual) return text(stillMissingMessage(existing, `${domain} no deja leerlo desde el servidor.`));
 
-  // Tienda que bloquea: se guarda sin precio y en modo manual, como
-  // addManualItem en la web; la extension de Chrome se lo pondra.
-  let extracted: Extracted | null = null;
+  let extracted: Extracted | null = priceFromPage ? pageRead : null;
   // La lectura fallo por algo que puede salir bien mas tarde (bloqueo,
   // tiempo de espera): se guarda sin precio y el pase diario lo reintenta,
   // como «Guardar sin precio» en la web (sesion 42).
   let readError: string | null = null;
-  if (!manual) {
+  // Safari trajo al menos nombre o foto: sirve aunque falle el servidor.
+  const pageDetails = pageRead && (pageRead.title || pageRead.image) ? { title: pageRead.title, image: pageRead.image } : null;
+  if (!extracted && !manual) {
     // Mismo camino alternativo para Amazon que scrape/index.ts (backlog B9).
     setAltFetcher(async (fetchUrl, headers) => {
       const { data: reqId, error } = await admin.rpc("fetch_enqueue", { p_url: fetchUrl, p_headers: headers });
@@ -129,18 +144,25 @@ Deno.serve(async (req) => {
       extracted = await extractFromUrl(url);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "Error desconocido";
-      if (existing) return text(stillMissingMessage(existing, reason));
       // La pagina no existe: guardarla no sirve, el pase volveria a fallar.
-      if (isNotFound(err)) return text(`No se pudo guardar: ${reason}`, 502);
+      if (isNotFound(err) && !pageDetails && !existing) return text(`No se pudo guardar: ${reason}`, 502);
       readError = reason.slice(0, 200);
     }
+  }
+  // Sin precio de nadie: al menos el nombre y la foto que se ven en Safari.
+  if (!extracted && pageDetails) extracted = pageDetails;
+  if (existing && !extracted) {
+    return text(stillMissingMessage(existing, readError ?? `${domain} no deja leerlo desde el servidor.`));
   }
 
   const now = new Date().toISOString();
 
   if (existing && extracted) {
     const update = fillUpdate(existing, extracted, now);
-    if (Object.keys(update).length === 0) return text(stillMissingMessage(existing, "la ficha no lo trae."));
+    if (Object.keys(update).length === 0) return text(stillMissingMessage(existing, readError ?? "la ficha no lo trae."));
+    // Tienda que bloquea: aunque Safari traiga el precio, sigue siendo
+    // cosa del navegador (el pase de la extension), no del servidor.
+    if (manual && "itm_is_manual" in update) update.itm_is_manual = true;
     const { data: filled, error: fillError } = await admin
       .from("items")
       .update(update)
@@ -153,7 +175,7 @@ Deno.serve(async (req) => {
         ph_itm_id: filled.itm_id,
         ph_price: extracted.price,
         ph_in_stock: extracted.inStock ?? null,
-        ph_source: "auto",
+        ph_source: priceFromPage ? "browser" : "auto",
       });
     }
     return text(completedMessage(filled));
@@ -169,7 +191,7 @@ Deno.serve(async (req) => {
       itm_currency: extracted?.currency ?? "EUR",
       itm_in_stock: extracted?.inStock ?? null,
       itm_is_manual: manual,
-      itm_last_checked_at: manual || readError ? null : now,
+      itm_last_checked_at: (manual && !priceFromPage) || readError ? null : now,
       itm_last_error: readError,
     })
     .select("itm_id, itm_title, itm_price")
@@ -182,7 +204,7 @@ Deno.serve(async (req) => {
       ph_itm_id: item.itm_id,
       ph_price: item.itm_price,
       ph_in_stock: extracted?.inStock ?? null,
-      ph_source: "auto",
+      ph_source: priceFromPage ? "browser" : "auto",
     });
   }
 

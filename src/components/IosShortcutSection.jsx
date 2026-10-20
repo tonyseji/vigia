@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { copyToClipboard } from '../lib/clipboard.js'
-import { SAVE_LINK_URL, SHORTCUT_ICLOUD_URL, hashShortcutKey, newShortcutKey } from '../lib/shortcutKey.js'
+import { SAVE_LINK_URL, SHORTCUT_ICLOUD_URL, SHORTCUT_PAGE_SCRIPT, hashShortcutKey, newShortcutKey } from '../lib/shortcutKey.js'
 
 const btn =
   'self-start rounded-lg border border-line px-3 py-1.5 text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60'
@@ -13,6 +13,7 @@ export default function IosShortcutSection({ hasKey, onSave }) {
   const [key, setKey] = useState('')
   const [copied, setCopied] = useState(null) // null | true | false
   const [copiedUrl, setCopiedUrl] = useState(false)
+  const [copiedScript, setCopiedScript] = useState(false)
 
   /** La clave se copia antes de cualquier espera: Safari solo deja escribir
    * en el portapapeles dentro del toque. Crear otra anula la anterior. */
@@ -38,11 +39,16 @@ export default function IosShortcutSection({ hasKey, onSave }) {
     setCopiedUrl(await copyToClipboard(SAVE_LINK_URL))
   }
 
+  async function copyScript() {
+    setCopiedScript(await copyToClipboard(SHORTCUT_PAGE_SCRIPT))
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <p>
         <b>iPhone:</b> Compartir → «Guardar en Vigía», desde Safari o cualquier app. Se añade una vez y guarda sin
-        abrir nada; te avisa con el título y el precio.
+        abrir nada; te avisa con el título y el precio. Desde Safari lee la página tal y como la ves, así que vale
+        también en tiendas que no dejan leer el precio automáticamente.
       </p>
 
       {SHORTCUT_ICLOUD_URL && (
@@ -94,23 +100,42 @@ export default function IosShortcutSection({ hasKey, onSave }) {
             compartir».
           </li>
           <li>
-            Añade la acción <b>«Obtener contenido de URL»</b> y pega en ella la dirección:{' '}
+            Añade <b>«Obtener tipo»</b> (de «Entrada del atajo») y debajo <b>«Si»</b>: «Tipo» · contiene ·{' '}
+            <code>Safari</code>.
+          </li>
+          <li>
+            Dentro del «Si», añade <b>«Ejecutar JavaScript en página web»</b> sobre «Entrada del atajo», borra lo que
+            trae y pega este código:{' '}
+            <button type="button" onClick={copyScript} className={btn}>
+              {copiedScript ? 'Copiado' : 'Copiar código'}
+            </button>{' '}
+            Deja vacío el «De lo contrario».
+          </li>
+          <li>
+            Debajo de «Fin del si», añade <b>«Obtener contenido de URL»</b> y pega en ella la dirección:{' '}
             <button type="button" onClick={copyUrl} className={btn}>
               {copiedUrl ? 'Copiada' : 'Copiar dirección'}
             </button>
           </li>
           <li>
-            En esa acción, «Mostrar más»: Método <b>POST</b>, Cuerpo de solicitud <b>JSON</b>, y dos campos de texto:{' '}
-            <code>url</code> con la variable «Entrada del atajo», y <code>key</code> con tu clave:{' '}
+            En esa acción, «Mostrar más»: Método <b>POST</b>, Cuerpo de solicitud <b>JSON</b>, y tres campos de texto:{' '}
+            <code>url</code> con la variable «Entrada del atajo», <code>page</code> con la variable «Si» (lo que sale
+            del «Si») y <code>key</code> con tu clave:{' '}
             <button type="button" onClick={createKey} className={btn}>
               {hasKey ? 'Copiar clave nueva' : 'Copiar clave'}
             </button>
           </li>
           <li>
             Añade <b>«Mostrar notificación»</b> con «Contenido de URL». Listo: en una tienda, Compartir → «Guardar en
-            Vigía» (está en la lista de abajo de la hoja de compartir).
+            Vigía» (está en la lista de abajo de la hoja de compartir). La primera vez en cada tienda, iOS pregunta si
+            el atajo puede acceder a la página: «Permitir».
           </li>
         </ol>
+        <p className="mt-2">
+          ¿Ya lo tenías montado? Añade arriba los pasos 2 y 3, deja «Obtener contenido de URL» debajo de «Fin del si» y añádele el campo <code>page</code>; la clave sigue valiendo. Si
+          Atajos dice que no puede ejecutar el código: Ajustes del iPhone → Atajos → Avanzado → «Permitir ejecutar
+          scripts».
+        </p>
         {hasKey && <p className="mt-2">Una clave nueva deja sin valor la anterior: el atajo viejo dejará de guardar.</p>}
       </details>
     </div>

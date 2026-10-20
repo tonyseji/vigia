@@ -9,11 +9,15 @@ import {
   missingParts,
   missingText,
   parseKey,
+  parsePage,
   savedMessage,
   stillMissingMessage,
   urlKey,
 } from './link.ts'
 import * as webGaps from '../../../src/lib/itemGaps.js'
+import { SHORTCUT_PAGE_SCRIPT } from '../../../src/lib/shortcutKey.js'
+import { extractFromHtml } from '../scrape/parse.ts'
+import { readFileSync } from 'node:fs'
 import { urlKey as webUrlKey } from '../../../src/lib/urlKey.js'
 import { hashShortcutKey, newShortcutKey } from '../../../src/lib/shortcutKey.js'
 
@@ -91,6 +95,10 @@ describe('mensajes', () => {
     expect(savedMessage({ url: 'https://www.maisonsdumonde.com/p', title: null, price: null, manual: true })).toMatch(
       /^Guardado en Vigía sin precio: maisonsdumonde\.com/,
     )
+    // Tienda que bloquea, pero el precio lo leyó Safari (sesión 44).
+    expect(savedMessage({ url: 'https://www.maisonsdumonde.com/p', title: 'Cómoda', price: 307.42, manual: true })).toMatch(
+      /^Guardado en Vigía: Cómoda · 307,42\s€$/,
+    )
     expect(savedMessage({ url: 'https://wallapop.com/item/m-1', title: null, price: null, manual: false, unread: true })).toMatch(
       /^Guardado en Vigía sin precio: ahora no he podido leer la ficha de wallapop\.com\. Lo vuelvo a intentar/,
     )
@@ -129,5 +137,46 @@ describe('artículo incompleto (copia de src/lib/itemGaps.js)', () => {
       /^Completado en Vigía: Aparador Tobias · 950,00\s€$/,
     )
     expect(completedMessage({ itm_url: url, itm_title: url, itm_price: null })).toBe('Completado en Vigía: manomano.es')
+  })
+})
+
+describe('página abierta en Safari (sesión 44)', () => {
+  /** Ejecuta el código del atajo como lo haría «Ejecutar JavaScript en página web». */
+  function runShortcutScript(html: string, href: string, canonical: string | null) {
+    let out: unknown
+    const document = {
+      querySelector: (sel: string) => (sel === 'link[rel="canonical"]' && canonical ? { href: canonical } : null),
+      documentElement: { outerHTML: html },
+    }
+    new Function('document', 'location', 'completion', SHORTCUT_PAGE_SCRIPT)(document, { href }, (v: unknown) => {
+      out = v
+    })
+    return out
+  }
+
+  it('lo que manda el atajo llega entero a save-link', () => {
+    const html = readFileSync(new URL('../scrape/fixtures/kavehome.html', import.meta.url), 'utf8')
+    const sent = runShortcutScript(html, 'https://kavehome.com/es/es/p/mesa?utm_source=x', 'https://kavehome.com/es/es/p/mesa')
+    const page = parsePage(sent)
+    expect(page?.href).toBe('https://kavehome.com/es/es/p/mesa?utm_source=x')
+    expect(page?.canonical).toBe('https://kavehome.com/es/es/p/mesa')
+    expect(page?.html).toBe(html.slice(0, 3_000_000))
+    // Y el lector de siempre saca de ahí el precio de una tienda que bloquea al servidor.
+    const read = extractFromHtml(page!.html, page!.href)
+    expect(read.price).toBeGreaterThan(0)
+    expect(read.title).toBeTruthy()
+  })
+
+  it('sin canónica, con null', () => {
+    const page = parsePage(runShortcutScript('<html>' + 'x'.repeat(200) + '</html>', 'https://tienda.test/p', null))
+    expect(page?.canonical).toBeNull()
+  })
+
+  it('rechaza lo que no es una página', () => {
+    expect(parsePage(undefined)).toBeNull()
+    expect(parsePage('')).toBeNull()
+    expect(parsePage('no es json')).toBeNull()
+    expect(parsePage(JSON.stringify({ href: 'javascript:alert(1)', html: 'x'.repeat(200) }))).toBeNull()
+    expect(parsePage(JSON.stringify({ href: 'https://tienda.test/p', html: 'corto' }))).toBeNull()
   })
 })

@@ -1386,3 +1386,28 @@ precio» (ya está guardado). Igual en los tres caminos de añadir:
 **Descartado:** dejar crear un segundo artículo (queda el roto al lado y en
 una carpeta compartida se ven los dos); completar también un artículo que
 ya tiene todo (sería un «actualizar precio» escondido: para eso está ↻).
+
+### 2026-10-21 — El atajo de iOS lee la página abierta en Safari (sesión 44)
+**Contexto:** las tiendas que bloquean al servidor (H&M, ManoMano) solo se
+completaban desde un Chrome de ordenador (extensión o botón de marcadores).
+Desde el iPhone no había relevo: Elena guarda desde ahí y no tiene Chrome.
+**Decisión (Tony: «sí, hazlo»):** al compartir desde Safari, el atajo
+ejecuta «Ejecutar JavaScript en página web» y manda a `save-link`, junto a
+la dirección y la clave, un campo `page` con el HTML de la página abierta,
+su dirección y la canónica. `save-link` lo lee con **el mismo lector**
+(`scrape/parse.ts`, `extractFromHtml`) que la extensión y el botón: es la
+página que la persona está viendo, así que pasa por donde el servidor no.
+Se guarda o se completa igual que con la extensión: dirección canónica (o
+la de la variante), histórico `browser`, y en tienda bloqueada sigue en
+modo manual (con precio). Si la página es un captcha o no trae ni precio
+ni nombre, se lee desde el servidor como siempre (relevo). Desde otras apps
+el atajo no puede leer la página y manda solo la dirección, como antes.
+**Cómo se monta:** una rama «Si» con «Obtener tipo» de la entrada que
+«contiene Safari» (vale con iOS en cualquier idioma); el resultado de la
+rama va en `page`. Sigue siendo un solo atajo.
+**Descartado:** mandar solo los datos ya leídos desde el iPhone (habría
+que meter el lector compilado dentro del atajo y mantener otra copia);
+extensión de Safari (necesita app nativa, 99 €/año); bookmarklet en Safari
+(no comparte sesión con la app instalada, B13).
+**Límite:** no es automático cada día (eso sigue siendo la extensión), y
+desde la app de la tienda (no Safari) no hay página que leer.

@@ -28,6 +28,24 @@ export function findUrl(value: unknown): string | null {
   return httpUrl(found[0].replace(/[.,;:!?)\]]+$/, ""));
 }
 
+/** La pagina abierta en Safari, si el atajo se lanzo desde alli: lo que
+ * devuelve SHORTCUT_PAGE_SCRIPT (src/lib/shortcutKey.js) como texto JSON.
+ * null si no vino o no vale; entonces se lee desde el servidor. */
+export function parsePage(value: unknown): { href: string; canonical: string | null; html: string } | null {
+  if (typeof value !== "string" || !value || value.length > 6_000_000) return null;
+  let page: Record<string, unknown>;
+  try {
+    page = JSON.parse(value);
+  } catch {
+    return null;
+  }
+  const href = typeof page?.href === "string" ? httpUrl(page.href) : null;
+  const html = typeof page?.html === "string" ? page.html : "";
+  if (!href || html.length < 100) return null;
+  const canonical = typeof page.canonical === "string" ? httpUrl(page.canonical) : null;
+  return { href, canonical, html };
+}
+
 /** La clave del atajo tal y como la crea Ajustes (src/lib/shortcutKey.js). */
 export function parseKey(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -97,7 +115,8 @@ function hostOf(url: string): string {
 
 /** Texto corto: lo ensena iOS en la notificacion del atajo. */
 export function savedMessage(saved: { url: string; title: string | null; price: number | null; manual: boolean; unread?: boolean }): string {
-  if (saved.manual) return `Guardado en Vigía sin precio: ${hostOf(saved.url)} no deja leerlo desde el servidor.`;
+  // Tienda que bloquea al servidor; con precio, es que lo leyo Safari.
+  if (saved.manual && saved.price == null) return `Guardado en Vigía sin precio: ${hostOf(saved.url)} no deja leerlo desde el servidor.`;
   // La lectura fallo por algo que puede salir bien mas tarde (sesion 42).
   if (saved.unread) return `Guardado en Vigía sin precio: ahora no he podido leer la ficha de ${hostOf(saved.url)}. Lo vuelvo a intentar en el próximo pase.`;
   const title = saved.title && saved.title !== saved.url ? saved.title : hostOf(saved.url);

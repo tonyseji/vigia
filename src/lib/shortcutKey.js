@@ -11,6 +11,16 @@
  * pasos para montarlo a mano. */
 export const SHORTCUT_ICLOUD_URL = ''
 
+/** Lo que el atajo ejecuta en la página abierta cuando se comparte desde
+ * Safari («Ejecutar JavaScript en página web»): la manda entera a save-link,
+ * que la lee con el mismo lector que la extensión (scrape/parse.ts). Así
+ * pasa por donde el servidor no: es la página que la persona está viendo
+ * (docs/DECISIONES.md 2026-10-21). parsePage (save-link/link.ts) lo lee. */
+export const SHORTCUT_PAGE_SCRIPT =
+  "var c = document.querySelector('link[rel=\"canonical\"]');\n" +
+  'completion(JSON.stringify({ href: location.href, canonical: c ? c.href : null, ' +
+  'html: document.documentElement.outerHTML.slice(0, 3000000) }));'
+
 /** Dirección a la que llama el atajo. */
 export const SAVE_LINK_URL = `${import.meta.env?.VITE_SUPABASE_URL ?? ''}/functions/v1/save-link`
 
