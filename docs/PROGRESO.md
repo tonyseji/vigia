@@ -1691,14 +1691,13 @@ leía nadie.
 - Tests: 291 en verde. `record-price` v6 arranca; con la sesión de la
   cuenta de pruebas un `itemId` inexistente da 404, así que el camino nuevo
   con el token del usuario corre.
-- **Sin verificar:** que la RLS deje apuntar el histórico de un artículo
-  ajeno. Una simulación en BD (transacción deshecha, como la cuenta de Tony)
-  sobre el H&M de Elena dio 0 filas visibles y el histórico rechazado por
-  la RLS. Las migraciones dicen que debería verlo (la subcarpeta es de Tony,
-  migración 023), así que lo más probable es que ese H&M ya no exista; no
-  se pudo confirmar porque el modo automático bloqueó más lecturas de
-  producción. Repetir la simulación con un artículo ajeno que exista (el
-  ManoMano de Elena) antes de darlo por bueno.
+- RLS comprobada (con permiso de Tony para consultar producción): el H&M
+  vacío de Elena ya no existía (lo borraron; queda el de Tony, completo, en
+  «Decoración»), por eso la primera simulación dio 0 filas. Repetida con el
+  ManoMano de Elena en «Dormitorio» (carpeta de Tony), como la cuenta de
+  Tony y en una transacción deshecha: lo ve (1), lo edita (1) y apunta el
+  histórico (1). Después, el ManoMano sigue intacto (913 €, sin nombre ni
+  foto, una fila en el histórico).
 
 ### Estado final
 
@@ -1706,4 +1705,5 @@ Hecho y subido. Los dos ejemplos de Tony no se arreglan solos: H&M y
 ManoMano bloquean al servidor, así que volver a pegarlos dirá qué falta y
 por qué; con la extensión (o el botón de marcadores) en la ficha abierta se
 completan. El H&M doble sigue ahí: el de Elena en «Decoración» (vacío) y el
-de Tony «Sin carpeta» (completo); cuál borrar lo decide Tony.
+de Tony «Sin carpeta» (completo); cuál borrar lo decide Tony. (Resuelto el
+mismo día: el vacío de Elena ya está borrado y el de Tony está en «Decoración».)
