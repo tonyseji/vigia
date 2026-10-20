@@ -1608,4 +1608,4 @@ eligió la A. Decisión en `DECISIONES.md`; las demás ideas, en el backlog
 
 ### Estado final
 
-Hecho y subido. Falta verlo con una sesión real en producción.
+Hecho y subido. Probado por Tony en su móvil, en producción, el 2026-10-20: funciona.
