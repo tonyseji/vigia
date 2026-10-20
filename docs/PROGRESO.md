@@ -1673,6 +1673,33 @@ otro.
 - `record-price` con un artículo de carpeta compartida: sin probar en vivo
   (haría falta la extensión con sesión de una cuenta invitada).
 
+### Añadido: el pase de la extensión lee también lo compartido
+
+Tony: «da igual cómo integras un producto, quiero que funcione
+correctamente y que no existan diferencias entre dispositivos». Revisados
+todos los caminos. Diferencia real encontrada: el pase diario de la
+extensión solo leía los artículos propios, así que lo que Elena guarda
+desde el iPhone en «Pisito» en una tienda que bloquea al servidor no lo
+leía nadie.
+
+- `extension/api.js`: `CHROME_ITEMS_PATH` sin filtrar por usuario (la RLS
+  deja ver lo compartido) e `itemsForThisChrome`: lo propio siempre; lo
+  ajeno salvo lo leído bien en las últimas 20 h. Extensión 1.4.0 (hay que
+  recargarla en `chrome://extensions`).
+- `record-price` v6: el `itemId` de un artículo ajeno visible se busca y
+  escribe con el token del usuario.
+- Tests: 291 en verde. `record-price` v6 arranca; con la sesión de la
+  cuenta de pruebas un `itemId` inexistente da 404, así que el camino nuevo
+  con el token del usuario corre.
+- **Sin verificar:** que la RLS deje apuntar el histórico de un artículo
+  ajeno. Una simulación en BD (transacción deshecha, como la cuenta de Tony)
+  sobre el H&M de Elena dio 0 filas visibles y el histórico rechazado por
+  la RLS. Las migraciones dicen que debería verlo (la subcarpeta es de Tony,
+  migración 023), así que lo más probable es que ese H&M ya no exista; no
+  se pudo confirmar porque el modo automático bloqueó más lecturas de
+  producción. Repetir la simulación con un artículo ajeno que exista (el
+  ManoMano de Elena) antes de darlo por bueno.
+
 ### Estado final
 
 Hecho y subido. Los dos ejemplos de Tony no se arreglan solos: H&M y

@@ -1375,6 +1375,14 @@ precio» (ya está guardado). Igual en los tres caminos de añadir:
   propio token** (la RLS decide) y escribe con ese mismo cliente: el
   `service_role` sigue sin tocar nunca un artículo ajeno. Sin avisos de
   bajada en ese caso (son del dueño, y los manda su pase).
+- Pase diario de la extensión: antes solo leía los artículos propios («los
+  de carpetas compartidas los lee su dueño»). Pero quien los guardó puede
+  no tener Chrome (Elena, desde el iPhone): el H&M y el ManoMano de «Pisito»
+  no los iba a leer nadie. Ahora lee todo lo que el usuario ve y
+  `record-price` acepta el `itemId` de un artículo ajeno visible (con su
+  token). Lo ajeno leído **bien** por otro Chrome en las últimas 20 h se
+  salta, para no apuntar dos precios al día; «bien» porque el pase del
+  servidor pone la fecha aunque falle.
 **Descartado:** dejar crear un segundo artículo (queda el roto al lado y en
 una carpeta compartida se ven los dos); completar también un artículo que
 ya tiene todo (sería un «actualizar precio» escondido: para eso está ↻).

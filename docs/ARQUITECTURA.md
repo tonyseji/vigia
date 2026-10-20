@@ -120,7 +120,9 @@ navegador de verdad, así que:
   que la web y `save-link`, backlog B25). Primero entre los del propio
   usuario (con `service_role`); si no hay, entre los de carpetas compartidas
   que ve, con el cliente de su propio token para que decida la RLS: así no
-  crea otro en su lista (sesión 44).
+  crea otro en su lista (sesión 44). El pase diario de la extensión lee
+  también lo de carpetas compartidas que otro guardó (puede no tener Chrome);
+  lo ajeno que otro Chrome ya leyó bien en las últimas 20 h se salta.
 
 **Volver a añadir uno incompleto lo completa** (sesión 44, `DECISIONES.md`).
 Si al artículo que ya está le falta el precio, la foto o el nombre

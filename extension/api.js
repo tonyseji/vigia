@@ -112,18 +112,32 @@ async function authedFetch(path, options = {}) {
  * Las tiendas que bloquean (itm_is_manual) y, de cualquier tienda, lo que
  * se quedó sin precio o falló en el último pase del servidor (Amazon lo ve
  * desde Irlanda y no enseña el precio de lo que no se envía allí; sesión
- * 37). Solo los propios: los de carpetas compartidas los lee su dueño. */
-export function chromeItemsPath(userId) {
-  return `/rest/v1/items?select=itm_id,itm_url,itm_title,itm_price&itm_usr_id=eq.${userId}` +
-    '&or=(itm_is_manual.eq.true,itm_price.is.null,itm_last_error.not.is.null)'
+ * 37). Todo lo que el usuario ve (la RLS): también lo que otro guardó en
+ * una carpeta compartida, que puede no tener Chrome (sesión 44). */
+export const CHROME_ITEMS_PATH =
+  '/rest/v1/items?select=itm_id,itm_usr_id,itm_url,itm_title,itm_price,itm_last_checked_at,itm_last_error' +
+  '&or=(itm_is_manual.eq.true,itm_price.is.null,itm_last_error.not.is.null)'
+
+// Un artículo ajeno que otro Chrome ya leyó bien hace poco no se vuelve a
+// leer: con dos Chromes en la carpeta, cada uno apuntaría el suyo cada día.
+// «Bien» importa: el pase del servidor pone la fecha aunque falle.
+const OTHERS_FRESH_MS = 20 * 60 * 60 * 1000
+
+/** Los propios siempre; los de otros, salvo los leídos bien en las últimas 20 h. */
+export function itemsForThisChrome(items, userId, now = Date.now()) {
+  return items.filter((item) => {
+    if (item.itm_usr_id === userId) return true
+    const readOk = item.itm_price != null && !item.itm_last_error && item.itm_last_checked_at
+    return !readOk || now - new Date(item.itm_last_checked_at).getTime() > OTHERS_FRESH_MS
+  })
 }
 
 export async function listChromeItems() {
   const session = await getSession()
   if (!session) throw new Error('Inicia sesión en la extensión.')
-  const res = await authedFetch(chromeItemsPath(session.user.id), { headers: { 'Accept-Profile': 'vigia' } })
+  const res = await authedFetch(CHROME_ITEMS_PATH, { headers: { 'Accept-Profile': 'vigia' } })
   if (!res.ok) throw new Error('No se pudo leer tu lista.')
-  return res.json()
+  return itemsForThisChrome(await res.json(), session.user.id)
 }
 
 /** Apunta un precio (supabase/functions/record-price). */

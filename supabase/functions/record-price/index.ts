@@ -93,21 +93,25 @@ Deno.serve(async (req) => {
   if (findError) return json({ error: "No se pudo leer la lista" }, 500);
   const urls = [url, data.altUrl ? cleanUrl(data.altUrl) : null].filter((u): u is string => u != null);
   let existing = data.itemId ? found?.[0] ?? null : findOwnItem(found ?? [], urls);
-  // Borrado mientras el pase lo leia: no se vuelve a crear.
-  if (data.itemId && !existing) return json({ error: "El articulo ya no esta en la lista" }, 404);
 
-  // No es suyo pero lo ve: otro lo guardo en una carpeta compartida con el.
-  // Se completa ese en vez de crear otro en su lista (asi nacio el H&M
-  // doble de la sesion 44). Con su token: la RLS dice que puede tocar.
+  // No es suyo pero lo ve: otro lo guardo en una carpeta compartida con el
+  // (y puede no tener Chrome). Al guardar la pagina se completa ese en vez
+  // de crear otro en su lista (asi nacio el H&M doble de la sesion 44), y el
+  // pase de su Chrome lo lee como uno propio. Con su token: la RLS dice que
+  // puede tocar.
   let shared = false;
-  if (!existing && !data.itemId) {
-    const { data: visible } = await userClient
+  if (!existing) {
+    let others = userClient
       .from("items")
       .select("itm_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
       .neq("itm_usr_id", user.id);
-    existing = findOwnItem(visible ?? [], urls);
+    if (data.itemId) others = others.eq("itm_id", data.itemId);
+    const { data: visible } = await others;
+    existing = data.itemId ? visible?.[0] ?? null : findOwnItem(visible ?? [], urls);
     shared = existing != null;
   }
+  // Borrado mientras el pase lo leia: no se vuelve a crear.
+  if (data.itemId && !existing) return json({ error: "El articulo ya no esta en la lista" }, 404);
   const writer = shared ? userClient : admin;
 
   let itemId: string;

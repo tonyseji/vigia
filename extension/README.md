@@ -61,6 +61,11 @@ el botón de recargar de la tarjeta de Vigía.
   backlog B25), así no se duplica. Si no es suyo pero está en una carpeta
   compartida que ve, completa ese (con su token, decide la RLS) en vez de
   crear otro en su lista (sesión 44).
+- **Qué lee el pase:** todo lo que el usuario ve que el servidor no puede
+  leer (tienda bloqueada, sin precio o con error), **también lo de carpetas
+  compartidas guardado por otro**, que puede no tener Chrome (sesión 44). Lo
+  ajeno que otro Chrome ya leyó bien en las últimas 20 h se salta
+  (`itemsForThisChrome`).
 - **Pase:** manda la URL guardada del artículo, no la de la página, para que
   una redirección no cree un artículo duplicado. Entre artículo y artículo
   espera 4–8 s. Si la tienda pide captcha, ese artículo se salta y queda
