@@ -1742,3 +1742,43 @@ por qué; con la extensión (o el botón de marcadores) en la ficha abierta se
 completan. El H&M doble sigue ahí: el de Elena en «Decoración» (vacío) y el
 de Tony «Sin carpeta» (completo); cuál borrar lo decide Tony. (Resuelto el
 mismo día: el vacío de Elena ya está borrado y el de Tony está en «Decoración».)
+
+## 2026-10-25 (Sesión 45) — Carpetas de tres niveles
+
+### Contexto
+
+Tony quería otro nivel de subcarpeta: Pisito → Dormitorio → Camas. La
+jerarquía era de dos niveles desde 2026-09-06 (migración 009) y varias
+piezas lo daban por hecho. Decisión (tope de tres, compartir sin cambios)
+en `DECISIONES.md`.
+
+### Cambios
+
+- Migración `025_tres_niveles_carpetas.sql` (aplicada en producción con
+  permiso de Tony): `check_folder_depth` sube hasta la raíz (tope
+  `v_max_levels = 3`, rechaza meter una carpeta dentro de sí misma y, al
+  mover una rama, cuenta también sus niveles de debajo); el trigger pasa a
+  llamarse `trg_folders_max_depth`. `visible_folder_ids()` baja
+  recursivamente desde la carpeta compartida y `revoke_folder_share()`
+  suelta los artículos del invitado en cualquier nivel.
+- `save-link` v14: lo compartido se busca bajando nivel a nivel.
+- `lib/itemGroups.js`: `MAX_FOLDER_LEVELS`, `folderGroupName` con el camino
+  entero, `foldersInTreeOrder` recursivo y con `depth`, `folderSubtreeIds`.
+- `useFolders`: árbol recursivo con `depth`; mensaje de error del cuarto
+  nivel.
+- `FolderSidebar`: pinta el árbol recursivamente (cada nivel 16 px más
+  adentro), conteo por subárbol, «Nueva subcarpeta» hasta el segundo nivel;
+  compartir y borrar la raíz siguen siendo solo del dueño.
+- `App.jsx`: seleccionar una carpeta y «Añadir a la cesta» incluyen todo lo
+  que cuelga de ella. Selectores de carpeta (fila, foto, Editar) sangrados
+  por nivel.
+- Tests: 298 en verde (camino de tres niveles, orden con `depth`,
+  subárbol). Build en verde.
+- Probado en producción, en una transacción deshecha al final (no quedó
+  nada): la cuenta de pruebas crea tres niveles propios; el cuarto, el ciclo
+  y mover una rama demasiado honda se rechazan; renombrar en el tercer nivel
+  va. Con un usuario ficticio dueño de Pisito / Dormitorio / Camas compartido
+  con ella: ve las tres, guarda un artículo en Camas, no puede crear un
+  cuarto nivel, crea uno de tercer nivel que queda a nombre del dueño, y al
+  retirar la invitación su artículo pasa a «Sin carpeta» y deja de ver las
+  carpetas. Avisos de seguridad de Supabase: los dos de siempre, nada nuevo.
