@@ -1782,3 +1782,17 @@ en `DECISIONES.md`.
   cuarto nivel, crea uno de tercer nivel que queda a nombre del dueño, y al
   retirar la invitación su artículo pasa a «Sin carpeta» y deja de ver las
   carpetas. Avisos de seguridad de Supabase: los dos de siempre, nada nuevo.
+- Probado en la web de producción con la cuenta de pruebas (escritorio,
+  1280 px): «Pisito prueba» → «Dormitorio» → «Camas» creadas desde el menú
+  «⋮»; el de Camas ya no ofrece «Nueva subcarpeta». Sidebar sangrado por
+  nivel (iconos a 32/48/64 px). Con la lámpara Shein movida a Camas: los
+  tres niveles cuentan 1, el grupo sale como «Pisito prueba / Dormitorio /
+  Camas», seleccionar Pisito la enseña, y los selectores (fila y Editar)
+  sangran cada nivel. Al borrar Pisito prueba se fueron sus subcarpetas y la
+  lámpara volvió a «Sin carpeta»: la cuenta quedó como estaba.
+
+### Estado final
+
+Hecho y subido. Tony ya puede crear «Camas» dentro de «Dormitorio» en
+«Pisito»; Elena lo verá igual por la carpeta compartida. Sin probar en
+móvil (el sidebar deslizante usa el mismo componente).
