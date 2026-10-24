@@ -4,29 +4,66 @@
 
 export const NO_FOLDER = '__none__'
 
-/** Nombre del grupo con la jerarquía visible: "Muebles / Salón" si es una
- * subcarpeta, o solo "Muebles" si es de primer nivel. */
+/** Vigía admite carpeta, subcarpeta y una más dentro (Pisito / Dormitorio /
+ * Camas). El tope lo pone el trigger de la migración 025; aquí solo decide
+ * dónde se ofrece «Nueva subcarpeta». */
+export const MAX_FOLDER_LEVELS = 3
+
+/** Nombre del grupo con la jerarquía visible: "Muebles / Salón / Sofás" en
+ * una subcarpeta, o solo "Muebles" si es de primer nivel. Un padre que no
+ * está cargado no sale en el nombre. */
 export function folderGroupName(key, foldersById) {
   const folder = key === NO_FOLDER ? null : foldersById[key]
   if (!folder) return 'Sin carpeta'
-  const parent = folder.fld_parent_id ? foldersById[folder.fld_parent_id] : null
-  return parent ? `${parent.fld_name} / ${folder.fld_name}` : folder.fld_name
+  const names = [folder.fld_name]
+  const seen = new Set([folder.fld_id])
+  for (let parent = foldersById[folder.fld_parent_id]; parent && !seen.has(parent.fld_id); parent = foldersById[parent.fld_parent_id]) {
+    seen.add(parent.fld_id)
+    names.unshift(parent.fld_name)
+  }
+  return names.join(' / ')
 }
 
 /** Carpetas en el orden del sidebar: cada carpeta seguida de sus
- * subcarpetas, y dentro de cada nivel el orden en que llegan (fld_order).
- * La BD las da en orden de creación, así que una subcarpeta creada después
- * de otra carpeta raíz salía debajo de esa raíz en los selectores. Una
- * subcarpeta cuya carpeta no está cargada va al final, no se pierde. */
+ * subcarpetas (y estas de las suyas), y dentro de cada nivel el orden en que
+ * llegan (fld_order). La BD las da en orden de creación, así que una
+ * subcarpeta creada después de otra carpeta raíz salía debajo de esa raíz en
+ * los selectores. Cada una lleva `depth` (0 = primer nivel) para sangrarla.
+ * Una subcarpeta cuya carpeta no está cargada va al final, no se pierde. */
 export function foldersInTreeOrder(folders) {
   const ids = new Set(folders.map((f) => f.fld_id))
   const childrenOf = {}
   for (const f of folders) {
     if (f.fld_parent_id != null) (childrenOf[f.fld_parent_id] = childrenOf[f.fld_parent_id] || []).push(f)
   }
-  const ordered = folders.filter((f) => f.fld_parent_id == null).flatMap((f) => [f, ...(childrenOf[f.fld_id] ?? [])])
-  const orphans = folders.filter((f) => f.fld_parent_id != null && !ids.has(f.fld_parent_id))
-  return [...ordered, ...orphans]
+  const ordered = []
+  const placed = new Set()
+  const walk = (f, depth) => {
+    if (placed.has(f.fld_id)) return
+    placed.add(f.fld_id)
+    ordered.push({ ...f, depth })
+    for (const child of childrenOf[f.fld_id] ?? []) walk(child, depth + 1)
+  }
+  for (const f of folders) if (f.fld_parent_id == null) walk(f, 0)
+  for (const f of folders) if (f.fld_parent_id != null && !ids.has(f.fld_parent_id)) walk(f, 0)
+  return ordered
+}
+
+/** La carpeta y todo lo que cuelga de ella, a cualquier nivel: lo que se ve
+ * al seleccionarla y lo que entra en la cesta desde su menú. */
+export function folderSubtreeIds(folderId, folders) {
+  const ids = new Set([folderId])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const f of folders) {
+      if (f.fld_parent_id != null && ids.has(f.fld_parent_id) && !ids.has(f.fld_id)) {
+        ids.add(f.fld_id)
+        grew = true
+      }
+    }
+  }
+  return ids
 }
 
 /** [clave, artículos] por carpeta, respetando el orden en que llegan los

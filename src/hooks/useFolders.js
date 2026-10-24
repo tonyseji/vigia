@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 import { foldersInTreeOrder } from '../lib/itemGroups.js'
 
-/** Carpetas del usuario y las que le han compartido, con jerarquía de dos
- * niveles (fld_parent_id). En una compartida, quien tiene acceso renombra y
+/** Carpetas del usuario y las que le han compartido, con jerarquía de hasta
+ * tres niveles (fld_parent_id, migración 025). En una compartida, quien tiene acceso renombra y
  * crea o borra subcarpetas igual que el dueño; borrar la de primer nivel y
  * compartirla (useFolderShares) son solo del dueño (RLS, migración 023). Una
  * subcarpeta nueva queda a nombre del dueño del padre (trigger). Al borrar
@@ -32,23 +32,24 @@ export function useFolders() {
   }, [reload])
   useReloadOnReturn(reload)
 
-  /** Árbol de dos niveles: carpetas de primer nivel con sus subcarpetas
-   * anidadas en `children`. Con la RLS combinada, `folders` también puede
-   * traer carpetas compartidas con este usuario, por eso cada carpeta lleva
-   * `isOwner`. */
+  /** Árbol: carpetas de primer nivel con sus subcarpetas anidadas en
+   * `children`, a cualquier profundidad, y su `depth` (0 = primer nivel).
+   * Con la RLS combinada, `folders` también puede traer carpetas compartidas
+   * con este usuario, por eso cada carpeta lleva `isOwner`. */
   const foldersTree = useMemo(() => {
-    const topLevel = folders.filter((f) => f.fld_parent_id == null)
     const byParent = {}
     for (const f of folders) {
       if (f.fld_parent_id != null) {
         ;(byParent[f.fld_parent_id] = byParent[f.fld_parent_id] || []).push(f)
       }
     }
-    return topLevel.map((f) => ({
+    const build = (f, depth) => ({
       ...f,
+      depth,
       isOwner: f.fld_usr_id === userId,
-      children: (byParent[f.fld_id] ?? []).map((c) => ({ ...c, isOwner: c.fld_usr_id === userId })),
-    }))
+      children: (byParent[f.fld_id] ?? []).map((c) => build(c, depth + 1)),
+    })
+    return folders.filter((f) => f.fld_parent_id == null).map((f) => build(f, 0))
   }, [folders, userId])
 
   const createFolder = useCallback(async (name, parentId = null) => {
@@ -64,8 +65,8 @@ export function useFolders() {
     })
     if (error) {
       return {
-        error: error.message?.includes('dos niveles')
-          ? 'Vigía solo admite carpetas y subcarpetas, no un tercer nivel.'
+        error: error.message?.includes('tres niveles')
+          ? 'Vigía admite como mucho tres niveles de carpetas.'
           : 'No se pudo crear la carpeta.',
       }
     }

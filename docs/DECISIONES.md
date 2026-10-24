@@ -1411,3 +1411,28 @@ extensión de Safari (necesita app nativa, 99 €/año); bookmarklet en Safari
 (no comparte sesión con la app instalada, B13).
 **Límite:** no es automático cada día (eso sigue siendo la extensión), y
 desde la app de la tienda (no Safari) no hay página que leer.
+
+### 2026-10-25 — Carpetas de tres niveles (sesión 45)
+**Contexto:** Tony quería «otro nivel de subcarpeta»: Pisito → Dormitorio →
+Camas. Desde la sesión de carpetas compartidas (2026-09-06) la jerarquía era
+de dos niveles, forzada por un trigger.
+**Decisión:** hasta **tres** niveles (lo pedido, ni uno más: con más, el
+sidebar de 224 px y los selectores dejan poco sitio al nombre). Todo lo que
+daba por hecho dos niveles pasa a recorrer el árbol entero, así que el tope
+vive en un solo sitio por capa: `v_max_levels` en el trigger
+`trg_folders_max_depth` (migración 025) y `MAX_FOLDER_LEVELS` en
+`lib/itemGroups.js`, que solo decide dónde se ofrece «Nueva subcarpeta».
+- BD: `visible_folder_ids()` baja recursivamente desde la carpeta
+  compartida; `revoke_folder_share()` suelta los artículos del invitado en
+  cualquier nivel; el trigger cuenta niveles subiendo hasta la raíz e
+  impide meter una carpeta dentro de sí misma.
+- `save-link` baja nivel a nivel desde lo compartido.
+- Web: sidebar recursivo (cada nivel entra 16 px), una carpeta incluye todo
+  lo que cuelga de ella al seleccionarla, contarla o mandarla a la cesta, y
+  el grupo de la vista general lleva el camino entero («Pisito / Dormitorio
+  / Camas»).
+**Sin cambios:** compartir sigue siendo de una carpeta de primer nivel
+entera, con todo lo de dentro; las subcarpetas de cualquier nivel son del
+dueño de la raíz y quien tiene acceso las crea, renombra y borra (023).
+**Descartado:** profundidad ilimitada (no pedida, y el sangrado acabaría
+comiéndose el nombre en móvil).

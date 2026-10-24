@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { IconCarpeta, IconChevronRight, IconMasOpciones, IconTodos } from './icons/index.jsx'
 import { ConfirmDialog } from './Dialog.jsx'
+import { MAX_FOLDER_LEVELS } from '../lib/itemGroups.js'
 
-/** Navegación por carpetas: árbol de dos niveles, clic en una carpeta filtra
+/** Artículos de la carpeta y de todo lo que cuelga de ella. */
+function subtreeCount(folder, countByFolder) {
+  return folder.children.reduce((sum, c) => sum + subtreeCount(c, countByFolder), countByFolder[folder.fld_id] ?? 0)
+}
+
+function allIds(tree) {
+  return tree.flatMap((f) => [f.fld_id, ...allIds(f.children)])
+}
+
+function subtreeHas(folder, id) {
+  return folder.fld_id === id || folder.children.some((c) => subtreeHas(c, id))
+}
+
+/** Navegación por carpetas: árbol de hasta tres niveles, clic en una carpeta filtra
  * la lista de artículos. Las acciones (renombrar, subcarpeta, compartir,
  * borrar) viven en un menú «⋮», no como botones de texto siempre visibles
  * (docs/DECISIONES.md 2026-09-06, "El sidebar de carpetas sustituye al modal
@@ -21,7 +35,7 @@ export default function FolderSidebar({
   onShare,
   onAddToBasket,
 }) {
-  const [expanded, setExpanded] = useState(() => new Set(foldersTree.map((f) => f.fld_id)))
+  const [expanded, setExpanded] = useState(() => new Set(allIds(foldersTree)))
   const [creatingSubOf, setCreatingSubOf] = useState(null)
   const [creatingRoot, setCreatingRoot] = useState(false)
   const [newName, setNewName] = useState('')
@@ -74,8 +88,100 @@ export default function FolderSidebar({
   }
 
   async function handleDelete(folder) {
-    if (selectedId === folder.fld_id || folder.children?.some((c) => c.fld_id === selectedId)) onSelect(null)
+    if (selectedId != null && subtreeHas(folder, selectedId)) onSelect(null)
     await deleteFolder(folder.fld_id)
+  }
+
+  /** Una carpeta con su menú y, si está desplegada, sus subcarpetas (con
+   * las suyas, hasta MAX_FOLDER_LEVELS). Cada nivel entra 16 px más. */
+  function renderFolder(folder) {
+    const canHaveChildren = folder.depth + 1 < MAX_FOLDER_LEVELS
+    return (
+      <div key={folder.fld_id}>
+        <FolderRow
+          folder={folder}
+          depth={folder.depth}
+          hasChildren={folder.children.length > 0}
+          expanded={expanded.has(folder.fld_id)}
+          onToggle={() => toggle(folder.fld_id)}
+          label={folder.fld_name}
+          count={subtreeCount(folder, countByFolder)}
+          active={selectedId === folder.fld_id}
+          onClick={() => onSelect(folder.fld_id)}
+          sharedBadge={folder.depth === 0 && !folder.isOwner}
+          menuOpen={openMenuId === folder.fld_id}
+          onMenuToggle={() => setOpenMenuId(openMenuId === folder.fld_id ? null : folder.fld_id)}
+          menuRef={menuRef}
+          renaming={renamingId === folder.fld_id}
+          renamingName={renamingName}
+          onRenamingNameChange={setRenamingName}
+          onRenameSubmit={() => submitRename(folder.fld_id)}
+          menu={
+            // Quien tiene acceso a una compartida la usa igual que el dueño
+            // (migración 023): renombra, crea y borra subcarpetas. Compartir
+            // y borrar la de primer nivel, que afecta a todos, siguen siendo
+            // solo del dueño.
+            <FolderMenu
+              onAddToBasket={() => {
+                onAddToBasket(folder)
+                setOpenMenuId(null)
+              }}
+              onRename={() => {
+                setRenamingId(folder.fld_id)
+                setRenamingName(folder.fld_name)
+                setOpenMenuId(null)
+              }}
+              {...(canHaveChildren && {
+                onNewSubfolder: () => {
+                  setCreatingSubOf(folder.fld_id)
+                  setExpanded((prev) => new Set(prev).add(folder.fld_id))
+                  setOpenMenuId(null)
+                },
+              })}
+              {...(folder.depth === 0 &&
+                folder.isOwner && {
+                  onShare: () => {
+                    onShare(folder)
+                    setOpenMenuId(null)
+                  },
+                })}
+              {...((folder.depth > 0 || folder.isOwner) && {
+                onDelete: () => {
+                  setDeletingFolder(folder)
+                  setOpenMenuId(null)
+                },
+              })}
+            />
+          }
+        />
+
+        {expanded.has(folder.fld_id) && (
+          <div className="flex flex-col gap-0.5">
+            {folder.children.map(renderFolder)}
+
+            {creatingSubOf === folder.fld_id && (
+              <div className="flex items-center gap-1 py-0.5 pr-2" style={{ paddingLeft: `${iconOffsetRem(folder.depth + 1)}rem` }}>
+                <input
+                  autoFocus
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submitNewSub(folder.fld_id)
+                    if (e.key === 'Escape') setCreatingSubOf(null)
+                  }}
+                  onBlur={() => {
+                    if (newName.trim()) submitNewSub(folder.fld_id)
+                    else setCreatingSubOf(null)
+                  }}
+                  placeholder="Nueva subcarpeta"
+                  className="min-w-0 flex-1 rounded-md border border-line bg-surface px-2 py-1 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -88,121 +194,7 @@ export default function FolderSidebar({
         onClick={() => onSelect(null)}
       />
 
-      {foldersTree.map((folder) => (
-        <div key={folder.fld_id}>
-          <FolderRow
-            folder={folder}
-            hasChildren={folder.children.length > 0}
-            expanded={expanded.has(folder.fld_id)}
-            onToggle={() => toggle(folder.fld_id)}
-            label={folder.fld_name}
-            count={
-              (countByFolder[folder.fld_id] ?? 0) +
-              folder.children.reduce((sum, c) => sum + (countByFolder[c.fld_id] ?? 0), 0)
-            }
-            active={selectedId === folder.fld_id}
-            onClick={() => onSelect(folder.fld_id)}
-            sharedBadge={!folder.isOwner}
-            menuOpen={openMenuId === folder.fld_id}
-            onMenuToggle={() => setOpenMenuId(openMenuId === folder.fld_id ? null : folder.fld_id)}
-            menuRef={menuRef}
-            renaming={renamingId === folder.fld_id}
-            renamingName={renamingName}
-            onRenamingNameChange={setRenamingName}
-            onRenameSubmit={() => submitRename(folder.fld_id)}
-            menu={
-              // Quien tiene acceso a una compartida la usa igual que el
-              // dueño (migración 023); compartirla y borrarla, que afecta a
-              // todos, siguen siendo solo del dueño.
-              <FolderMenu
-                onAddToBasket={() => {
-                  onAddToBasket(folder)
-                  setOpenMenuId(null)
-                }}
-                onRename={() => {
-                  setRenamingId(folder.fld_id)
-                  setRenamingName(folder.fld_name)
-                  setOpenMenuId(null)
-                }}
-                onNewSubfolder={() => {
-                  setCreatingSubOf(folder.fld_id)
-                  setExpanded((prev) => new Set(prev).add(folder.fld_id))
-                  setOpenMenuId(null)
-                }}
-                {...(folder.isOwner && {
-                  onShare: () => {
-                    onShare(folder)
-                    setOpenMenuId(null)
-                  },
-                  onDelete: () => {
-                    setDeletingFolder(folder)
-                    setOpenMenuId(null)
-                  },
-                })}
-              />
-            }
-          />
-
-          {expanded.has(folder.fld_id) && (
-            <div className="flex flex-col gap-0.5">
-              {folder.children.map((child) => (
-                <FolderRow
-                  key={child.fld_id}
-                  indent
-                  label={child.fld_name}
-                  count={countByFolder[child.fld_id] ?? 0}
-                  active={selectedId === child.fld_id}
-                  onClick={() => onSelect(child.fld_id)}
-                  menuOpen={openMenuId === child.fld_id}
-                  onMenuToggle={() => setOpenMenuId(openMenuId === child.fld_id ? null : child.fld_id)}
-                  menuRef={menuRef}
-                  renaming={renamingId === child.fld_id}
-                  renamingName={renamingName}
-                  onRenamingNameChange={setRenamingName}
-                  onRenameSubmit={() => submitRename(child.fld_id)}
-                  menu={
-                    <FolderMenu
-                      onAddToBasket={() => {
-                        onAddToBasket(child)
-                        setOpenMenuId(null)
-                      }}
-                      onRename={() => {
-                        setRenamingId(child.fld_id)
-                        setRenamingName(child.fld_name)
-                        setOpenMenuId(null)
-                      }}
-                      onDelete={() => {
-                        setDeletingFolder(child)
-                        setOpenMenuId(null)
-                      }}
-                    />
-                  }
-                />
-              ))}
-
-              {creatingSubOf === folder.fld_id && (
-                <div className="flex items-center gap-1 py-0.5 pl-12 pr-2">
-                  <input
-                    autoFocus
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') submitNewSub(folder.fld_id)
-                      if (e.key === 'Escape') setCreatingSubOf(null)
-                    }}
-                    onBlur={() => {
-                      if (newName.trim()) submitNewSub(folder.fld_id)
-                      else setCreatingSubOf(null)
-                    }}
-                    placeholder="Nueva subcarpeta"
-                    className="min-w-0 flex-1 rounded-md border border-line bg-surface px-2 py-1 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+      {foldersTree.map(renderFolder)}
 
       {creatingRoot ? (
         <div className="flex items-center gap-1 px-2 py-1">
@@ -248,10 +240,10 @@ export default function FolderSidebar({
 function FolderRow({
   icon,
   folder,
+  depth = 0,
   hasChildren,
   expanded,
   onToggle,
-  indent,
   label,
   count,
   active,
@@ -268,7 +260,7 @@ function FolderRow({
 }) {
   if (renaming) {
     return (
-      <div className="flex items-center gap-1 py-0.5 pr-1" style={{ paddingLeft: indent ? '3rem' : '0.5rem' }}>
+      <div className="flex items-center gap-1 py-0.5 pr-1" style={{ paddingLeft: `${depth === 0 ? 0.5 : iconOffsetRem(depth)}rem` }}>
         <input
           autoFocus
           value={renamingName}
@@ -284,11 +276,12 @@ function FolderRow({
   return (
     <div
       className={`group flex items-center gap-1 rounded-md pr-1 ${active ? 'bg-accent-soft' : 'hover:bg-surface-2'}`}
-      // Una raíz lleva delante la flecha o su hueco (20 px + 4 de separación),
-      // así que su icono queda a 32 px. La subcarpeta va un escalón más
-      // adentro (48 px): con 28 px quedaba por fuera de una raíz sin
-      // subcarpetas y parecía que esa raíz colgaba de la carpeta de arriba.
-      style={{ paddingLeft: indent ? '3rem' : '0.5rem' }}
+      // Toda carpeta lleva delante la flecha o su hueco (20 px + 4 de
+      // separación), así que el icono de una raíz queda a 32 px y cada nivel
+      // entra 16 px más (48, 64). Con la subcarpeta a 28 px quedaba por fuera
+      // de una raíz sin subcarpetas y parecía que esa raíz colgaba de la
+      // carpeta de arriba.
+      style={{ paddingLeft: `${0.5 + depth}rem` }}
     >
       {/* Sin subcarpetas, un hueco y no un botón invisible: con el teclado
           era una parada sin nombre que no hacía nada. */}
@@ -335,6 +328,12 @@ function FolderRow({
       )}
     </div>
   )
+}
+
+/** Dónde queda el icono de una carpeta de ese nivel (0 = primer nivel): ahí
+ * se alinean los campos de renombrar y de nueva subcarpeta. */
+function iconOffsetRem(depth) {
+  return 2 + depth
 }
 
 function FolderMenu({ onAddToBasket, onRename, onNewSubfolder, onShare, onDelete }) {

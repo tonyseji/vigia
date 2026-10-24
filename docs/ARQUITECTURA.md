@@ -208,9 +208,10 @@ Una fila por lectura. Es el corazón del proyecto: no se borra ni se compacta.
 ### `folders`
 
 Las carpetas del usuario. Sustituyen al campo `category` de texto libre de la
-app vieja. Jerarquía de dos niveles desde 2026-09-06 (migración 009): una
-carpeta con `fld_parent_id = null` es de primer nivel, una subcarpeta cuelga
-de otra. Un trigger impide un tercer nivel.
+app vieja. Jerarquía desde 2026-09-06 (migración 009), de tres niveles desde
+2026-10-25 (migración 025): una carpeta con `fld_parent_id = null` es de
+primer nivel, una subcarpeta cuelga de otra. El trigger `trg_folders_max_depth`
+impide un cuarto nivel y meter una carpeta dentro de sí misma.
 
 | Campo | Tipo | Notas |
 |---|---|---|
@@ -218,7 +219,7 @@ de otra. Un trigger impide un tercer nivel.
 | `fld_usr_id` | uuid | FK a `auth.users`. Dueño de la carpeta. Una subcarpeta es siempre del dueño de su padre, aunque la cree un invitado (trigger `trg_folders_guard_tree`, migración 023); no se puede cambiar. |
 | `fld_name` | text | |
 | `fld_order` | int | Orden manual. |
-| `fld_parent_id` | uuid | FK a `folders`. Null = primer nivel. Máximo dos niveles. |
+| `fld_parent_id` | uuid | FK a `folders`. Null = primer nivel. Máximo tres niveles. |
 
 ### `folder_shares`
 

@@ -20,6 +20,7 @@ import { BasketBar, BasketSheet } from './components/Basket.jsx'
 import { IconEngranaje, IconMenu, IconActualizar, IconCesta } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
 import { basketLines, basketSummary } from './lib/basket.js'
+import { folderSubtreeIds } from './lib/itemGroups.js'
 import { readJoinToken, removeJoinParam, savePendingJoin, loadPendingJoin, clearPendingJoin } from './lib/shareLink.js'
 import { readImport, removeImportHash, savePendingImport, loadPendingImport, clearPendingImport, isTrustedImport } from './lib/browserImport.js'
 import { readSharedUrl, savePendingShare, loadPendingShare, clearPendingShare } from './lib/shareTarget.js'
@@ -236,19 +237,18 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     return counts
   }, [items])
 
-  // La carpeta seleccionada filtra a ella y, si es de primer nivel, también
-  // a sus subcarpetas (ver una carpeta padre incluye lo que hay dentro).
+  // La carpeta seleccionada filtra a ella y a todo lo que cuelga de ella
+  // (ver una carpeta padre incluye lo que hay dentro, a cualquier nivel).
   const visibleItems = useMemo(() => {
     if (selectedFolderId == null) return items
-    const childIds = foldersTree.find((f) => f.fld_id === selectedFolderId)?.children.map((c) => c.fld_id) ?? []
-    const ids = new Set([selectedFolderId, ...childIds])
+    const ids = folderSubtreeIds(selectedFolderId, folders)
     return items.filter((item) => ids.has(item.itm_fld_id))
-  }, [items, selectedFolderId, foldersTree])
+  }, [items, selectedFolderId, folders])
 
-  /** «Añadir a la cesta» del menú de carpeta: la carpeta y, si es de primer
-   * nivel, sus subcarpetas (lo mismo que se ve al seleccionarla). */
+  /** «Añadir a la cesta» del menú de carpeta: la carpeta y todo lo que
+   * cuelga de ella (lo mismo que se ve al seleccionarla). */
   function addFolderToBasket(folder) {
-    const ids = new Set([folder.fld_id, ...(folder.children ?? []).map((c) => c.fld_id)])
+    const ids = folderSubtreeIds(folder.fld_id, folders)
     cesta.addMany(items.filter((item) => ids.has(item.itm_fld_id)).map((item) => item.itm_id))
     setShowSidebarMobile(false)
   }

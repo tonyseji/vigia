@@ -204,7 +204,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
                     type="button"
                     onClick={() => moveTo(f.fld_id)}
                     className={`truncate rounded-md px-2 py-1.5 text-left text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent ${item.itm_fld_id === f.fld_id ? 'bg-accent-soft text-ink' : 'text-ink hover:bg-surface-2'}`}
-                    style={{ paddingLeft: f.fld_parent_id ? '1.5rem' : '0.5rem' }}
+                    style={{ paddingLeft: `${0.5 + (f.depth ?? 0)}rem` }}
                     title={f.fld_name}
                   >
                     {f.fld_name}

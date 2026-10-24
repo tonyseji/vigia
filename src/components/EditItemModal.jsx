@@ -77,7 +77,7 @@ export default function EditItemModal({ item, folders, onSave, onDelete, onClose
           <option value="">Sin carpeta</option>
           {folders?.map((f) => (
             <option key={f.fld_id} value={f.fld_id}>
-              {f.fld_parent_id ? `  ↳ ${f.fld_name}` : f.fld_name}
+              {f.depth ? `${' '.repeat(3 * f.depth - 1)}↳ ${f.fld_name}` : f.fld_name}
             </option>
           ))}
         </select>

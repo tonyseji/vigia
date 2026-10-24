@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { NO_FOLDER, folderGroupName, groupByFolder, foldersInTreeOrder, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal, favoritesFirst } from '../itemGroups.js'
+import { NO_FOLDER, folderGroupName, groupByFolder, foldersInTreeOrder, folderSubtreeIds, loadView, saveView, loadCollapsed, saveCollapsed, itemsTotal, favoritesFirst } from '../itemGroups.js'
 
 const foldersById = {
   m: { fld_id: 'm', fld_name: 'Muebles', fld_parent_id: null },
   s: { fld_id: 's', fld_name: 'Salón', fld_parent_id: 'm' },
   a: { fld_id: 'a', fld_name: 'Audio', fld_parent_id: null },
+  so: { fld_id: 'so', fld_name: 'Sofás', fld_parent_id: 's' },
 }
 
 const item = (id, fld) => ({ itm_id: id, itm_fld_id: fld })
@@ -19,6 +20,14 @@ describe('groupByFolder', () => {
       'Muebles / Salón',
     ])
     expect(groups[0][1].map((i) => i.itm_id)).toEqual([2, 5])
+  })
+
+  it('una carpeta de tercer nivel lleva el camino entero', () => {
+    expect(folderGroupName('so', foldersById)).toBe('Muebles / Salón / Sofás')
+  })
+
+  it('un padre que no está cargado no sale en el nombre', () => {
+    expect(folderGroupName('h', { h: { fld_id: 'h', fld_name: 'Camas', fld_parent_id: 'x' } })).toBe('Camas')
   })
 
   it('una carpeta desconocida cae en «Sin carpeta», sin grupo repetido', () => {
@@ -39,8 +48,30 @@ describe('foldersInTreeOrder', () => {
     expect(foldersInTreeOrder(folders).map((x) => x.fld_id)).toEqual(['pisito', 'papel', 'dormitorio', 'cocina', 'ordenador'])
   })
 
-  it('una subcarpeta cuya carpeta no está cargada no se pierde: va al final', () => {
-    expect(foldersInTreeOrder([f('hija', 'x'), f('a')]).map((x) => x.fld_id)).toEqual(['a', 'hija'])
+  it('tres niveles: cada carpeta seguida de lo que cuelga de ella, con su nivel', () => {
+    const folders = [f('pisito'), f('dormitorio', 'pisito'), f('ordenador'), f('camas', 'dormitorio'), f('cocina', 'pisito')]
+    expect(foldersInTreeOrder(folders).map((x) => [x.fld_id, x.depth])).toEqual([
+      ['pisito', 0],
+      ['dormitorio', 1],
+      ['camas', 2],
+      ['cocina', 1],
+      ['ordenador', 0],
+    ])
+  })
+
+  it('una subcarpeta cuya carpeta no está cargada no se pierde: va al final, con sus hijas', () => {
+    expect(foldersInTreeOrder([f('hija', 'x'), f('nieta', 'hija'), f('a')]).map((x) => x.fld_id)).toEqual(['a', 'hija', 'nieta'])
+  })
+})
+
+describe('folderSubtreeIds', () => {
+  const f = (id, parent = null) => ({ fld_id: id, fld_parent_id: parent })
+  const folders = [f('pisito'), f('dormitorio', 'pisito'), f('camas', 'dormitorio'), f('cocina', 'pisito'), f('ordenador')]
+
+  it('la carpeta y todo lo que cuelga de ella, a cualquier nivel', () => {
+    expect([...folderSubtreeIds('pisito', folders)].sort()).toEqual(['camas', 'cocina', 'dormitorio', 'pisito'])
+    expect([...folderSubtreeIds('dormitorio', folders)].sort()).toEqual(['camas', 'dormitorio'])
+    expect([...folderSubtreeIds('camas', folders)]).toEqual(['camas'])
   })
 })
 

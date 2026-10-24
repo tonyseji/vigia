@@ -83,18 +83,18 @@ Deno.serve(async (req) => {
   const candidates = [url, page && cleanUrl(page.href), found && cleanUrl(found)].filter((u): u is string => u != null);
 
   // Lo que el usuario ve en su lista (RLS, migracion 016): lo suyo y lo de
-  // las carpetas compartidas con el, subcarpetas incluidas.
+  // las carpetas compartidas con el, con todo lo que cuelga de ellas (hasta
+  // tres niveles, migracion 025: se baja un nivel en cada vuelta).
   const { data: shares } = await admin
     .from("folder_shares")
     .select("shr_fld_id")
     .eq("shr_invited_usr_id", userId)
     .eq("shr_status", "accepted");
-  const sharedTop = (shares ?? []).map((s) => s.shr_fld_id as string);
-  let sharedFolderIds: string[] = [];
-  if (sharedTop.length > 0) {
-    const list = sharedTop.join(",");
-    const { data: folders } = await admin.from("folders").select("fld_id").or(`fld_id.in.(${list}),fld_parent_id.in.(${list})`);
-    sharedFolderIds = (folders ?? []).map((f) => f.fld_id as string);
+  const sharedFolderIds: string[] = (shares ?? []).map((s) => s.shr_fld_id as string);
+  for (let level = sharedFolderIds; level.length > 0;) {
+    const { data: children } = await admin.from("folders").select("fld_id").in("fld_parent_id", level);
+    level = (children ?? []).map((f) => f.fld_id as string).filter((id) => !sharedFolderIds.includes(id));
+    sharedFolderIds.push(...level);
   }
   const { data: ownFolders } = await admin.from("folders").select("fld_id").eq("fld_usr_id", userId);
   const folderIds = [...sharedFolderIds, ...(ownFolders ?? []).map((f) => f.fld_id as string)];
