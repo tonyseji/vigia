@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { useReloadOnReturn } from './useReloadOnReturn.js'
 import { cleanUrl, findSameItem } from '../lib/urlKey.js'
 import { scrapeFailure } from '../lib/loadErrors.js'
-import { fillUpdate, missingParts, missingText } from '../lib/itemGaps.js'
+import { checkedAtFor, fillUpdate, missingParts, missingText } from '../lib/itemGaps.js'
 
 function domainOf(url) {
   return new URL(url).hostname.replace(/^www\./, '')
@@ -174,7 +174,7 @@ export function useItems() {
         itm_price: fnData?.price ?? null,
         itm_currency: fnData?.currency ?? 'EUR',
         itm_in_stock: fnData?.inStock ?? null,
-        itm_last_checked_at: new Date().toISOString(),
+        itm_last_checked_at: checkedAtFor(fnData, new Date().toISOString()),
       })
       .select()
       .single()

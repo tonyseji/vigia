@@ -1436,3 +1436,25 @@ entera, con todo lo de dentro; las subcarpetas de cualquier nivel son del
 dueño de la raíz y quien tiene acceso las crea, renombra y borra (023).
 **Descartado:** profundidad ilimitada (no pedida, y el sangrado acabaría
 comiéndose el nombre en móvil).
+
+### 2026-11-02 — Lo que el servidor no ve se relee en minutos (sesión 46)
+**Contexto:** Tony añadió dos veces el mismo marco de Zara Home (2026-11-01,
+23:03 y 23:24 UTC) y la web no detectó ni precio ni imagen. `scrape` contestó
+200 sin precio: Zara Home (Akamai) responde 403 a `curl` y a `pg_net` desde
+Postgres, y el ✅ de `TIENDAS.md` salía de un barrido hecho en el navegador
+integrado, no con la IP del servidor. La web guardaba el artículo como ya
+leído (`itm_last_checked_at` = ahora), así que solo lo recogió la extensión
+en su pasada horaria, 23 minutos después.
+**Decisión:** no se marca Zara Home como bloqueada (el aviso de «bloqueada»
+llevaría a guardar con precio a mano, y Tony quiere que la tienda se lea
+sola). En su lugar, relevo en las dos puntas:
+- Web: si `scrape` no trae precio, el artículo se guarda sin leer
+  (`itm_last_checked_at` null, `checkedAtFor` en `lib/itemGaps.js`); va el
+  primero en el pase del servidor y el aviso lo explica.
+- Extensión 1.5.0: alarma `nuevos` cada minuto que lee, una vez, lo recién
+  añadido sin precio (antes, la alarma horaria). Coste: una consulta a
+  Supabase por minuto mientras Chrome esté abierto y haya sesión.
+**Descartado:** que la web avise a la extensión al guardar (script de
+contenido en la web y mensajes entre las dos: más piezas por ahorrar un
+minuto); marcar la tienda bloqueada; sondear Zara Home con otras cabeceras
+para saltar a Akamai.

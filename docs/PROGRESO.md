@@ -1796,3 +1796,38 @@ en `DECISIONES.md`.
 Hecho y subido. Tony ya puede crear «Camas» dentro de «Dormitorio» en
 «Pisito»; Elena lo verá igual por la carpeta compartida. Sin probar en
 móvil (el sidebar deslizante usa el mismo componente).
+
+## 2026-11-02 (Sesión 46) — Zara Home se guardaba sin precio ni foto
+
+### Contexto
+
+Tony: «nuevo problema al meter producto, no detecta ni precio ni imagen».
+Sin la dirección, se buscó en los datos: los dos últimos artículos son
+marcos de Zara Home (2026-11-01, 23:03 y 23:24 UTC) y su primer precio es
+`ph_source = browser`, de la extensión a las 23:26. `scrape` había
+contestado 200 sin precio. Desde esta máquina y desde Postgres (`pg_net`)
+Zara Home da 403 de Akamai. Qué página recibe exactamente la Edge Function
+no se pudo ver (no queda el cuerpo en los logs, y el navegador integrado no
+tenía sesión); otras pruebas con cabeceras de Googlebot se descartaron.
+Tony: marcarla como bloqueada no vale, tiene que guardar sola.
+
+### Cambios
+
+- `lib/itemGaps.js`: `checkedAtFor(read, now)`; `useItems.addItem` lo usa
+  en el INSERT, así un artículo sin precio queda sin leer
+  (`itm_last_checked_at` null) y no como «comprobado».
+- `AddItemForm`: el aviso de «sin precio» explica que la extensión lo lee en
+  un par de minutos y, si no, el próximo pase.
+- Extensión 1.5.0: alarma `nuevos` cada minuto (`readNewIfSignedIn`).
+- `TIENDAS.md`: Zara Home pasa de ✅ a ⚠️ (el barrido era del navegador, no
+  del servidor). Decisión en `DECISIONES.md`.
+- Tests: 300 en verde (2 nuevos); build en verde.
+
+### Estado final
+
+Hecho en código y subido; **sin probar en producción**: la web probada
+necesita sesión, y la extensión hay que recargarla en `chrome://extensions`
+para que tome la 1.5.0. Pendiente: confirmar con Tony que el enlace que
+falló era Zara Home, y que tras recargar la extensión un marco nuevo se
+rellena en un par de minutos. Los dos marcos de Zara Home de Tony están
+duplicados (misma ficha con `/es/es/` y `/es/`): él decide cuál borrar.

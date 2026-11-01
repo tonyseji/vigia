@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fillUpdate, missingParts, missingText } from '../itemGaps.js'
+import { checkedAtFor, fillUpdate, missingParts, missingText } from '../itemGaps.js'
 
 const url = 'https://www2.hm.com/es_es/productpage.1360669012.html'
 const blank = { itm_url: url, itm_title: url, itm_image_url: null, itm_price: null, itm_notified_price: null }
@@ -26,6 +26,16 @@ describe('missingText', () => {
     expect(missingText(['precio', 'foto', 'nombre'])).toBe('el precio, la foto y el nombre')
     expect(missingText(['foto', 'nombre'])).toBe('la foto y el nombre')
     expect(missingText(['precio'])).toBe('el precio')
+  })
+})
+
+describe('checkedAtFor', () => {
+  it('con precio leído, la lectura cuenta como hecha', () => {
+    expect(checkedAtFor({ price: 12.99 }, NOW)).toBe(NOW)
+  })
+  it('sin precio (Zara Home: el servidor entra pero no ve el precio) queda sin leer para que la extensión y el pase lo reintenten', () => {
+    expect(checkedAtFor({ title: 'Marco', image: 'https://img/1.jpg' }, NOW)).toBeNull()
+    expect(checkedAtFor(undefined, NOW)).toBeNull()
   })
 })
 

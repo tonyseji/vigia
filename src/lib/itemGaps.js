@@ -21,6 +21,14 @@ export function missingText(parts) {
   return words.length > 1 ? `${words.slice(0, -1).join(', ')} y ${words.at(-1)}` : (words[0] ?? '')
 }
 
+/** `itm_last_checked_at` de un artículo recién leído por scrape. Sin precio
+ * (la tienda deja entrar al servidor pero no enseña el precio, como Zara Home)
+ * la lectura no cuenta: queda sin leer, y la extensión de Chrome y el pase
+ * del servidor lo cogen primero (extension/background.js, refresh/index.ts). */
+export function checkedAtFor(read, now) {
+  return read?.price != null ? now : null
+}
+
 /** Campos que rellena una lectura nueva de la ficha (lo que devuelve scrape).
  * Título y foto solo si faltaban: lo editado no se pisa (como itemUpdate en
  * record-price/record.ts). Un precio leído es un precio más: deja de ser

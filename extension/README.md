@@ -12,8 +12,9 @@ Hace dos cosas:
    servidor (Amazon, que lo ve desde Irlanda). Una vez al día abre esos
    artículos en una ventana minimizada, lee el precio y lo apunta. Si baja,
    llega el aviso igual que con el resto. Lo que se añade sin precio (por
-   ejemplo desde el móvil) se lee una vez en la hora siguiente, sin esperar
-   al pase.
+   ejemplo desde el móvil, o Zara Home, que deja entrar al servidor pero no
+   le enseña el precio) se lee una vez en el minuto siguiente (alarma
+   `nuevos`, cada minuto), sin esperar al pase.
 
 Solo funciona con el ordenador encendido y Chrome abierto. Si a la hora del
 pase estaba apagado, lo hace en cuanto se abre Chrome (mira cada hora si el
@@ -41,7 +42,7 @@ el botón de recargar de la tarjeta de Vigía.
 | Archivo | Qué hace |
 |---|---|
 | `manifest.json` | Permisos: `activeTab` + `scripting` para leer la pestaña al pulsar el icono; `host_permissions` para el pase (cualquier tienda `https`), Supabase y la web. |
-| `background.js` | Service worker. Pase diario (`chrome.alarms`), guardar la pestaña, sesión. |
+| `background.js` | Service worker. Pase diario y alarma de cada minuto por lo nuevo sin precio (`chrome.alarms`), guardar la pestaña, sesión. |
 | `api.js` | Login con email y contraseña contra Supabase Auth, renovación del token, lectura de artículos y llamada a `record-price`. |
 | `parse.js` | **Generado, no se edita a mano.** El lector del servidor (`supabase/functions/scrape/parse.ts`) compilado con `npm run build:parse`; deja `VigiaParse` en la pestaña. Un test falla si no está al día. |
 | `extract.js` | `readOpenPage`: le pasa a `VigiaParse.readPage` el HTML de la pestaña y su canónica. `background.js` inyecta antes `parse.js`. |

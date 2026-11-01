@@ -223,8 +223,8 @@ export default function AddItemForm({ onAdd, onAddManual, onAddUnread, folderId 
             </>
           ) : saved.itm_last_checked_at == null ? (
             <>
-              <span className="text-warn">{savedLabel} sin precio:</span> {displayTitle(saved)}. Lo vuelvo a leer en el
-              próximo pase.
+              <span className="text-warn">{savedLabel} sin precio:</span> {displayTitle(saved)}. No lo veo desde aquí:
+              la extensión de Chrome lo lee en un par de minutos, y si no, el próximo pase.
             </>
           ) : (
             <>

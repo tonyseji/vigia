@@ -20,7 +20,7 @@
 | Coolmod | ✅ | JSON-LD | Barrido 2026-10-14. |
 | Alternate | ✅ | JSON-LD | Barrido 2026-10-14. |
 | Decathlon | ✅ | JSON-LD | Publica un `Product` por color, cada uno con su url: vale el de la página abierta. Barrido 2026-10-14. |
-| Zara Home | ✅ | JSON-LD | Un `Product` por talla. Barrido 2026-10-14. |
+| Zara Home | ⚠️ | Extensión de Chrome (en un minuto) | Akamai: el servidor recibe 403 (`curl` y `pg_net`) o una respuesta sin precio. El navegador sí lee el JSON-LD (un `Product` por talla, barrido 2026-10-14). Al añadirla en la web queda sin leer y la extensión la lee en un par de minutos (sesión 46). No está en `store_rules`: marcarla bloqueada impediría que se lea sola. |
 | Conforama | ✅ | JSON-LD | `AggregateOffer` sin disponibilidad: stock sin dato. Barrido 2026-10-14. |
 | JYSK | ✅ | JSON-LD | Barrido 2026-10-14. |
 | Photowall | ✅ | JSON-LD | Precio por m², solo en `priceSpecification`. Barrido 2026-10-14. |

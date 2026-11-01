@@ -11,16 +11,20 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // Una alarma cada hora: si el último pase tiene más de 20 h, toca otro. Así
 // no importa a qué hora se encienda el ordenador o se abra Chrome.
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create('pase', { delayInMinutes: 1, periodInMinutes: 60 })
-})
-chrome.runtime.onStartup.addListener(() => {
-  chrome.alarms.create('pase', { delayInMinutes: 2, periodInMinutes: 60 })
-})
+// Otra cada minuto, solo por lo recién añadido sin precio (Zara Home: el
+// servidor entra pero no ve el precio): así aparece en un par de minutos y no
+// hasta una hora después.
+function createAlarms(firstPassInMinutes) {
+  chrome.alarms.create('pase', { delayInMinutes: firstPassInMinutes, periodInMinutes: 60 })
+  chrome.alarms.create('nuevos', { delayInMinutes: 1, periodInMinutes: 1 })
+}
+chrome.runtime.onInstalled.addListener(() => createAlarms(1))
+chrome.runtime.onStartup.addListener(() => createAlarms(2))
 chrome.alarms.onAlarm.addListener((alarm) => {
   // Sin conexión no se puede ni renovar la sesión: se reintenta en la
   // siguiente alarma.
   if (alarm.name === 'pase') runPassIfDue().catch(() => {})
+  if (alarm.name === 'nuevos') readNewIfSignedIn().catch(() => {})
 })
 
 // Un pase que falló entero (sin conexión, sesión caducada) no cuenta: se
@@ -35,6 +39,10 @@ async function runPassIfDue() {
     return
   }
   await readNewWithoutPrice()
+}
+
+async function readNewIfSignedIn() {
+  if (await getSession()) await readNewWithoutPrice()
 }
 
 /** Navega la pestaña y espera a que cargue. El listener se pone antes de
