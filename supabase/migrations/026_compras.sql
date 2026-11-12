@@ -7,7 +7,7 @@
 
 create table vigia.purchases (
   pur_id uuid primary key default gen_random_uuid(),
-  pur_usr_id uuid not null default (select auth.uid()) references auth.users(id) on delete cascade,
+  pur_usr_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   pur_title text not null check (length(btrim(pur_title)) > 0),
   pur_amount numeric(12,2) not null check (pur_amount >= 0),
   pur_currency text not null default 'EUR',

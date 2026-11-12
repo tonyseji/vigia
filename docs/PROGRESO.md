@@ -1858,8 +1858,8 @@ de siempre (si la carpeta es compartida, sus compras también). Decisión en
 
 ### Estado final
 
-Hecho y commiteado **sin subir**: no hay acceso a Supabase desde esta sesión,
-así que la migración 026 está sin aplicar y subir la web ahora dejaría un
-aviso de error de «compras» a todos. Pendiente: aplicar la 026, desplegar
-`refresh`, subir, y probar en uso real (también con una carpeta compartida).
-Sin ver en navegador ni en móvil.
+Migración 026 aplicada en producción el 2026-11-13 (con `apply_migration`, a
+petición de Tony; el SQL del archivo tenía un `default (select auth.uid())`
+que Postgres no admite y se corrigió a `default auth.uid()` antes). Tabla,
+RLS (1 política) e `itm_bought_at` comprobados. Sin ver en móvil; falta
+probar con una carpeta compartida entre dos cuentas.

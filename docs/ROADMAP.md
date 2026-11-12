@@ -129,5 +129,5 @@ Ordenado por lo que cuesta deshacerlo, no por lo que aporta hoy:
 | B38 | Ver las estrellas de los demás en una carpeta compartida | Opción C de la sesión 43 (como los votos de Spoak): «★ Tú y Ana». La tabla ya lo permite; falta una política de lectura para las estrellas de artículos que ves y pintarlo. |
 | B39 | Precio objetivo por artículo | Lo tienen Google Shopping, idealo y Keepa: «avísame si baja de 300 €». Hoy el umbral del aviso es por usuario. |
 | B40 | «¿Es buen momento?» | Etiqueta bajo / normal / alto según el histórico del artículo, como Google Shopping. Sin datos nuevos: sale de `price_history`. |
-| B41 | ~~Marcar como «Comprado»~~ | **Hecho 2026-11-12 (sesión 47)** junto con la sección Compras (`DECISIONES.md` 2026-11-12). Pendiente de aplicar la migración 026 en Supabase y probar en uso real. |
+| B41 | ~~Marcar como «Comprado»~~ | **Hecho 2026-11-12 (sesión 47)** junto con la sección Compras (`DECISIONES.md` 2026-11-12). Migración 026 aplicada el 2026-11-13; falta probar en uso real y con una carpeta compartida. |
 | B33 | Fnac, Worten y Carrefour sin probar | El navegador integrado no pudo entrar (DataDome, consentimiento, «Service Unavailable»). Probar cuando Tony guarde algo de ellas. |
