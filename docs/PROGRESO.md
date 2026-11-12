@@ -1861,5 +1861,7 @@ de siempre (si la carpeta es compartida, sus compras también). Decisión en
 Migración 026 aplicada en producción el 2026-11-13 (con `apply_migration`, a
 petición de Tony; el SQL del archivo tenía un `default (select auth.uid())`
 que Postgres no admite y se corrigió a `default auth.uid()` antes). Tabla,
-RLS (1 política) e `itm_bought_at` comprobados. Sin ver en móvil; falta
+RLS (1 política) e `itm_bought_at` comprobados (propias sí, ajenas no, carpeta ajena
+bloqueada). `refresh` desplegada como versión 14 con el conector (los 5 archivos
+verificados idénticos al repo); `record-price` y `save-link` no cambian. Sin ver en móvil; falta
 probar con una carpeta compartida entre dos cuentas.
