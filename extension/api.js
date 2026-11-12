@@ -116,6 +116,7 @@ async function authedFetch(path, options = {}) {
  * una carpeta compartida, que puede no tener Chrome (sesión 44). */
 export const CHROME_ITEMS_PATH =
   '/rest/v1/items?select=itm_id,itm_usr_id,itm_url,itm_title,itm_price,itm_last_checked_at,itm_last_error' +
+  '&itm_bought_at=is.null' +
   '&or=(itm_is_manual.eq.true,itm_price.is.null,itm_last_error.not.is.null)'
 
 // Un artículo ajeno que otro Chrome ya leyó bien hace poco no se vuelve a

@@ -73,6 +73,8 @@ export default function ItemList({
   folderName = null,
   onShowAll,
   justAdded = null,
+  onMarkBought,
+  onUndoBought,
 }) {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('drop')
@@ -170,6 +172,8 @@ export default function ItemList({
         inBasket={Boolean(basket?.[item.itm_id])}
         onToggleBasket={onToggleBasket}
         onToggleFavorite={toggleFavorite}
+        onMarkBought={onMarkBought}
+        onUndoBought={onUndoBought}
       />
     )
   }
@@ -187,6 +191,8 @@ export default function ItemList({
         inBasket={Boolean(basket?.[item.itm_id])}
         onToggleBasket={onToggleBasket}
         onToggleFavorite={toggleFavorite}
+        onMarkBought={onMarkBought}
+        onUndoBought={onUndoBought}
       />
     )
   }

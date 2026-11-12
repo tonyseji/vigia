@@ -5,6 +5,7 @@ import { useFolders } from './hooks/useFolders.js'
 import { useFolderShares } from './hooks/useFolderShares.js'
 import { useSettings } from './hooks/useSettings.js'
 import { useBasket } from './hooks/useBasket.js'
+import { usePurchases } from './hooks/usePurchases.js'
 import Login from './components/Login.jsx'
 import PasswordFields from './components/PasswordFields.jsx'
 import AddItemForm from './components/AddItemForm.jsx'
@@ -16,8 +17,9 @@ import InstallBanner from './components/InstallBanner.jsx'
 import PendingInvitesBanner from './components/PendingInvitesBanner.jsx'
 import BrowserImportBanner from './components/BrowserImportBanner.jsx'
 import SharedLinkBanner from './components/SharedLinkBanner.jsx'
+import PurchasesView from './components/PurchasesView.jsx'
 import { BasketBar, BasketSheet } from './components/Basket.jsx'
-import { IconEngranaje, IconMenu, IconActualizar, IconCesta } from './components/icons/index.jsx'
+import { IconEngranaje, IconMenu, IconActualizar, IconCesta, IconRecibo } from './components/icons/index.jsx'
 import { loadErrorMessage } from './lib/loadErrors.js'
 import { basketLines, basketSummary } from './lib/basket.js'
 import { folderSubtreeIds } from './lib/itemGroups.js'
@@ -118,6 +120,8 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     reload: reloadFolders,
   } = useFolders()
   const folderShares = useFolderShares()
+  const purchasesState = usePurchases()
+  const [view, setView] = useState('list') // 'list' | 'purchases'
   const { settings, loadError: settingsLoadError, reload: reloadSettings, save: saveSettings } = useSettings()
   const itemsById = useMemo(() => Object.fromEntries(items.map((i) => [i.itm_id, i])), [items])
   const cesta = useBasket(itemsById, !loading && !itemsLoadError)
@@ -162,6 +166,20 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     const result = await toggleFavorite(itemId, favorite)
     if (result.error) setJoinResult({ ok: false, text: result.error })
   }
+  // Marcar o deshacer «comprado» cambia el artículo (itm_bought_at): se
+  // recarga la lista para que se vea apagado o vigilado de nuevo.
+  const withItemsReload = (action) => async (...args) => {
+    const result = await action(...args)
+    if (!result?.error) await reloadItems()
+    return result
+  }
+  const handleMarkBought = withItemsReload(purchasesState.markItemBought)
+  const handleUndoBought = async (itemId) => {
+    const result = await withItemsReload(purchasesState.undoItemBought)(itemId)
+    if (result.error) setJoinResult({ ok: false, text: result.error })
+    return result
+  }
+  const handleDeletePurchase = withItemsReload(purchasesState.deletePurchase)
   const handleAddUnread = async (url, folderId, reason) => markAdded(await addUnreadItem(url, folderId, reason))
   const selectedFolder = folders.find((f) => f.fld_id === selectedFolderId)
 
@@ -215,6 +233,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
     folders: foldersLoadError,
     shares: folderShares.loadError,
     settings: settingsLoadError,
+    purchases: purchasesState.loadError,
   })
   const [retrying, setRetrying] = useState(false)
 
@@ -225,6 +244,7 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
       foldersLoadError && reloadFolders(),
       folderShares.loadError && folderShares.reload(),
       settingsLoadError && reloadSettings(),
+      purchasesState.loadError && purchasesState.reload(),
     ])
     setRetrying(false)
   }
@@ -304,6 +324,17 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
           </button>
           <button
             type="button"
+            aria-pressed={view === 'purchases'}
+            onClick={() => setView((v) => (v === 'purchases' ? 'list' : 'purchases'))}
+            aria-label="Compras"
+            title="Compras: lo que has gastado"
+            className="flex items-center gap-1.5 rounded-lg border border-line p-1.5 outline-none focus-visible:outline-2 focus-visible:outline-accent aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-ink sm:px-3 sm:py-1.5"
+          >
+            <IconRecibo className="h-4 w-4" />
+            <span className="hidden sm:inline">Compras</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setShowSettings(true)}
             aria-label="Ajustes"
             title="Ajustes"
@@ -375,9 +406,11 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
         />
       </div>
 
-      <div className="mt-6">
-        <AddItemForm onAdd={handleAdd} onAddManual={handleAddManual} onAddUnread={handleAddUnread} folderId={selectedFolderId} />
-      </div>
+      {view === 'list' && (
+        <div className="mt-6">
+          <AddItemForm onAdd={handleAdd} onAddManual={handleAddManual} onAddUnread={handleAddUnread} folderId={selectedFolderId} />
+        </div>
+      )}
 
       <div className="mt-6 flex items-start gap-6">
         <div className="hidden md:block">
@@ -397,6 +430,20 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
         </div>
 
         <div className="min-w-0 flex-1">
+          {view === 'purchases' ? (
+            <PurchasesView
+              purchases={purchasesState.purchases}
+              loading={purchasesState.loading}
+              loadFailed={purchasesState.loadError}
+              folders={folders}
+              selectedFolderId={selectedFolderId}
+              folderName={selectedFolder?.fld_name ?? null}
+              itemsById={itemsById}
+              onAdd={purchasesState.addPurchase}
+              onUpdate={purchasesState.updatePurchase}
+              onDelete={handleDeletePurchase}
+            />
+          ) : (
           <ItemList
             items={visibleItems}
             folders={folders}
@@ -412,7 +459,10 @@ function Dashboard({ onSignOut, email, onChangePassword }) {
             basket={cesta.basket}
             onToggleBasket={cesta.toggle}
             onToggleFavorite={handleToggleFavorite}
+            onMarkBought={handleMarkBought}
+            onUndoBought={handleUndoBought}
           />
+          )}
         </div>
       </div>
 

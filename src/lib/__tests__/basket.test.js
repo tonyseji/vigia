@@ -82,6 +82,16 @@ describe('basketSummary', () => {
     expect(s.unpriced).toBe(0)
   })
 
+  it('lo ya comprado tampoco suma', () => {
+    const bought = { ...item('b', 25, hist(30, 25)), itm_bought_at: '2026-11-01T10:00:00Z' }
+    const s = basketSummary([
+      { item: item('a', 10, hist(10)), qty: 1 },
+      { item: bought, qty: 1 },
+    ])
+    expect(s.total).toBe(10)
+    expect(s.unavailable).toBe(1)
+  })
+
   it('sin histórico, el precio de hoy hace de referencia y de mínimo', () => {
     const s = basketSummary([{ item: item('a', 12.3), qty: 1 }])
     expect(s.totalThen).toBe(12.3)

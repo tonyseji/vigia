@@ -10,6 +10,9 @@ describe('loadErrorMessage', () => {
     expect(loadErrorMessage({ folders: true })).toBe('No se han podido cargar tus carpetas.')
     expect(loadErrorMessage({ settings: true })).toBe('No se han podido cargar tus ajustes.')
   })
+  it('nombra las compras', () => {
+    expect(loadErrorMessage({ purchases: true })).toBe('No se han podido cargar tus compras.')
+  })
   it('junta dos fallos con «y»', () => {
     expect(loadErrorMessage({ items: true, folders: true })).toBe('No se han podido cargar tus artículos y carpetas.')
   })

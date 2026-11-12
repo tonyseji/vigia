@@ -141,6 +141,10 @@ describe('itemsTotal', () => {
     expect(itemsTotal(items)).toBe(40.5)
   })
 
+  it('un artículo ya comprado no suma', () => {
+    expect(itemsTotal([{ itm_price: 10 }, { itm_price: 5, itm_bought_at: '2026-11-01T10:00:00Z' }])).toBe(10)
+  })
+
   it('redondea a céntimos', () => {
     expect(itemsTotal([{ itm_price: 0.1 }, { itm_price: 0.2 }])).toBe(0.3)
   })

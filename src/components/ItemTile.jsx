@@ -6,6 +6,9 @@ import { ProductIcon, IconEtiqueta } from './icons/index.jsx'
 import EditItemModal from './EditItemModal.jsx'
 import HistoryModal from './HistoryModal.jsx'
 import FavoriteButton from './FavoriteButton.jsx'
+import PurchaseFormModal from './PurchaseFormModal.jsx'
+import { todayLocal } from './PurchasesView.jsx'
+import { purchaseDraftFromItem } from '../lib/purchases.js'
 
 function domainOf(url) {
   try {
@@ -22,7 +25,9 @@ function domainOf(url) {
  * un artículo añadido en esta vista no se podía organizar (feedback de
  * Tony tras ver la vista Fotos en producción, sesión 15). La estrella de
  * favorito va abajo a la derecha de la foto, como en la fila. */
-export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded }) {
+export default function ItemTile({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded, onMarkBought, onUndoBought }) {
+  const [buying, setBuying] = useState(false)
+  const [undoing, setUndoing] = useState(false)
   const [editing, setEditing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [movingFolder, setMovingFolder] = useState(false)
@@ -56,12 +61,13 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
   // sitio de la variación y la franja pasa a gris (subir o bajar ya no cuenta).
   const stock = item.itm_price != null ? stockLabel(item) : null
   const state = item.itm_price == null ? 'n' : stock ? 's' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
+  const bought = item.itm_bought_at != null
   const stripeColor = { d: 'var(--color-ok)', u: 'var(--color-bad)', n: 'var(--color-warn)', s: 'var(--color-ink-mut)' }[state] ?? 'transparent'
 
   return (
     <article
       data-item-id={item.itm_id}
-      className={`flex flex-col rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
+      className={`flex flex-col rounded-lg border ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''} ${bought ? 'opacity-60' : ''}`}
     >
       {/* El recorte de las esquinas va en la foto y no en la tarjeta: con
           overflow-hidden en la tarjeta, el desplegable de carpeta se cortaba. */}
@@ -90,6 +96,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
               type="checkbox"
               checked={inBasket}
               onChange={() => onToggleBasket(item.itm_id)}
+              disabled={bought}
               aria-label={`Meter ${title} en la cesta`}
               className="h-4 w-4 cursor-pointer accent-accent"
             />
@@ -128,6 +135,7 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
             delante, el separador se quedaba colgando al final de la anterior. */}
         <div className="flex min-w-0 flex-col text-[11px] text-ink-mut">
           <span className="truncate">{domainOf(item.itm_url)}</span>
+          {bought && <span className="w-fit rounded-md bg-ok-soft px-1.5 py-0.5 font-medium text-ok">Comprado</span>}
           {manualStatus === 'browser' && <span title={BROWSER_HINT}>precio desde Chrome</span>}
           {manualStatus && manualStatus !== 'browser' && (
             <span className="text-warn" title={MANUAL_HINT}>
@@ -166,6 +174,31 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
                 </span>
               )}
             </button>
+          )}
+
+          {bought ? (
+            <button
+              type="button"
+              disabled={undoing}
+              onClick={async () => {
+                setUndoing(true)
+                await onUndoBought?.(item.itm_id)
+                setUndoing(false)
+              }}
+              className="rounded-md border border-line px-1.5 py-1 text-[10.5px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+            >
+              {undoing ? 'Deshaciendo…' : 'Deshacer'}
+            </button>
+          ) : (
+            onMarkBought && (
+              <button
+                type="button"
+                onClick={() => setBuying(true)}
+                className="rounded-md border border-line px-1.5 py-1 text-[10.5px] text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                Comprado
+              </button>
+            )
           )}
 
           {/* En su propia línea, a todo el ancho: al lado del precio solo
@@ -224,7 +257,26 @@ export default function ItemTile({ item, folders, onUpdate, onDelete, picking, i
           folders={folders}
           onSave={(changes) => onUpdate(item.itm_id, changes)}
           onDelete={() => onDelete(item.itm_id)}
+          onBuy={
+            onMarkBought && !bought
+              ? () => {
+                  setEditing(false)
+                  setBuying(true)
+                }
+              : undefined
+          }
           onClose={() => setEditing(false)}
+        />
+      )}
+
+      {buying && (
+        <PurchaseFormModal
+          heading="Comprado"
+          draft={purchaseDraftFromItem(item, todayLocal())}
+          folders={folders}
+          submitLabel="Marcar comprado"
+          onSave={(fields) => onMarkBought(item, fields)}
+          onClose={() => setBuying(false)}
         />
       )}
     </article>

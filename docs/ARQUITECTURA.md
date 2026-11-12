@@ -190,6 +190,7 @@ Un artículo vigilado. Uno por URL y usuario.
 | `itm_fld_id` | uuid | FK a `folders`. Nullable. |
 | `itm_last_checked_at` | timestamptz | |
 | `itm_last_error` | text | Último fallo de lectura, para poder diagnosticar. |
+| `itm_bought_at` | timestamptz | Nullable. Si tiene fecha, el artículo está comprado (migración 026): se enseña apagado, no suma y el refresco y la extensión lo saltan. |
 | `itm_created_at` | timestamptz | Desde aquí arranca el histórico. |
 
 ### `price_history`
@@ -279,6 +280,25 @@ Clave primaria `(fav_usr_id, fav_itm_id)`. RLS `favorites_own`: solo las
 propias, y al marcar el artículo tiene que ser uno que ves (tuyo o de una
 carpeta compartida contigo). `useItems` las trae embebidas en la consulta de
 `items` (`favorites(fav_usr_id)`) y las convierte en `isFavorite`.
+
+### `purchases`
+
+Lo que se ha comprado, dentro o fuera de Vigía (migración 026, sesión 47).
+Con carpeta compartida, sus compras también: misma RLS que `items`
+(`purchases_all`). Sin carpeta, privada de quien la registró.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `pur_id` | uuid PK | |
+| `pur_usr_id` | uuid | Quien la registró. Por defecto `auth.uid()`. |
+| `pur_title` | text | Qué se compró. |
+| `pur_amount` | numeric(12,2) | Lo pagado, ≥ 0. |
+| `pur_currency` | text | `EUR`. |
+| `pur_date` | date | Fecha de compra. |
+| `pur_store` / `pur_notes` | text | Opcionales. |
+| `pur_fld_id` | uuid | FK a `folders`, `ON DELETE SET NULL`. Null = privada. |
+| `pur_itm_id` | uuid | FK a `items`, `ON DELETE SET NULL`. De qué artículo vigilado vino; null si es de fuera. |
+| `pur_created_at` | timestamptz | |
 
 ### `user_settings`
 

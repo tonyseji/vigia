@@ -4,7 +4,7 @@ import Dialog, { ConfirmDialog } from './Dialog.jsx'
 
 /** Modal simple para editar título, notas, carpeta y precio manual, o borrar
  * el artículo. Sin librería de diálogos: Dialog propio. */
-export default function EditItemModal({ item, folders, onSave, onDelete, onClose }) {
+export default function EditItemModal({ item, folders, onSave, onDelete, onBuy, onClose }) {
   // Sin nombre todavía (título = dirección, ver src/lib/itemText.js): campo
   // vacío con el nombre sugerido de muestra, para no guardar la dirección
   // como si fuera un nombre escrito a mano.
@@ -109,6 +109,16 @@ export default function EditItemModal({ item, folders, onSave, onDelete, onClose
           Eliminar
         </button>
         <div className="flex gap-2">
+          {onBuy && (
+            <button
+              type="button"
+              onClick={onBuy}
+              disabled={saving}
+              className="rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+            >
+              Comprado
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

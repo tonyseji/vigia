@@ -26,8 +26,8 @@ function historyPrices(item) {
   return (item.price_history ?? []).map((h) => h.ph_price).filter((p) => p != null)
 }
 
-/** Vendido o sin stock en la última lectura: no se puede comprar. */
-const unavailable = (item) => item.itm_in_stock === false
+/** Vendido o sin stock en la última lectura, o ya comprado: no suma. */
+const unavailable = (item) => item.itm_in_stock === false || item.itm_bought_at != null
 
 /** Totales de la cesta. «Al guardarlos» usa el primer precio registrado de
  * cada artículo (el mismo que la variación de cada fila); «mínimo» el más

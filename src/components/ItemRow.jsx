@@ -8,6 +8,9 @@ import Sparkline from './Sparkline.jsx'
 import EditItemModal from './EditItemModal.jsx'
 import FavoriteButton from './FavoriteButton.jsx'
 import HistoryModal from './HistoryModal.jsx'
+import PurchaseFormModal from './PurchaseFormModal.jsx'
+import { todayLocal } from './PurchasesView.jsx'
+import { purchaseDraftFromItem } from '../lib/purchases.js'
 
 function domainOf(url) {
   try {
@@ -24,7 +27,9 @@ function domainOf(url) {
  * el precio, el minigráfico y «N registros» abren HistoryModal. La
  * estrella de favorito va en la esquina de la foto: en la segunda línea de
  * la fila móvil no cabe otro botón. */
-export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded }) {
+export default function ItemRow({ item, folders, onUpdate, onDelete, picking, inBasket, onToggleBasket, onToggleFavorite, justAdded, onMarkBought, onUndoBought }) {
+  const [buying, setBuying] = useState(false)
+  const [undoing, setUndoing] = useState(false)
   const [editing, setEditing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -62,12 +67,13 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
   // sitio de la variación y la franja pasa a gris (subir o bajar ya no cuenta).
   const stock = item.itm_price != null ? stockLabel(item) : null
   const state = item.itm_price == null ? 'n' : stock ? 's' : pct < 0 ? 'd' : pct > 0 ? 'u' : ''
+  const bought = item.itm_bought_at != null
   const stripeColor = { d: 'var(--color-ok)', u: 'var(--color-bad)', n: 'var(--color-warn)', s: 'var(--color-ink-mut)' }[state] ?? 'transparent'
 
   return (
     <article
       data-item-id={item.itm_id}
-      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''}`}
+      className={`relative flex flex-wrap items-stretch gap-x-3 gap-y-2.5 rounded-lg border p-2.5 pl-3 lg:flex-nowrap ${picking && inBasket ? 'border-accent bg-accent-soft' : item.isFavorite ? 'border-fav/60 bg-surface' : 'border-line bg-surface'} ${justAdded ? 'just-added' : ''} ${bought ? 'opacity-60' : ''}`}
     >
       <div className="absolute inset-y-0 left-0 w-[3px] rounded-l-lg" style={{ background: stripeColor }} />
 
@@ -77,6 +83,7 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
             type="checkbox"
             checked={inBasket}
             onChange={() => onToggleBasket(item.itm_id)}
+            disabled={bought}
             aria-label={`Meter ${title} en la cesta`}
             className="h-4 w-4 cursor-pointer accent-accent"
           />
@@ -143,6 +150,9 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
               {item.price_history.length} {item.price_history.length === 1 ? 'registro' : 'registros'}
             </button>
           </span>
+          {bought && (
+            <span className="whitespace-nowrap rounded-md bg-ok-soft px-1.5 py-0.5 font-medium text-ok">Comprado</span>
+          )}
           {manualStatus === 'browser' && (
             <span className="whitespace-nowrap" title={BROWSER_HINT}>
               · precio desde Chrome
@@ -277,6 +287,33 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
         {copied ? <IconCheck className="h-4 w-4 text-ok" /> : <IconCopiar className="h-4 w-4" />}
       </button>
 
+      {bought ? (
+        <button
+          type="button"
+          disabled={undoing}
+          onClick={async () => {
+            setUndoing(true)
+            await onUndoBought?.(item.itm_id)
+            setUndoing(false)
+          }}
+          title="Volver a vigilar este artículo"
+          className="order-3 flex-none self-center rounded-md border border-line px-2 py-1.5 text-xs text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+        >
+          {undoing ? 'Deshaciendo…' : 'Deshacer'}
+        </button>
+      ) : (
+        onMarkBought && (
+          <button
+            type="button"
+            onClick={() => setBuying(true)}
+            title="Marcar como comprado y apuntarlo en Compras"
+            className="order-3 flex-none self-center rounded-md border border-line px-2 py-1.5 text-xs text-ink-mut outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            Comprado
+          </button>
+        )
+      )}
+
       <button
         type="button"
         onClick={() => setEditing(true)}
@@ -298,7 +335,26 @@ export default function ItemRow({ item, folders, onUpdate, onDelete, picking, in
           folders={folders}
           onSave={(changes) => onUpdate(item.itm_id, changes)}
           onDelete={() => onDelete(item.itm_id)}
+          onBuy={
+            onMarkBought && !bought
+              ? () => {
+                  setEditing(false)
+                  setBuying(true)
+                }
+              : undefined
+          }
           onClose={() => setEditing(false)}
+        />
+      )}
+
+      {buying && (
+        <PurchaseFormModal
+          heading="Comprado"
+          draft={purchaseDraftFromItem(item, todayLocal())}
+          folders={folders}
+          submitLabel="Marcar comprado"
+          onSave={(fields) => onMarkBought(item, fields)}
+          onClose={() => setBuying(false)}
         />
       )}
     </article>

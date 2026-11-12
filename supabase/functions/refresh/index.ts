@@ -145,6 +145,7 @@ Deno.serve(async (req) => {
       .select("itm_id, itm_usr_id, itm_url, itm_title, itm_image_url, itm_price, itm_min_price, itm_in_stock, itm_notified_price")
       .eq("itm_usr_id", userId)
       .eq("itm_is_manual", false)
+      .is("itm_bought_at", null)
       .or(`itm_last_checked_at.is.null,itm_last_checked_at.lt.${cutoff}`)
       .order("itm_last_checked_at", { ascending: true, nullsFirst: true })
       .limit(BATCH_LIMIT - items.length);

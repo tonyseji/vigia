@@ -4,6 +4,8 @@ import { CHROME_ITEMS_PATH, itemsForThisChrome } from './api.js'
 describe('lo que lee el pase de este Chrome', () => {
   it('tiendas que bloquean y lo que el servidor no pudo leer, de todo lo que ve', () => {
     expect(CHROME_ITEMS_PATH).toContain('or=(itm_is_manual.eq.true,itm_price.is.null,itm_last_error.not.is.null)')
+    // Lo ya comprado deja de vigilarse.
+    expect(CHROME_ITEMS_PATH).toContain('itm_bought_at=is.null')
     // Sin filtrar por usuario: la RLS deja ver también lo de carpetas compartidas.
     expect(CHROME_ITEMS_PATH).not.toContain('itm_usr_id=eq.')
   })

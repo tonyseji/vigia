@@ -78,9 +78,9 @@ export function groupKeyOf(item, foldersById) {
 }
 
 /** Lo que costaría todo junto, como el total de la cesta (lib/basket.js):
- * sin precio y vendido o sin stock (B27) no suman. */
+ * sin precio, vendido o sin stock (B27) y ya comprado no suman. */
 export function itemsTotal(items) {
-  const total = items.reduce((sum, i) => (i.itm_price == null || i.itm_in_stock === false ? sum : sum + i.itm_price), 0)
+  const total = items.reduce((sum, i) => (i.itm_price == null || i.itm_in_stock === false || i.itm_bought_at != null ? sum : sum + i.itm_price), 0)
   return Math.round(total * 100) / 100
 }
 

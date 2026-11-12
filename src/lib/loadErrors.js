@@ -4,6 +4,7 @@ const PARTS = [
   ['folders', 'carpetas'],
   ['shares', 'invitaciones'],
   ['settings', 'ajustes'],
+  ['purchases', 'compras'],
 ]
 
 /** Texto del aviso cuando falla alguna lectura de la BD, o null si no ha

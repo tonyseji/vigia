@@ -1458,3 +1458,26 @@ sola). En su lugar, relevo en las dos puntas:
 contenido en la web y mensajes entre las dos: más piezas por ahorrar un
 minuto); marcar la tienda bloqueada; sondear Zara Home con otras cabeceras
 para saltar a Akamai.
+
+### 2026-11-12 — Compras: hoja de gastos ligada a las carpetas (sesión 47)
+**Contexto:** Tony quiere saber cuánto ha gastado en un ordenador, un
+dormitorio, etc., contando lo que vigilaba en Vigía y lo comprado fuera (algo
+que ve en una tienda física y compra sin haberlo guardado antes).
+**Decisión:**
+- **Tabla propia `purchases`**, no un estado de los artículos: una compra de
+  fuera no tiene URL ni precio vigilado, y mezclarlas obligaba a quitar casos
+  especiales en refresco, extensión y duplicados.
+- **Se agrupa con las carpetas de siempre.** Primero se eligieron «proyectos
+  propios»; Tony lo cambió al decidir que quería compartirlo: si «Pisito» es
+  compartida, sus compras también (misma RLS que `items`). Sin carpeta, la
+  compra es privada de quien la registró.
+- **«Comprado» en un artículo vigilado** crea la compra con el precio actual
+  precargado y marca `itm_bought_at`: el artículo se queda en la lista
+  apagado, conserva el histórico, no suma en cesta ni totales, y el refresco
+  y la extensión lo saltan. Se puede deshacer (borra la compra y quita la
+  marca). Cierra B41.
+**Descartado:** reutilizar `items` con estado «Comprado» para las compras de
+fuera; proyectos de compras independientes de las carpetas (no se pueden
+compartir con la carpeta); borrar el artículo al comprarlo (pierde el
+histórico).
+**Revisitar:** importar extractos, facturas adjuntas, devoluciones, exportar.

@@ -1831,3 +1831,35 @@ para que tome la 1.5.0. Pendiente: confirmar con Tony que el enlace que
 falló era Zara Home, y que tras recargar la extensión un marco nuevo se
 rellena en un par de minutos. Los dos marcos de Zara Home de Tony están
 duplicados (misma ficha con `/es/es/` y `/es/`): él decide cuál borrar.
+
+## 2026-11-12 (Sesión 47) — Compras
+
+### Contexto
+
+Tony quiere un apartado de compras: todo lo comprado, vigilado en Vigía o no,
+para saber cuánto lleva gastado en un ordenador, un dormitorio, etc. Elegió
+hoja de gastos propia y «Comprado» que deja el artículo en la lista. Pensó
+primero en grupos propios y, al querer compartir, los cambió por las carpetas
+de siempre (si la carpeta es compartida, sus compras también). Decisión en
+`DECISIONES.md` 2026-11-12; diseño en `docs/superpowers/specs/2026-11-12-compras-design.md`.
+
+### Cambios
+
+- Migración `026_compras.sql`: tabla `purchases` (RLS `purchases_all`, como
+  `items_all`) y `items.itm_bought_at`.
+- `refresh` y el pase de la extensión (`CHROME_ITEMS_PATH`) saltan lo comprado.
+- `lib/purchases.js` (totales por carpeta/año, borrador desde artículo,
+  diferencia con el mínimo) y `hooks/usePurchases.js`.
+- UI: vista Compras (`PurchasesView`), `PurchaseFormModal`, botón «Comprado» y
+  «Deshacer» en fila, ficha de Fotos y edición; lo comprado no suma en cesta ni
+  en totales de grupo.
+- Reparto: lib/hook y UI los hicieron dos subagentes (Sonnet); BD, backend y
+  docs, la sesión principal. 318 tests y build en verde.
+
+### Estado final
+
+Hecho y commiteado **sin subir**: no hay acceso a Supabase desde esta sesión,
+así que la migración 026 está sin aplicar y subir la web ahora dejaría un
+aviso de error de «compras» a todos. Pendiente: aplicar la 026, desplegar
+`refresh`, subir, y probar en uso real (también con una carpeta compartida).
+Sin ver en navegador ni en móvil.

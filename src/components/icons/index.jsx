@@ -198,3 +198,13 @@ export function IconEstrella({ filled = false, ...props }) {
     </svg>
   )
 }
+
+/** Recibo: la vista de compras. */
+export function IconRecibo(props) {
+  return (
+    <svg {...common} {...props}>
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z" />
+      <path d="M9 8h6M9 12h6" />
+    </svg>
+  )
+}
